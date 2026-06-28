@@ -38,7 +38,7 @@ export default function FAQ() {
     <section className="py-20 bg-black">
       <div className="max-w-3xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Frequently Asked Questions</h2>
+          <h2 className="text-4xl font-bold text-white mb-4">Frequently Asked Questions</h2>
           <p className="text-zinc-400">Everything you need to know about creating Solana tokens.</p>
         </div>
 
@@ -50,21 +50,21 @@ export default function FAQ() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               viewport={{ once: true }}
-              className="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden"
+              className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden"
             >
               <button
                 className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-zinc-800/50 transition"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <span className="font-semibold">{faq.q}</span>
+                <span className="font-semibold text-white">{faq.q}</span>
                 <ChevronDown
-                  className={`h-5 w-5 text-zinc-500 transition-transform ${
+                  className={`h-5 w-5 text-zinc-400 transition-transform ${
                     openIndex === index ? 'rotate-180' : ''
                   }`}
                 />
               </button>
               {openIndex === index && (
-                <div className="px-6 pb-4 text-zinc-400 text-sm">
+                <div className="px-6 pb-4 text-zinc-300 text-sm border-t border-zinc-800 pt-3">
                   {faq.a}
                 </div>
               )}

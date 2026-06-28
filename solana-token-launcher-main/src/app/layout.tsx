@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Providers } from "../providers/providers";
+import { Providers } from "@/providers/providers";
 import { Inter } from "next/font/google";
-import Header from "@/components/header";     // make sure path is correct
+import Header from "@/components/header";
 import Footer from "@/components/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "ZRP - Launch & Manage Solana Tokens",
-  description: "Create, mint, and launch your own Solana tokens with ZRP. Fast, simple, and powerful token launcher.",
+  description: "Create, mint, and launch your own Solana tokens with ZRP. Fast, simple, and powerful",
   icons: {
-    icon: "/favicon.ico", // update if you have a new logo
+    icon: "/favicon.ico",
   },
 };
 

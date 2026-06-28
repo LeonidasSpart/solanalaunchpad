@@ -1,48 +1,74 @@
-'use client'
+'use client';
 
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { motion } from 'framer-motion'
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 
-const HeroSection = () => {
+export default function HeroSection() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-zinc-950 via-black to-zinc-950 overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(#4f46e520_1px,transparent_1px)] [background-size:40px_40px]"></div>
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden px-4">
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-black" />
+      
+      {/* Animated background orbs */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
 
-      <div className="container mx-auto px-6 relative z-10 text-center">
+      <div className="relative z-10 max-w-5xl mx-auto text-center">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full text-sm mb-6 border border-white/10">
-            ⚡ NO-CODE SOLANA TOKEN CREATOR
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-purple-900/30 border border-purple-500/30 rounded-full px-4 py-2 mb-6">
+            <span className="text-purple-400 text-sm font-medium">⚡ NO-CODE SOLANA TOKEN CREATOR</span>
           </div>
 
-          <h1 className="text-6xl md:text-7xl font-bold tracking-tighter mb-6 leading-tight">
-            Create a Solana Token<br />
-            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-              in Under 2 Minutes
-            </span>
+          {/* Main Heading */}
+          <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-6">
+            Create a <span className="text-purple-400">Solana Token</span>
+            <br />
+            in Under 2 Minutes
           </h1>
 
-          <p className="max-w-2xl mx-auto text-xl text-zinc-400 mb-10">
-            No coding required. Mint instantly to your wallet. 
-            Secure, fast, and non-custodial.
+          {/* Sub-heading */}
+          <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
+            No coding required. Mint instantly to your wallet. Secure, fast, and non-custodial.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="text-lg px-10 py-7 bg-purple-600 hover:bg-purple-700">
-              <Link href="/create-mint">🚀 Create Your Token</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="text-lg px-10 py-7">
-              <Link href="#how-it-works">How It Works</Link>
-            </Button>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/create-mint"
+              className="px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-2xl transition-all transform hover:scale-105 shadow-lg shadow-purple-500/25"
+            >
+              Create Your Token
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="px-8 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-2xl transition-all border border-zinc-700"
+            >
+              How It Works →
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="flex flex-wrap justify-center gap-8 mt-12 text-sm text-zinc-500">
+            <div>
+              <span className="text-purple-400 font-bold text-lg">10k+</span>
+              <p className="text-zinc-500">Tokens Launched</p>
+            </div>
+            <div>
+              <span className="text-purple-400 font-bold text-lg">&lt;60s</span>
+              <p className="text-zinc-500">Average Mint Time</p>
+            </div>
+            <div>
+              <span className="text-purple-400 font-bold text-lg">0.15 SOL</span>
+              <p className="text-zinc-500">Starting From</p>
+            </div>
           </div>
         </motion.div>
       </div>
     </section>
-  )
+  );
 }
-
-export default HeroSection

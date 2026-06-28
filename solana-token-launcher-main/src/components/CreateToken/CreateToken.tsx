@@ -1,21 +1,30 @@
 'use client';
 
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useContext } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Loader2, Rocket, CheckCircle, ExternalLink } from 'lucide-react';
+import { NetworkContext } from '@/providers/providers';
 
 const CreateToken = () => {
   const { publicKey, signTransaction } = useWallet();
+  const { network } = useContext(NetworkContext);
 
   const [formData, setFormData] = useState({
-    name: "", symbol: "", description: "", website: "", twitter: "", telegram: "", discord: "",
-    supply: "1000000000", decimals: "9",
+    name: '',
+    symbol: '',
+    description: '',
+    website: '',
+    twitter: '',
+    telegram: '',
+    discord: '',
+    supply: '1000000000',
+    decimals: '9',
   });
 
   const [revokeMint, setRevokeMint] = useState(true);
@@ -25,12 +34,12 @@ const CreateToken = () => {
   const [file, setFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [status, setStatus] = useState("");
-  const [txId, setTxId] = useState("");
+  const [status, setStatus] = useState('');
+  const [txId, setTxId] = useState('');
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -45,42 +54,38 @@ const CreateToken = () => {
 
   const createToken = async () => {
     if (!publicKey || !signTransaction || !file || !formData.name || !formData.symbol) {
-      setStatus("❌ Please connect wallet and fill all required fields");
+      setStatus('❌ Please connect wallet and fill all required fields');
       return;
     }
 
-    // Validate supply
     const supplyNum = parseFloat(formData.supply);
     if (isNaN(supplyNum) || supplyNum <= 0) {
-      setStatus("❌ Invalid supply amount");
+      setStatus('❌ Invalid supply amount');
       return;
     }
 
-    // Validate decimals
     const decimalsNum = parseInt(formData.decimals);
     if (isNaN(decimalsNum) || decimalsNum < 0 || decimalsNum > 9) {
-      setStatus("❌ Decimals must be between 0 and 9");
+      setStatus('❌ Decimals must be between 0 and 9');
       return;
     }
 
-    // Validate symbol
     if (formData.symbol.length > 10) {
-      setStatus("❌ Symbol must be 10 characters or less");
+      setStatus('❌ Symbol must be 10 characters or less');
       return;
     }
 
-    // Validate name
     if (formData.name.length > 32) {
-      setStatus("❌ Name must be 32 characters or less");
+      setStatus('❌ Name must be 32 characters or less');
       return;
     }
 
     setUploading(true);
-    setTxId("");
-    setStatus("⏳ Uploading image to IPFS...");
+    setTxId('');
+    setStatus('⏳ Uploading image to IPFS...');
 
     try {
-      const { createToken: createTokenLib } = await import("@/lib/create-token");
+      const { createToken: createTokenLib } = await import('@/lib/create-token');
 
       const signature = await createTokenLib({
         wallet: publicKey,
@@ -94,22 +99,23 @@ const CreateToken = () => {
         revokeFreeze,
         revokeUpdate,
         signTransaction,
+        network,
       });
 
       setTxId(signature);
-      setStatus("");
+      setStatus('');
     } catch (error: any) {
-      console.error("Creation failed:", error);
-      let errorMessage = "Unknown error occurred";
+      console.error('Creation failed:', error);
+      let errorMessage = 'Unknown error occurred';
 
-      if (error.message?.includes("insufficient")) {
-        errorMessage = "Insufficient SOL balance. You need at least 0.55 SOL.";
-      } else if (error.message?.includes("rejected") || error.message?.includes("User rejected")) {
-        errorMessage = "Transaction was rejected in wallet.";
-      } else if (error.message?.includes("NFT.Storage")) {
-        errorMessage = "Image upload failed. Check your API key.";
+      if (error.message?.includes('insufficient')) {
+        errorMessage = 'Insufficient SOL balance. You need at least 0.55 SOL.';
+      } else if (error.message?.includes('rejected') || error.message?.includes('User rejected')) {
+        errorMessage = 'Transaction was rejected in wallet.';
+      } else if (error.message?.includes('NFT.Storage')) {
+        errorMessage = 'Image upload failed. Check your API key.';
       } else {
-        errorMessage = error.message?.slice(0, 150) || "Transaction failed";
+        errorMessage = error.message?.slice(0, 150) || 'Transaction failed';
       }
 
       setStatus(`❌ ${errorMessage}`);
@@ -125,69 +131,133 @@ const CreateToken = () => {
           <Rocket className="h-8 w-8 text-purple-500" /> Create Your Solana Token
         </CardTitle>
         <p className="text-zinc-400">Launch your token or memecoin on Solana with ZRP</p>
+        {network === 'mainnet' && (
+          <div className="bg-red-900/30 border border-red-500 rounded-xl p-4 mt-2">
+            <p className="text-red-400 font-bold">⚠️ MAINNET MODE</p>
+            <p className="text-red-300 text-sm">
+              You are about to create a token on Solana Mainnet. This will cost REAL SOL.
+              Please double-check all details before proceeding.
+            </p>
+          </div>
+        )}
       </CardHeader>
 
       <CardContent className="space-y-8 p-8">
-        {/* Basic Info */}
         <div className="grid grid-cols-2 gap-6">
           <div>
             <Label>Token Name *</Label>
-            <Input name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Pepe Coin" maxLength={32} />
+            <Input
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              placeholder="e.g. Pepe Coin"
+              maxLength={32}
+            />
           </div>
           <div>
             <Label>Symbol *</Label>
-            <Input name="symbol" value={formData.symbol} onChange={handleInputChange} placeholder="PEPE" maxLength={10} />
+            <Input
+              name="symbol"
+              value={formData.symbol}
+              onChange={handleInputChange}
+              placeholder="PEPE"
+              maxLength={10}
+            />
           </div>
         </div>
 
         <div>
           <Label>Description</Label>
-          <Textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} />
+          <Textarea
+            name="description"
+            value={formData.description}
+            onChange={handleInputChange}
+            rows={4}
+          />
         </div>
 
-        {/* Supply */}
         <div className="grid grid-cols-2 gap-6">
           <div>
             <Label>Total Supply</Label>
-            <Input name="supply" type="number" value={formData.supply} onChange={handleInputChange} min="1" />
+            <Input
+              name="supply"
+              type="number"
+              value={formData.supply}
+              onChange={handleInputChange}
+              min="1"
+            />
           </div>
           <div>
             <Label>Decimals (0-9)</Label>
-            <Input name="decimals" type="number" value={formData.decimals} onChange={handleInputChange} min="0" max="9" />
+            <Input
+              name="decimals"
+              type="number"
+              value={formData.decimals}
+              onChange={handleInputChange}
+              min="0"
+              max="9"
+            />
           </div>
         </div>
 
-        {/* Socials */}
         <div className="space-y-4 pt-4 border-t border-zinc-800">
           <Label className="text-lg">Socials & Links (Recommended)</Label>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Website</Label>
-              <Input name="website" value={formData.website} onChange={handleInputChange} placeholder="https://yourtoken.com" />
+              <Input
+                name="website"
+                value={formData.website}
+                onChange={handleInputChange}
+                placeholder="https://yourtoken.com"
+              />
             </div>
             <div>
               <Label>X / Twitter</Label>
-              <Input name="twitter" value={formData.twitter} onChange={handleInputChange} placeholder="https://x.com/yourtoken" />
+              <Input
+                name="twitter"
+                value={formData.twitter}
+                onChange={handleInputChange}
+                placeholder="https://x.com/yourtoken"
+              />
             </div>
             <div>
               <Label>Telegram</Label>
-              <Input name="telegram" value={formData.telegram} onChange={handleInputChange} placeholder="https://t.me/yourtoken" />
+              <Input
+                name="telegram"
+                value={formData.telegram}
+                onChange={handleInputChange}
+                placeholder="https://t.me/yourtoken"
+              />
             </div>
             <div>
               <Label>Discord</Label>
-              <Input name="discord" value={formData.discord} onChange={handleInputChange} placeholder="https://discord.gg/..." />
+              <Input
+                name="discord"
+                value={formData.discord}
+                onChange={handleInputChange}
+                placeholder="https://discord.gg/..."
+              />
             </div>
           </div>
         </div>
 
-        {/* Image */}
         <div>
           <Label>Token Image *</Label>
-          <Input type="file" onChange={handleFileChange} accept="image/png,image/jpeg,image/gif,image/webp" />
-          {imagePreview && <img src={imagePreview} className="mt-4 max-h-48 rounded-xl border border-zinc-800" alt="Preview" />}
+          <Input
+            type="file"
+            onChange={handleFileChange}
+            accept="image/png,image/jpeg,image/gif,image/webp"
+          />
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              className="mt-4 max-h-48 rounded-xl border border-zinc-800"
+              alt="Preview"
+            />
+          )}
         </div>
 
-        {/* Security */}
         <div className="space-y-6 pt-6 border-t border-zinc-800">
           <Label className="text-lg">Security Settings</Label>
           <div className="flex justify-between items-center">
@@ -213,7 +283,6 @@ const CreateToken = () => {
           </div>
         </div>
 
-        {/* Fee */}
         <div className="bg-zinc-900 p-6 rounded-xl text-center border border-purple-500/20">
           <div className="text-3xl font-bold text-purple-400">0.5 SOL</div>
           <p className="text-sm text-zinc-400">Total fee • Network rent included</p>
@@ -227,12 +296,20 @@ const CreateToken = () => {
           className="w-full py-7 text-lg bg-purple-600 hover:bg-purple-700 disabled:opacity-50"
         >
           {uploading ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : null}
-          {uploading ? "Creating Token..." : "Create & Mint Token (0.5 SOL)"}
+          {uploading ? 'Creating Token...' : `Create & Mint Token (0.5 SOL)`}
         </Button>
       </div>
 
       {status && (
-        <div className={`p-6 pt-0 text-center text-sm ${status.startsWith("✅") ? "text-green-400" : status.startsWith("❌") ? "text-red-400" : "text-zinc-400"}`}>
+        <div
+          className={`p-6 pt-0 text-center text-sm ${
+            status.startsWith('✅')
+              ? 'text-green-400'
+              : status.startsWith('❌')
+              ? 'text-red-400'
+              : 'text-zinc-400'
+          }`}
+        >
           <p>{status}</p>
         </div>
       )}

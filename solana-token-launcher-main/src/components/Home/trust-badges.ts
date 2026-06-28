@@ -32,7 +32,7 @@ export default function TrustBadges() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {badges.map((badge, index) => {
-            const IconComponent = badge.icon;
+            const Icon = badge.icon;
             return (
               <motion.div
                 key={index}
@@ -43,7 +43,7 @@ export default function TrustBadges() {
                 className="flex items-center gap-4"
               >
                 <div className="w-12 h-12 rounded-lg bg-purple-900/20 flex items-center justify-center flex-shrink-0">
-                  <IconComponent className="h-6 w-6 text-purple-400" />
+                  <Icon className="h-6 w-6 text-purple-400" />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-white">{badge.title}</p>

@@ -1,11 +1,18 @@
+```markdown
 # 🪙 Solana Token Launcher
 
 A production-ready web application for creating and deploying custom tokens on the Solana blockchain with IPFS metadata storage.
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-Railway-0B0D0E?style=for-the-badge&logo=railway)](https://solanalaunchpad-production.up.railway.app)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Railway-0B0D0E?style=for-the-badge&logo=railway)](https://solanalaunchpad-production.up.railway.app/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![Solana](https://img.shields.io/badge/Solana-Web3.js-9945FF?style=for-the-badge&logo=solana)](https://solana.com/)
+
+---
+
+## 🌐 Live Demo
+
+**🚀 Try it now:** [https://solanalaunchpad-production.up.railway.app/](https://solanalaunchpad-production.up.railway.app/)
 
 ---
 
@@ -18,7 +25,7 @@ A production-ready web application for creating and deploying custom tokens on t
 - 📱 **Responsive** – Works on desktop, tablet, and mobile
 - ⚡ **Fast & Modern** – Built with Next.js 15 and TypeScript
 - 🎨 **Beautiful UI** – Tailwind CSS with animations
-- 🚀 **Live Demo** – Fully deployed and functional
+- 🚀 **Live & Functional** – Fully deployed and ready to use
 
 ---
 
@@ -227,6 +234,3 @@ Made with ❤️ by LeonidasSpart
 
 https://img.shields.io/badge/🚀_Try_It_Now-Click_Here-9945FF?style=for-the-badge
 
-```
-
----

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';  // ← ADD THIS IMPORT
 
 interface Token {
   id: string;
@@ -13,17 +13,12 @@ interface Token {
 }
 
 export default function TokenFeed() {
-  const [tokens, setTokens] = useState<Token[]>([
+  const [tokens] = useState<Token[]>([
     { id: '1', name: 'ZRPDEEPSEEK', symbol: 'ZDP', network: 'Devnet', timestamp: 'Just now' },
     { id: '2', name: 'SolToken', symbol: 'SOLT', network: 'Devnet', timestamp: '1 min ago' },
     { id: '3', name: 'Memecoin', symbol: 'MEME', network: 'Devnet', timestamp: '3 min ago' },
-    { id: '4', name: 'LaunchToken', symbol: 'LUN', network: 'Devnet', timestamp: '5 min ago' },
+    { id: '4', name: 'LaunchToken', symbol: 'LUN', network: 'Devnet', timestamp: '5 min ago' }
   ]);
-
-  useEffect(() => {
-    // In production, fetch from your API
-    // For now, use mock data
-  }, []);
 
   return (
     <section className="py-20 bg-black">

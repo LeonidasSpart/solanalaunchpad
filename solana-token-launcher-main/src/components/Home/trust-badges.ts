@@ -34,12 +34,8 @@ export default function TrustBadges() {
           {badges.map((badge, index) => {
             const Icon = badge.icon;
             return (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
                 className="flex items-center gap-4"
               >
                 <div className="w-12 h-12 rounded-lg bg-purple-900/20 flex items-center justify-center flex-shrink-0">
@@ -49,7 +45,7 @@ export default function TrustBadges() {
                   <p className="text-sm font-semibold text-white">{badge.title}</p>
                   <p className="text-xs text-zinc-500">{badge.description}</p>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </div>

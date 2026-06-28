@@ -5,105 +5,148 @@ import Image from 'next/image';
 
 const Footer = () => {
   return (
-    <footer className="bg-black border-t border-zinc-800 py-12">
+    <footer className="bg-black border-t border-zinc-800 py-16">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Top section: Logo + Tagline */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-zinc-800/50">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="ZRP Logo"
-              width={40}
-              height={40}
-              className="rounded-xl"
-              priority
-            />
-            <span className="text-2xl font-bold text-white">ZRP</span>
-          </div>
-          <p className="text-zinc-500 text-sm text-center md:text-right">
-            Premium AI experiences, built for the future.
-          </p>
-        </div>
-
-        {/* Middle section: Quick Links + Social */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8 py-8">
-          <div className="flex flex-wrap justify-center gap-8">
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-3">Quick Links</h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/airdrop" className="text-zinc-500 hover:text-purple-400 text-sm transition">
-                    Airdrop
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/create-mint" className="text-zinc-500 hover:text-purple-400 text-sm transition">
-                    Create Mint
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/tokens" className="text-zinc-500 hover:text-purple-400 text-sm transition">
-                    Tokens
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
+        {/* Top Section: Logo + Tagline */}
+        <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-12 border-b border-zinc-800/50">
           <div>
-            <h4 className="text-white font-semibold text-sm mb-3 text-center md:text-left">Connect With Us</h4>
-            <div className="flex justify-center gap-4">
-              {/* X (Twitter) */}
-              <a
-                href="https://x.com/zrp_ai"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-500 hover:text-white transition p-2 rounded-lg hover:bg-zinc-800/50"
-                aria-label="Follow us on X"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-              </a>
+            <div className="flex items-center gap-3 mb-3">
+              <Image
+                src="/logo.png"
+                alt="ZRP Logo"
+                width={48}
+                height={48}
+                className="rounded-xl"
+                priority
+              />
+              <span className="text-2xl font-bold text-white">ZRP</span>
+            </div>
+            <p className="text-zinc-400 text-sm max-w-md">
+              Zero-code Solana token creation. Fast, simple, and secure.
+            </p>
+            <p className="text-zinc-500 text-sm mt-2">
+              Starting from <span className="text-purple-400 font-semibold">0.15 SOL</span> · No hidden fees · Your keys, your tokens
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <Link
+              href="/create-mint"
+              className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition text-sm"
+            >
+              Create Token
+            </Link>
+            <Link
+              href="#"
+              className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition text-sm border border-zinc-700"
+            >
+              Watch Tutorial
+            </Link>
+          </div>
+        </div>
 
-              {/* Telegram */}
-              <a
-                href="https://t.me/AIZRP"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-500 hover:text-white transition p-2 rounded-lg hover:bg-zinc-800/50"
-                aria-label="Join us on Telegram"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 7.2l-1.42 6.7c-.12.53-.44.66-.9.41l-3.85-2.85-1.85 1.78c-.2.2-.37.37-.76.37l.26-3.72 3.35-3.2c.3-.26.15-.4-.15-.15L8.3 13.3l-3.2-1c-.53-.18-.54-.53.11-.7l12.5-4.82c.45-.17.85.1.7.7z"/>
-                </svg>
-              </a>
+        {/* Main Footer Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12">
+          {/* Product */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">Product</h4>
+            <ul className="space-y-2.5">
+              <li><Link href="/" className="text-zinc-400 hover:text-white text-sm transition">Home</Link></li>
+              <li><Link href="/create-mint" className="text-zinc-400 hover:text-white text-sm transition">Create Token</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Airdrop Tool</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Pricing</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Dashboard</Link></li>
+            </ul>
+          </div>
 
-              {/* Discord */}
-              <a
-                href="https://discord.com/invite/W4qS4xkbn"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-zinc-500 hover:text-white transition p-2 rounded-lg hover:bg-zinc-800/50"
-                aria-label="Join us on Discord"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20.317 4.492c-1.728-1.06-3.58-1.79-5.5-2.21-.15-.03-.3.06-.37.2-.5.85-1.05 1.55-1.6 2.3-.4.55-.85.95-1.4 1.2-.55.25-1.15.3-1.75.15-.6-.15-1.2-.55-1.65-1.15-.45-.6-.95-1.2-1.55-1.75-.1-.1-.25-.15-.4-.15-1.92.42-3.77 1.16-5.5 2.21-.12.07-.2.2-.2.35v1.5c0 .2.1.35.25.45.8.5 1.55 1.05 2.25 1.7.45.4.9.85 1.35 1.35.4.45.75.95 1.05 1.5.3.55.5 1.15.55 1.8.1 1.35-.2 2.7-.9 3.9-.4.7-.95 1.3-1.65 1.7-.25.15-.4.45-.35.75.1.3.35.5.65.5h2c.3 0 .55-.15.65-.45.25-.75.8-1.35 1.45-1.65.65-.3 1.35-.4 2.05-.3.7.1 1.35.45 1.85 1 .5.55.85 1.25.95 2 .1.35.35.6.7.6h2c.3 0 .55-.2.65-.5.1-.3-.05-.6-.3-.8z"/>
-                </svg>
-              </a>
+          {/* Guides */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">Guides</h4>
+            <ul className="space-y-2.5">
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">How to Create Token</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">Resources</h4>
+            <ul className="space-y-2.5">
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Blog</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">SPL Token Guide</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Creation Costs</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">FAQ</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">About Us</Link></li>
+              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Contact</Link></li>
+            </ul>
+          </div>
+
+          {/* Trust & Security */}
+          <div>
+            <h4 className="text-white font-semibold text-sm mb-4">Trust & Security</h4>
+            <ul className="space-y-2.5">
+              <li className="flex items-center gap-2 text-zinc-400 text-sm">
+                <span className="text-green-400">✓</span> Wallet-signed only
+              </li>
+              <li className="flex items-center gap-2 text-zinc-400 text-sm">
+                <span className="text-green-400">✓</span> No seed phrase access
+              </li>
+              <li className="flex items-center gap-2 text-zinc-400 text-sm">
+                <span className="text-green-400">✓</span> Decentralised storage
+              </li>
+              <li className="flex items-center gap-2 text-zinc-400 text-sm">
+                <span className="text-green-400">✓</span> You own your tokens
+              </li>
+              <li className="flex items-center gap-2 text-zinc-400 text-sm">
+                <span className="text-green-400">✓</span> Transparent pricing
+              </li>
+            </ul>
+
+            {/* Ecosystem */}
+            <h4 className="text-white font-semibold text-sm mt-6 mb-3">Ecosystem</h4>
+            <div className="flex flex-wrap gap-3">
+              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Phantom</span>
+              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Solflare</span>
+              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Raydium</span>
+              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Jupiter</span>
+              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Metaplex</span>
+              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Solscan</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom: Copyright */}
-        <div className="pt-8 border-t border-zinc-800/50 text-center">
-          <p className="text-zinc-600 text-sm">
-            &copy; {new Date().getFullYear()} ZRP. All rights reserved.
+        {/* Disclaimer */}
+        <div className="border-t border-zinc-800/50 pt-8">
+          <p className="text-zinc-500 text-xs leading-relaxed max-w-4xl">
+            <span className="text-zinc-400 font-semibold">Disclaimer &amp; Safety Notice:</span>{' '}
+            This platform provides tools for interacting with the Solana blockchain. We do not control, verify, or endorse tokens created by users. Nothing on this website constitutes financial, investment, or trading advice. Blockchain transactions are irreversible — always verify details before confirming in your wallet. We will never request your seed phrase or private keys. Users are solely responsible for tokens they create and must ensure compliance with applicable laws and regulations.
           </p>
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-800/50 mt-6">
+          <p className="text-zinc-600 text-sm">
+            © {new Date().getFullYear()} ZRP. All rights reserved.
+          </p>
+          <div className="flex flex-wrap items-center gap-6 text-sm">
+            <Link href="#" className="text-zinc-500 hover:text-zinc-300 transition">Not financial advice</Link>
+            <Link href="#" className="text-zinc-500 hover:text-zinc-300 transition">Privacy Policy</Link>
+            <Link href="#" className="text-zinc-500 hover:text-zinc-300 transition">Terms of Service</Link>
+            <span className="text-zinc-600">|</span>
+            <div className="flex gap-2">
+              <button className="text-zinc-500 hover:text-white text-sm transition">🇬🇧 EN</button>
+              <button className="text-zinc-600 hover:text-white text-sm transition">🇪🇸 ES</button>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
   );
 };
-
-export default Footer;

@@ -23,6 +23,8 @@ import {
   FEE_RECIPIENT,
   CREATION_FEE_SOL,
   TOKEN_PROGRAM_ID,
+  NETWORKS,
+  RPC_URLS,
 } from "./constants";
 
 interface CreateTokenParams {
@@ -37,6 +39,7 @@ interface CreateTokenParams {
   revokeFreeze: boolean;
   revokeUpdate: boolean;
   signTransaction: (transaction: Transaction) => Promise<Transaction>;
+  network?: string; // Add network parameter
 }
 
 export async function createToken({
@@ -51,8 +54,14 @@ export async function createToken({
   revokeFreeze,
   revokeUpdate,
   signTransaction,
+  network = 'devnet', // Default to devnet
 }: CreateTokenParams): Promise<string> {
-  const connection = getConnection();
+  // Use network-specific RPC
+  const rpcUrl = network === 'mainnet' 
+    ? RPC_URLS[NETWORKS.MAINNET] 
+    : RPC_URLS[NETWORKS.DEVNET];
+  
+  const connection = new Connection(rpcUrl, 'confirmed');
 
   // 1. Pre-flight checks
   const balance = await connection.getBalance(wallet);

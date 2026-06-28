@@ -1,4 +1,4 @@
-```markdown
+
 # 🪙 Solana Token Launcher
 
 A production-ready web application for creating and deploying custom tokens on the Solana blockchain with IPFS metadata storage.

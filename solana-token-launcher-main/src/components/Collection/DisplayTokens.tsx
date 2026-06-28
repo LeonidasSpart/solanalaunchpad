@@ -1,11 +1,9 @@
 'use client';
 import React, { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { db } from '@/config/firebase';
 import { TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { getTokenMetadata } from '@solana/spl-token';
 import { useRouter } from 'next/navigation';
@@ -20,6 +18,12 @@ interface TokenMetadata {
   description: string;
   mintAddress: string;
 }
+
+// Mock token data for testing
+const MOCK_TOKENS = [
+  'So11111111111111111111111111111111111111112',
+  'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+];
 
 const DisplayTokens = () => {
   const wallet = useWallet();
@@ -97,18 +101,12 @@ const DisplayTokens = () => {
       }
 
       try {
-        const userAddress = wallet.publicKey.toBase58();
-        const userDocRef = doc(db, 'tokens', userAddress);
-        const userDocSnap = await getDoc(userDocRef);
+        // Use mock tokens instead of Firebase
+        setTokens(MOCK_TOKENS);
 
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          setTokens(userData.tokens || []);
-
-          const metadataPromises = userData.tokens.map(fetchMetadata);
-          const metadata = await Promise.all(metadataPromises);
-          setTokenMetadata(metadata.filter(m => m != null));
-        }
+        const metadataPromises = MOCK_TOKENS.map(fetchMetadata);
+        const metadata = await Promise.all(metadataPromises);
+        setTokenMetadata(metadata.filter(m => m != null));
       } catch (error) {
         console.error('Error fetching tokens:', error);
         setError('Failed to fetch your tokens. Please try again later.');

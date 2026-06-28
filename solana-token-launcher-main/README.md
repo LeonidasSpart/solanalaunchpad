@@ -46,59 +46,6 @@ A modern, user-friendly web application for creating and launching custom tokens
 git clone https://github.com/LeonidasSpart/solana-token-launcher.git
 cd solana-token-launcher
 
-Here's a professional README for your Solana Token Launcher. Copy and paste this directly into your README.md file:
-
----
-
-```markdown
-# 🪙 Solana Token Launcher
-
-A modern, user-friendly web application for creating and launching custom tokens on the Solana blockchain. Built with Next.js and the Solana Web3.js library, this tool simplifies the process of token creation, metadata management, and deployment.
-
-## ✨ Features
-
-- **Create Custom Tokens**: Launch your own SPL tokens on Solana with a simple form interface
-- **IPFS Integration**: Upload token images and metadata to IPFS via NFT.Storage
-- **Wallet Support**: Connect with popular Solana wallets (Phantom, Solflare, etc.)
-- **Authority Management**: Option to revoke mint, freeze, and update authorities for enhanced security
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Token Management**: View and manage your created tokens in one place
-
-## 🚀 Live Demo
-
-[View the application](https://solana-token-launcher-production.up.railway.app)
-
-## 📸 Screenshots
-
-![Token Creation Form](/public/screenshot.png)
-
-## 🛠️ Tech Stack
-
-| Technology | Purpose |
-|------------|---------|
-| **Next.js 15** | React framework for server-side rendering and routing |
-| **TypeScript** | Type-safe JavaScript development |
-| **Solana Web3.js** | Interact with the Solana blockchain |
-| **SPL Token** | Create and manage Solana tokens |
-| **NFT.Storage** | Store token images and metadata on IPFS |
-| **Firebase** | Backend for storing user token data |
-| **Tailwind CSS** | Styling and responsive design |
-| **Wallet Adapter** | Connect with multiple Solana wallets |
-
-## 📋 Prerequisites
-
-- Node.js 18+ and npm
-- A Solana wallet (Phantom, Solflare, etc.)
-- NFT.Storage API key (for IPFS uploads)
-
-## 🔧 Installation
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/LeonidasSpart/solana-token-launcher.git
-cd solana-token-launcher
-```
 
 2. Install Dependencies
 

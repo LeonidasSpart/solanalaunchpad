@@ -150,3 +150,5 @@ const Footer = () => {
     </footer>
   );
 };
+
+export default Footer; // ← THIS MUST BE HERE

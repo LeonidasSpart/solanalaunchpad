@@ -146,11 +146,6 @@ const Footer = () => {
           <div className="flex flex-wrap items-center gap-6 text-sm">
             <Link href="/privacy" className="text-zinc-500 hover:text-zinc-300 transition">Privacy Policy</Link>
             <Link href="/terms" className="text-zinc-500 hover:text-zinc-300 transition">Terms of Service</Link>
-            <span className="text-zinc-600">|</span>
-            <div className="flex gap-2">
-              <button className="text-zinc-500 hover:text-white text-sm transition">🇬🇧 EN</button>
-              <button className="text-zinc-600 hover:text-white text-sm transition">🇪🇸 ES</button>
-            </div>
           </div>
         </div>
       </div>

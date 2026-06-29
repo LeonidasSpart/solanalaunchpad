@@ -6,18 +6,21 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { NetworkContext } from '@/providers/providers';
 import { motion } from 'framer-motion';
-import { Coins, Wallet, ArrowRight, Loader2, CheckCircle, AlertCircle, ExternalLink, Info } from 'lucide-react';
+import { Coins, Wallet, Loader2, CheckCircle, AlertCircle, Info, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
+import { getTokenDecimals, getTokenBalance } from '@/lib/raydium';
 
 export default function AddLiquidityPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signTransaction } = useWallet();
   const { network } = useContext(NetworkContext);
   const [tokenMint, setTokenMint] = useState('');
   const [solAmount, setSolAmount] = useState('');
   const [tokenAmount, setTokenAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [tokenDecimals, setTokenDecimals] = useState<number | null>(null);
-  const [tokenSymbol, setTokenSymbol] = useState<string | null>(null);
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null);
+  const [solBalance, setSolBalance] = useState<number | null>(null);
+  const [txId, setTxId] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null; message: string }>({
     type: null,
     message: '',
@@ -33,32 +36,44 @@ export default function AddLiquidityPage() {
     const fetchTokenInfo = async () => {
       if (!tokenMint || tokenMint.length < 32) {
         setTokenDecimals(null);
-        setTokenSymbol(null);
+        setTokenBalance(null);
         return;
       }
 
       try {
         const mintPubkey = new PublicKey(tokenMint);
-        // Try to get mint info
-        const mintInfo = await connection.getParsedAccountInfo(mintPubkey);
-        if (mintInfo.value && mintInfo.value.data) {
-          const data = mintInfo.value.data as any;
-          if (data.parsed) {
-            const parsed = data.parsed;
-            if (parsed.type === 'mint' && parsed.info) {
-              setTokenDecimals(parsed.info.decimals);
-            }
-          }
+        const decimals = await getTokenDecimals(connection, mintPubkey);
+        setTokenDecimals(decimals);
+        
+        if (publicKey) {
+          const balance = await getTokenBalance(connection, publicKey, mintPubkey);
+          setTokenBalance(balance);
         }
       } catch (error) {
-        // Silently fail - user might be typing
+        setTokenDecimals(null);
+        setTokenBalance(null);
       }
     };
     fetchTokenInfo();
-  }, [tokenMint, connection]);
+  }, [tokenMint, publicKey, connection]);
+
+  // Fetch SOL balance
+  useEffect(() => {
+    const fetchSolBalance = async () => {
+      if (publicKey) {
+        try {
+          const balance = await connection.getBalance(publicKey);
+          setSolBalance(balance / LAMPORTS_PER_SOL);
+        } catch (error) {
+          setSolBalance(null);
+        }
+      }
+    };
+    fetchSolBalance();
+  }, [publicKey, connection]);
 
   const handleAddLiquidity = async () => {
-    if (!connected || !publicKey) {
+    if (!connected || !publicKey || !signTransaction) {
       setStatus({ type: 'error', message: 'Please connect your wallet first' });
       return;
     }
@@ -80,31 +95,37 @@ export default function AddLiquidityPage() {
       return;
     }
 
+    // Check balances
+    if (solBalance !== null && solBalance < sol + 0.005) {
+      setStatus({ type: 'error', message: `Insufficient SOL balance. You have ${solBalance.toFixed(4)} SOL` });
+      return;
+    }
+
+    if (tokenBalance !== null && tokenBalance < tokens) {
+      setStatus({ type: 'error', message: `Insufficient token balance. You have ${tokenBalance} tokens` });
+      return;
+    }
+
     setLoading(true);
-    setStatus({ type: 'info', message: 'Preparing Raydium liquidity pool...' });
+    setTxId('');
+    setStatus({ type: 'info', message: 'Creating liquidity pool on Raydium...' });
 
     try {
-      // Check SOL balance
-      const solBalance = await connection.getBalance(publicKey);
-      const solLamports = sol * 1e9;
-
-      if (solBalance < solLamports + 3000000) {
-        throw new Error(`Insufficient SOL balance. Need ${sol + 0.003} SOL for liquidity + fees`);
-      }
-
-      // Open Raydium in new tab with pre-filled parameters
+      const mintPubkey = new PublicKey(tokenMint);
+      
+      // Open Raydium with pre-filled values
       const raydiumUrl = `https://raydium.io/liquidity/pool/create?mint=${tokenMint}`;
       window.open(raydiumUrl, '_blank');
 
       setStatus({
         type: 'success',
-        message: '✅ Raydium opened! Follow the steps above to create your liquidity pool.',
+        message: '✅ Raydium opened! Follow the steps to complete your pool creation.',
       });
 
     } catch (error: any) {
       setStatus({
         type: 'error',
-        message: error.message || 'Failed to prepare liquidity pool',
+        message: error.message || 'Failed to create liquidity pool',
       });
     } finally {
       setLoading(false);
@@ -125,7 +146,7 @@ export default function AddLiquidityPage() {
           <span className="text-purple-400">Your Solana Token</span>
         </h1>
         <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-          Create a SOL-pair liquidity pool in minutes. No coding — your token becomes tradeable instantly.
+          Create a SOL-pair liquidity pool in minutes. Your token becomes tradeable instantly.
         </p>
         <div className="flex flex-wrap justify-center gap-4 mt-6 text-sm">
           <div className="bg-zinc-800/50 rounded-xl px-4 py-2 border border-zinc-700">
@@ -154,6 +175,11 @@ export default function AddLiquidityPage() {
             <span className="text-white text-sm font-medium">
               {connected ? `Connected: ${publicKey?.toBase58().slice(0, 8)}...${publicKey?.toBase58().slice(-8)}` : 'Wallet not connected'}
             </span>
+            {solBalance !== null && (
+              <span className="text-zinc-400 text-xs ml-2">
+                ◎ {solBalance.toFixed(4)} SOL
+              </span>
+            )}
           </div>
           <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700 !rounded-xl !px-4 !py-2 !font-semibold !text-white !text-sm" />
         </div>
@@ -183,12 +209,19 @@ export default function AddLiquidityPage() {
                 placeholder="e.g. So11111111111111111111111111111111111111112"
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm font-mono"
               />
-              <p className="text-zinc-500 text-xs mt-1">
-                The on-chain address of your token — from the Create Token success screen or Solscan.
+              <div className="flex items-center gap-4 mt-1 text-xs">
+                <span className="text-zinc-500">
+                  The on-chain address of your token — from Solscan
+                </span>
                 {tokenDecimals !== null && (
-                  <span className="text-green-400 ml-2">✅ {tokenDecimals} decimals detected</span>
+                  <span className="text-green-400">✅ {tokenDecimals} decimals</span>
                 )}
-              </p>
+                {tokenBalance !== null && (
+                  <span className="text-zinc-400">
+                    Balance: {tokenBalance.toLocaleString()} tokens
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -240,6 +273,11 @@ export default function AddLiquidityPage() {
                 <p className="text-zinc-500 text-xs mt-1">
                   Token Price = SOL Amount ÷ Token Amount
                 </p>
+                {tokenDecimals !== null && (
+                  <p className="text-zinc-500 text-xs mt-1">
+                    Amount in base units: {(tokenNum * Math.pow(10, tokenDecimals)).toLocaleString()}
+                  </p>
+                )}
               </motion.div>
             )}
           </div>
@@ -295,6 +333,22 @@ export default function AddLiquidityPage() {
           </div>
         )}
 
+        {/* Result */}
+        {txId && (
+          <div className="bg-green-900/30 border border-green-500/30 rounded-xl p-4 text-center">
+            <CheckCircle className="h-8 w-8 text-green-400 mx-auto mb-2" />
+            <p className="text-green-400 font-semibold mb-2">Liquidity Pool Created!</p>
+            <a
+              href={`https://solscan.io/tx/${txId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-purple-400 hover:text-purple-300 inline-flex items-center gap-1"
+            >
+              View on Solscan <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+        )}
+
         {/* Button */}
         <button
           onClick={handleAddLiquidity}
@@ -304,17 +358,16 @@ export default function AddLiquidityPage() {
           {loading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Processing...
+              Creating Pool...
             </>
           ) : (
             <>
-              <Wallet className="h-5 w-5" />
-              Add Liquidity
+              <Coins className="h-5 w-5" />
+              Create Liquidity Pool
             </>
           )}
         </button>
 
-        {/* ✅ CORRECTED WARNING MESSAGE */}
         <p className="text-zinc-500 text-xs text-center">
           ⚠️ Liquidity transactions require SOL for network fees. Ensure your wallet has sufficient balance.
         </p>
@@ -333,19 +386,19 @@ export default function AddLiquidityPage() {
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <h3 className="text-white font-semibold">How much SOL should I add?</h3>
             <p className="text-zinc-400 text-sm mt-1">
-              Typical launches use 5–20 SOL. More liquidity means less price slippage for traders, which usually attracts more volume. A higher SOL amount also signals confidence to potential buyers.
+              Typical launches use 5–20 SOL. More liquidity means less price slippage for traders, which usually attracts more volume.
             </p>
           </div>
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <h3 className="text-white font-semibold">How is the starting price set?</h3>
             <p className="text-zinc-400 text-sm mt-1">
-              Your token's initial price is the ratio of SOL to tokens: Price ≈ SOL Amount ÷ Token Amount. Choose amounts that reflect your intended market cap.
+              Your token's initial price is the ratio of SOL to tokens: Price ≈ SOL Amount ÷ Token Amount.
             </p>
           </div>
           <div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
             <h3 className="text-white font-semibold">Can I remove liquidity later?</h3>
             <p className="text-zinc-400 text-sm mt-1">
-              Yes. You receive LP tokens when you create the pool. Redeem them on Raydium at any time to withdraw your proportional share of both assets.
+              Yes. You receive LP tokens when you create the pool. Redeem them on Raydium at any time to withdraw your proportional share.
             </p>
           </div>
         </div>

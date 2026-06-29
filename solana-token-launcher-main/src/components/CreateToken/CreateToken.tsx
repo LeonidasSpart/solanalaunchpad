@@ -52,6 +52,59 @@ const CreateToken = () => {
     }
   };
 
+  const getFee = () => {
+    if (network === 'devnet') {
+      return { 
+        amount: 'FREE', 
+        label: 'Free testing on Devnet • No SOL required', 
+        badge: '🧪 Free Devnet Testing',
+        details: '0 SOL'
+      };
+    }
+
+    // Check if all revokes are selected (Premium)
+    const allRevokes = revokeMint && revokeFreeze && revokeUpdate;
+    
+    if (allRevokes) {
+      return {
+        amount: '0.5 SOL',
+        label: 'Premium Package • All authorities revoked',
+        badge: '⭐ Premium',
+        details: 'Revoke Mint, Freeze & Update • Social Links included'
+      };
+    }
+
+    // Base fee for mainnet
+    let baseFee = 0.15;
+    let details = [];
+
+    if (revokeMint) {
+      baseFee += 0.15;
+      details.push('Revoke Mint: +0.15 SOL');
+    }
+    if (revokeFreeze) {
+      baseFee += 0.15;
+      details.push('Revoke Freeze: +0.15 SOL');
+    }
+    if (revokeUpdate) {
+      baseFee += 0.15;
+      details.push('Revoke Update: +0.15 SOL');
+    }
+
+    const totalFee = baseFee.toFixed(2);
+    const detailText = details.length > 0 ? details.join(' • ') : 'No authority revocations';
+
+    return {
+      amount: `${totalFee} SOL`,
+      label: `Launch on Mainnet • Network rent included`,
+      badge: `🔴 Live on Mainnet`,
+      details: detailText,
+      total: totalFee
+    };
+  };
+
+  const fee = getFee();
+
   const createToken = async () => {
     if (!publicKey || !signTransaction || !file || !formData.name || !formData.symbol) {
       setStatus('❌ Please connect wallet and fill all required fields');
@@ -124,15 +177,6 @@ const CreateToken = () => {
     }
   };
 
-  // Determine fee based on network
-  const getFee = () => {
-    if (network === 'devnet') return { amount: 'FREE', label: 'Free testing on Devnet • No SOL required', badge: '🧪 Free Devnet Testing' };
-    if (network === 'mainnet') return { amount: '0.15 SOL', label: 'Launch on Mainnet • Network rent included', badge: '🔴 Live on Mainnet' };
-    return { amount: '0.5 SOL', label: 'Total fee • Network rent included', badge: null };
-  };
-
-  const fee = getFee();
-
   return (
     <Card className="max-w-3xl mx-auto bg-zinc-900 border-zinc-800">
       <CardHeader>
@@ -152,7 +196,7 @@ const CreateToken = () => {
       </CardHeader>
 
       <CardContent className="space-y-8 p-8">
-        {/* Rest of your form fields... */}
+        {/* Basic Info */}
         <div className="grid grid-cols-2 gap-6">
           <div>
             <Label className="text-white">Token Name *</Label>
@@ -189,6 +233,7 @@ const CreateToken = () => {
           />
         </div>
 
+        {/* Supply */}
         <div className="grid grid-cols-2 gap-6">
           <div>
             <Label className="text-white">Total Supply</Label>
@@ -306,7 +351,7 @@ const CreateToken = () => {
           </div>
         </div>
 
-        {/* DYNAMIC FEE DISPLAY */}
+        {/* Dynamic Fee Display */}
         <div className="bg-zinc-900 p-6 rounded-xl text-center border border-purple-500/20">
           <div className="text-3xl font-bold text-purple-400">
             {fee.amount}
@@ -315,6 +360,11 @@ const CreateToken = () => {
           {fee.badge && (
             <div className="mt-2 inline-block bg-purple-900/30 text-purple-400 text-xs font-medium px-3 py-1 rounded-full border border-purple-500/30">
               {fee.badge}
+            </div>
+          )}
+          {network === 'mainnet' && fee.details && (
+            <div className="mt-3 text-xs text-zinc-500 border-t border-zinc-800 pt-3">
+              <p>Fee breakdown: {fee.details}</p>
             </div>
           )}
         </div>

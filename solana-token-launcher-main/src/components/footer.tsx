@@ -134,7 +134,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* 🔴 Disclaimer & Safety Notice - Red Background */}
+        {/* 🔴 Disclaimer & Safety Notice */}
         <div className="bg-red-950/50 border border-red-500/30 rounded-xl p-6 mt-8">
           <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Disclaimer &amp; Safety Notice</h4>
           <p className="text-zinc-300 text-xs leading-relaxed">
@@ -142,7 +142,7 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Bottom Bar with Admin Link */}
+        {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-800/50 mt-6">
           <p className="text-zinc-600 text-sm">
             © {new Date().getFullYear()} ZRP. All rights reserved.

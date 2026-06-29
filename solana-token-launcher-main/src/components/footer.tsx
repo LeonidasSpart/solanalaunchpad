@@ -68,10 +68,17 @@ const Footer = () => {
               <li><Link href="/checklist" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
               <li><Link href="/launch" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
               <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
-              <li><Link href="/distribution" className="text-zinc-400 hover:text-white text-sm transition">Distribution Guide</Link></li>
-              <li><Link href="/marketing" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
-              <li><Link href="/security" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
+              <li><Link href="/list-token-dex" className="text-zinc-400 hover:text-white text-sm transition">DEX Listing</Link></li>
+              <li><Link href="/distribution" className="text-zinc-400 hover:text-white text-sm transition">Distribution</Link></li>
+              <li><Link href="/airdrop-guide" className="text-zinc-400 hover:text-white text-sm transition">Airdrop Guide</Link></li>
+              <li><Link href="/burn" className="text-zinc-400 hover:text-white text-sm transition">Token Burning</Link></li>
+              <li><Link href="/staking" className="text-zinc-400 hover:text-white text-sm transition">Staking</Link></li>
+              <li><Link href="/meme-vs-utility" className="text-zinc-400 hover:text-white text-sm transition">Meme vs Utility</Link></li>
+              <li><Link href="/community" className="text-zinc-400 hover:text-white text-sm transition">Community Building</Link></li>
+              <li><Link href="/marketing" className="text-zinc-400 hover:text-white text-sm transition">Marketing</Link></li>
+              <li><Link href="/security" className="text-zinc-400 hover:text-white text-sm transition">Security</Link></li>
               <li><Link href="/tokenomics" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
+              <li><Link href="/tokenomics-calculator" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
             </ul>
           </div>
 

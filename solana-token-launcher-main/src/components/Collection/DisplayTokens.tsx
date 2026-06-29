@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -119,10 +120,21 @@ const DisplayTokens = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet.publicKey]);
 
+  // Show connect wallet message when not connected
   if (!wallet.publicKey) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <p className="text-muted-foreground">Connect your wallet to view your tokens.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+        <Card className="max-w-md w-full bg-zinc-900 border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center text-white">Connect Your Wallet</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-zinc-400 mb-6">
+              Connect your wallet to view your token collection.
+            </p>
+            <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700 !rounded-xl !px-6 !py-3 !font-semibold !text-white" />
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -135,12 +147,12 @@ const DisplayTokens = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="mb-8">
+          <Card className="mb-8 bg-zinc-900 border-zinc-800">
             <CardHeader>
-              <CardTitle className="text-3xl font-bold">Your Token Collection</CardTitle>
+              <CardTitle className="text-3xl font-bold text-white">Your Token Collection</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-zinc-400">
                 Connected Wallet: {wallet.publicKey.toBase58().slice(0, 8)}...{wallet.publicKey.toBase58().slice(-8)}
               </p>
             </CardContent>
@@ -148,11 +160,11 @@ const DisplayTokens = () => {
 
           {loading ? (
             <div className="flex justify-center items-center h-64">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="ml-2">Loading your tokens...</span>
+              <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+              <span className="ml-2 text-zinc-400">Loading your tokens...</span>
             </div>
           ) : error ? (
-            <Card>
+            <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
                 <CardTitle className="text-red-500">Error</CardTitle>
               </CardHeader>
@@ -181,9 +193,9 @@ const DisplayTokens = () => {
                       visible: { opacity: 1, y: 0 }
                     }}
                   >
-                    <Card className="overflow-hidden h-full flex flex-col">
+                    <Card className="overflow-hidden h-full flex flex-col bg-zinc-900 border-zinc-800">
                       <CardHeader>
-                        <CardTitle className="text-xl">{token.name}</CardTitle>
+                        <CardTitle className="text-xl text-white">{token.name}</CardTitle>
                       </CardHeader>
                       <CardContent className="flex-grow">
                         <img
@@ -192,11 +204,11 @@ const DisplayTokens = () => {
                           className="w-full h-48 object-cover rounded-md mb-4"
                         />
                         <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Symbol: {token.symbol}</p>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
+                          <p className="text-sm text-zinc-400">Symbol: {token.symbol}</p>
+                          <p className="text-sm text-zinc-400 line-clamp-2">
                             Description: {token.description || 'No description available'}
                           </p>
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-sm text-zinc-400 truncate">
                             Mint Address: {token.mintAddress}
                           </p>
                         </div>
@@ -204,7 +216,7 @@ const DisplayTokens = () => {
                       <CardFooter>
                         <Button 
                           onClick={() => handleMint(token.mintAddress)}
-                          className="w-full"
+                          className="w-full bg-purple-600 hover:bg-purple-700"
                         >
                           <Coins className="mr-2 h-4 w-4" />
                           Mint Tokens

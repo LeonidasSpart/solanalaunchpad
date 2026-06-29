@@ -2,10 +2,26 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { ArrowUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 const Footer = () => {
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <footer className="bg-black border-t border-zinc-800 py-16">
+    <footer className="bg-black border-t border-zinc-800 py-16 relative">
       <div className="max-w-6xl mx-auto px-4">
         {/* Top Section: Logo + Tagline */}
         <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-12 border-b border-zinc-800/50">
@@ -68,6 +84,7 @@ const Footer = () => {
               <li><Link href="/checklist" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
               <li><Link href="/launch" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
               <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
+              <li><Link href="/liquidity-guide" className="text-zinc-400 hover:text-white text-sm transition">Liquidity Guide</Link></li>
               <li><Link href="/list-token-dex" className="text-zinc-400 hover:text-white text-sm transition">DEX Listing</Link></li>
               <li><Link href="/dex-comparison" className="text-zinc-400 hover:text-white text-sm transition">DEX Comparison</Link></li>
               <li><Link href="/distribution" className="text-zinc-400 hover:text-white text-sm transition">Distribution</Link></li>
@@ -142,7 +159,7 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar with Admin Link */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-800/50 mt-6">
           <p className="text-zinc-600 text-sm">
             © {new Date().getFullYear()} ZRP. All rights reserved.
@@ -156,6 +173,17 @@ const Footer = () => {
           </div>
         </div>
       </div>
+
+      {/* 🔝 Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 z-50 p-3 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg shadow-purple-500/30 transition-all hover:scale-110 duration-300"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+      )}
     </footer>
   );
 };

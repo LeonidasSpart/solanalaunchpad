@@ -1,34 +1,57 @@
 // src/app/airdrop/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { motion } from 'framer-motion';
-import { Upload, Send, Users, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Upload, Send, Users, CheckCircle, AlertCircle, Loader2, FileUp } from 'lucide-react';
 
 export default function AirdropPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signTransaction } = useWallet();
   const [walletList, setWalletList] = useState('');
   const [amount, setAmount] = useState('');
   const [tokenMint, setTokenMint] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null; message: string }>({
     type: null,
     message: '',
   });
-  const [previewWallets, setPreviewWallets] = useState<string[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
+  const [txResults, setTxResults] = useState<{ address: string; status: 'success' | 'failed'; signature?: string }[]>([]);
+
+  const connection = new Connection(
+    process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com',
+    'confirmed'
+  );
 
   const handleWalletsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setWalletList(value);
-    const wallets = value.split('\n').filter(line => line.trim() !== '');
-    setPreviewWallets(wallets);
+    setWalletList(e.target.value);
+  };
+
+  const parseWallets = useCallback(() => {
+    return walletList
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && line.startsWith('0x') || line.length === 44);
+  }, [walletList]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setWalletList(content);
+    };
+    reader.readAsText(file);
   };
 
   const handleAirdrop = async () => {
-    if (!connected || !publicKey) {
+    if (!connected || !publicKey || !signTransaction) {
       setStatus({ type: 'error', message: 'Please connect your wallet first' });
       return;
     }
@@ -38,29 +61,138 @@ export default function AirdropPage() {
       return;
     }
 
-    if (!amount || parseFloat(amount) <= 0) {
+    const amountNum = parseFloat(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
       setStatus({ type: 'error', message: 'Please enter a valid amount' });
       return;
     }
 
-    if (previewWallets.length === 0) {
+    const wallets = parseWallets();
+    if (wallets.length === 0) {
       setStatus({ type: 'error', message: 'Please add at least one wallet address' });
       return;
     }
 
     setIsProcessing(true);
-    setStatus({ type: 'info', message: 'Processing airdrop...' });
+    setProgress({ current: 0, total: wallets.length });
+    setTxResults([]);
+    setStatus({ type: 'info', message: `Processing airdrop to ${wallets.length} wallets...` });
 
     try {
-      // This will be connected to the actual Solana logic
-      // For now, we simulate the process
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const mintPubkey = new PublicKey(tokenMint);
+      const senderAta = await getAssociatedTokenAddress(mintPubkey, publicKey);
 
-      // Simulate success
-      setStatus({
-        type: 'success',
-        message: `✅ Successfully airdropped ${amount} tokens to ${previewWallets.length} wallets!`,
-      });
+      // Check sender's token balance
+      const senderBalance = await connection.getTokenAccountBalance(senderAta);
+      const requiredTotal = amountNum * wallets.length;
+      const decimals = senderBalance.value.decimals;
+      const amountInBaseUnits = amountNum * Math.pow(10, decimals);
+
+      if (senderBalance.value.uiAmount === null || senderBalance.value.uiAmount < requiredTotal) {
+        setStatus({
+          type: 'error',
+          message: `Insufficient balance. You have ${senderBalance.value.uiAmount || 0} tokens, need ${requiredTotal}`,
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // Process each wallet
+      const results = [];
+      const batchSize = 10;
+      const batches = [];
+
+      for (let i = 0; i < wallets.length; i += batchSize) {
+        batches.push(wallets.slice(i, i + batchSize));
+      }
+
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        const transaction = new Transaction();
+
+        for (const walletAddress of batch) {
+          try {
+            const recipientPubkey = new PublicKey(walletAddress);
+            const recipientAta = await getAssociatedTokenAddress(mintPubkey, recipientPubkey);
+
+            // Create transfer instruction
+            const transferIx = createTransferInstruction(
+              senderAta,
+              recipientAta,
+              publicKey,
+              amountInBaseUnits,
+              [],
+              TOKEN_PROGRAM_ID
+            );
+
+            transaction.add(transferIx);
+          } catch (error) {
+            results.push({
+              address: walletAddress,
+              status: 'failed' as const,
+            });
+          }
+        }
+
+        if (transaction.instructions.length > 0) {
+          try {
+            const { blockhash } = await connection.getLatestBlockhash();
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = publicKey;
+
+            const signedTx = await signTransaction(transaction);
+            const signature = await connection.sendRawTransaction(signedTx.serialize());
+            await connection.confirmTransaction(signature);
+
+            // Update results for successful transactions
+            for (const walletAddress of batch) {
+              if (!results.some(r => r.address === walletAddress && r.status === 'failed')) {
+                results.push({
+                  address: walletAddress,
+                  status: 'success' as const,
+                  signature,
+                });
+              }
+            }
+
+            setProgress({ current: Math.min(batchIndex * batchSize + batch.length, wallets.length), total: wallets.length });
+          } catch (error: any) {
+            for (const walletAddress of batch) {
+              if (!results.some(r => r.address === walletAddress)) {
+                results.push({
+                  address: walletAddress,
+                  status: 'failed' as const,
+                });
+              }
+            }
+            setStatus({
+              type: 'error',
+              message: `Batch ${batchIndex + 1} failed: ${error.message?.slice(0, 100) || 'Unknown error'}`,
+            });
+          }
+        }
+      }
+
+      setTxResults(results);
+      const successCount = results.filter(r => r.status === 'success').length;
+      const failCount = results.filter(r => r.status === 'failed').length;
+
+      if (successCount === wallets.length) {
+        setStatus({
+          type: 'success',
+          message: `✅ Successfully airdropped ${amount} tokens to all ${wallets.length} wallets!`,
+        });
+      } else if (successCount > 0) {
+        setStatus({
+          type: 'info',
+          message: `✅ ${successCount} successful, ${failCount} failed. Check results below.`,
+        });
+      } else {
+        setStatus({
+          type: 'error',
+          message: `❌ All transactions failed. Please check your balance and wallet addresses.`,
+        });
+      }
     } catch (error: any) {
       setStatus({
         type: 'error',
@@ -68,8 +200,11 @@ export default function AirdropPage() {
       });
     } finally {
       setIsProcessing(false);
+      setProgress({ current: 0, total: 0 });
     }
   };
+
+  const wallets = parseWallets();
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
@@ -128,9 +263,23 @@ export default function AirdropPage() {
 
         {/* Step 3: Wallet List */}
         <div>
-          <label className="text-white font-semibold text-sm block mb-2">
-            Step 3: Wallet Addresses
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-white font-semibold text-sm">
+              Step 3: Wallet Addresses
+            </label>
+            <div className="flex items-center gap-2">
+              <label className="cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium px-3 py-1.5 rounded-lg transition flex items-center gap-1">
+                <FileUp className="h-3.5 w-3.5" />
+                Upload CSV
+                <input
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
           <textarea
             value={walletList}
             onChange={handleWalletsChange}
@@ -138,62 +287,25 @@ export default function AirdropPage() {
             placeholder="Paste wallet addresses here, one per line&#10;e.g.&#10;BEK84UNPpH9jAqHR21hWmrEgKgrnGjA7yc5cocd1v&#10;EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
             className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm font-mono"
           />
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-zinc-500 text-xs">
-              {previewWallets.length > 0 ? `${previewWallets.length} wallets detected` : 'Paste wallet addresses, one per line'}
-            </p>
-            <button
-              onClick={() => setShowPreview(!showPreview)}
-              className="text-purple-400 hover:text-purple-300 text-xs font-medium transition"
-            >
-              {showPreview ? 'Hide Preview' : 'Show Preview'}
-            </button>
-          </div>
+          <p className="text-zinc-500 text-xs mt-1">
+            {wallets.length > 0 ? `${wallets.length} wallets detected` : 'Paste wallet addresses, one per line'}
+          </p>
         </div>
 
-        {/* Preview */}
-        {showPreview && previewWallets.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700 max-h-48 overflow-y-auto"
-          >
-            <p className="text-zinc-400 text-xs font-mono">
-              {previewWallets.map((wallet, index) => (
-                <span key={index} className="block py-0.5">
-                  {index + 1}. {wallet}
-                </span>
-              ))}
-            </p>
-          </motion.div>
-        )}
-
-        {/* Summary */}
-        {previewWallets.length > 0 && amount && tokenMint && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4"
-          >
-            <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm mb-2">
-              <Users className="h-4 w-4" />
-              <span>Airdrop Summary</span>
+        {/* Progress Bar */}
+        {isProcessing && progress.total > 0 && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-zinc-400">Progress</span>
+              <span className="text-zinc-400">{progress.current} / {progress.total}</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
-              <div>
-                <p className="text-zinc-500 text-xs">Recipients</p>
-                <p className="text-white font-medium">{previewWallets.length}</p>
-              </div>
-              <div>
-                <p className="text-zinc-500 text-xs">Per Wallet</p>
-                <p className="text-white font-medium">{amount} tokens</p>
-              </div>
-              <div>
-                <p className="text-zinc-500 text-xs">Total</p>
-                <p className="text-white font-medium">{parseFloat(amount) * previewWallets.length} tokens</p>
-              </div>
+            <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-purple-600 h-2 transition-all duration-500 rounded-full"
+                style={{ width: `${(progress.current / progress.total) * 100}%` }}
+              />
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* Status Message */}
@@ -220,10 +332,50 @@ export default function AirdropPage() {
           </div>
         )}
 
+        {/* Results Table */}
+        {txResults.length > 0 && (
+          <div className="border border-zinc-800 rounded-xl overflow-hidden">
+            <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-800">
+              <p className="text-white font-semibold text-sm">Results</p>
+            </div>
+            <div className="max-h-48 overflow-y-auto">
+              {txResults.map((result, index) => (
+                <div
+                  key={index}
+                  className={`flex items-center justify-between px-4 py-2 border-b border-zinc-800/50 text-sm ${
+                    result.status === 'success' ? 'bg-green-900/10' : 'bg-red-900/10'
+                  }`}
+                >
+                  <span className="text-zinc-300 font-mono text-xs truncate max-w-xs">
+                    {result.address}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-xs font-medium ${
+                      result.status === 'success' ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {result.status === 'success' ? '✅ Success' : '❌ Failed'}
+                    </span>
+                    {result.signature && (
+                      <a
+                        href={`https://solscan.io/tx/${result.signature}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-400 hover:text-purple-300 text-xs transition"
+                      >
+                        View
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Airdrop Button */}
         <button
           onClick={handleAirdrop}
-          disabled={isProcessing || !connected || !tokenMint || !amount || previewWallets.length === 0}
+          disabled={isProcessing || !connected || !tokenMint || !amount || wallets.length === 0}
           className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2"
         >
           {isProcessing ? (

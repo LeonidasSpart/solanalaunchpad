@@ -52,11 +52,11 @@ const Footer = () => {
             <ul className="space-y-2.5">
               <li><Link href="/" className="text-zinc-400 hover:text-white text-sm transition">Home</Link></li>
               <li><Link href="/create-mint" className="text-zinc-400 hover:text-white text-sm transition">Create Token</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Airdrop Tool</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Pricing</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Dashboard</Link></li>
+              <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
+              <li><Link href="/airdrop" className="text-zinc-400 hover:text-white text-sm transition">Airdrop Tool</Link></li>
+              <li><Link href="/revoke" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
+              <li><Link href="/pricing" className="text-zinc-400 hover:text-white text-sm transition">Pricing</Link></li>
+              <li><Link href="/dashboard" className="text-zinc-400 hover:text-white text-sm transition">Dashboard</Link></li>
             </ul>
           </div>
 
@@ -64,13 +64,13 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Guides</h4>
             <ul className="space-y-2.5">
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">How to Create Token</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
+              <li><Link href="/guide" className="text-zinc-400 hover:text-white text-sm transition">How to Create Token</Link></li>
+              <li><Link href="/guide#checklist" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
+              <li><Link href="/guide#strategy" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
+              <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
+              <li><Link href="/guide#marketing" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
+              <li><Link href="/guide#security" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
+              <li><Link href="/guide#tokenomics" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
             </ul>
           </div>
 
@@ -78,13 +78,13 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Resources</h4>
             <ul className="space-y-2.5">
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Blog</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">SPL Token Guide</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Creation Costs</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">FAQ</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">About Us</Link></li>
-              <li><Link href="#" className="text-zinc-400 hover:text-white text-sm transition">Contact</Link></li>
+              <li><Link href="/blog" className="text-zinc-400 hover:text-white text-sm transition">Blog</Link></li>
+              <li><Link href="/guide" className="text-zinc-400 hover:text-white text-sm transition">SPL Token Guide</Link></li>
+              <li><Link href="/revoke" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
+              <li><Link href="/pricing" className="text-zinc-400 hover:text-white text-sm transition">Creation Costs</Link></li>
+              <li><Link href="/faq" className="text-zinc-400 hover:text-white text-sm transition">FAQ</Link></li>
+              <li><Link href="/about" className="text-zinc-400 hover:text-white text-sm transition">About Us</Link></li>
+              <li><Link href="/contact" className="text-zinc-400 hover:text-white text-sm transition">Contact</Link></li>
             </ul>
           </div>
 
@@ -112,12 +112,12 @@ const Footer = () => {
             {/* Ecosystem */}
             <h4 className="text-white font-semibold text-sm mt-6 mb-3">Ecosystem</h4>
             <div className="flex flex-wrap gap-3">
-              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Phantom</span>
-              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Solflare</span>
-              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Raydium</span>
-              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Jupiter</span>
-              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Metaplex</span>
-              <span className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full">Solscan</span>
+              <a href="https://phantom.app/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full hover:text-white hover:bg-zinc-800 transition">Phantom</a>
+              <a href="https://solflare.com/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full hover:text-white hover:bg-zinc-800 transition">Solflare</a>
+              <a href="https://raydium.io/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full hover:text-white hover:bg-zinc-800 transition">Raydium</a>
+              <a href="https://jup.ag/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full hover:text-white hover:bg-zinc-800 transition">Jupiter</a>
+              <a href="https://metaplex.com/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full hover:text-white hover:bg-zinc-800 transition">Metaplex</a>
+              <a href="https://solscan.io/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 text-xs bg-zinc-900 px-3 py-1 rounded-full hover:text-white hover:bg-zinc-800 transition">Solscan</a>
             </div>
           </div>
         </div>
@@ -136,9 +136,8 @@ const Footer = () => {
             © {new Date().getFullYear()} ZRP. All rights reserved.
           </p>
           <div className="flex flex-wrap items-center gap-6 text-sm">
-            <Link href="#" className="text-zinc-500 hover:text-zinc-300 transition">Not financial advice</Link>
-            <Link href="#" className="text-zinc-500 hover:text-zinc-300 transition">Privacy Policy</Link>
-            <Link href="#" className="text-zinc-500 hover:text-zinc-300 transition">Terms of Service</Link>
+            <Link href="/privacy" className="text-zinc-500 hover:text-zinc-300 transition">Privacy Policy</Link>
+            <Link href="/terms" className="text-zinc-500 hover:text-zinc-300 transition">Terms of Service</Link>
             <span className="text-zinc-600">|</span>
             <div className="flex gap-2">
               <button className="text-zinc-500 hover:text-white text-sm transition">🇬🇧 EN</button>
@@ -151,4 +150,4 @@ const Footer = () => {
   );
 };
 
-export default Footer; // ← THIS MUST BE HERE
+export default Footer;

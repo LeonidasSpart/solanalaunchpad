@@ -36,10 +36,10 @@ const Footer = () => {
               Create Token
             </Link>
             <Link
-              href="/guide"
+              href="/checklist"
               className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition text-sm border border-zinc-700"
             >
-              Watch Tutorial
+              Launch Checklist
             </Link>
           </div>
         </div>
@@ -65,11 +65,11 @@ const Footer = () => {
             <h4 className="text-white font-semibold text-sm mb-4">Guides</h4>
             <ul className="space-y-2.5">
               <li><Link href="/guide" className="text-zinc-400 hover:text-white text-sm transition">How to Create Token</Link></li>
-              <li><Link href="/guide#checklist" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
-              <li><Link href="/guide#strategy" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
+              <li><Link href="/checklist" className="text-zinc-400 hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
+              <li><Link href="/launch" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
               <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
-              <li><Link href="/guide#marketing" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
-              <li><Link href="/guide#security" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
+              <li><Link href="/marketing" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
+              <li><Link href="/security" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
               <li><Link href="/tokenomics" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
             </ul>
           </div>

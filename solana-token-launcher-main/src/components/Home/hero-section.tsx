@@ -56,12 +56,12 @@ export default function HeroSection() {
             >
               Create Your Token
             </Link>
-            <Link
+            <a
               href="#how-it-works"
               className="px-8 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-2xl transition-all border border-zinc-700"
             >
               How It Works →
-            </Link>
+            </a>
           </div>
 
           {/* Share Buttons */}

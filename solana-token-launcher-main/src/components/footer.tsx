@@ -134,15 +134,15 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Disclaimer */}
-        <div className="border-t border-zinc-800/50 pt-8">
-          <p className="text-zinc-500 text-xs leading-relaxed max-w-4xl">
-            <span className="text-zinc-400 font-semibold">Disclaimer &amp; Safety Notice:</span>{' '}
+        {/* 🔴 Disclaimer & Safety Notice - Red Background */}
+        <div className="bg-red-950/50 border border-red-500/30 rounded-xl p-6 mt-8">
+          <h4 className="text-red-400 font-semibold text-sm mb-2">⚠️ Disclaimer &amp; Safety Notice</h4>
+          <p className="text-zinc-300 text-xs leading-relaxed">
             This platform provides tools for interacting with the Solana blockchain. We do not control, verify, or endorse tokens created by users. Nothing on this website constitutes financial, investment, or trading advice. Blockchain transactions are irreversible — always verify details before confirming in your wallet. We will never request your seed phrase or private keys. Users are solely responsible for tokens they create and must ensure compliance with applicable laws and regulations.
           </p>
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar with Admin Link */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-zinc-800/50 mt-6">
           <p className="text-zinc-600 text-sm">
             © {new Date().getFullYear()} ZRP. All rights reserved.
@@ -150,6 +150,9 @@ const Footer = () => {
           <div className="flex flex-wrap items-center gap-6 text-sm">
             <Link href="/privacy" className="text-zinc-500 hover:text-zinc-300 transition">Privacy Policy</Link>
             <Link href="/terms" className="text-zinc-500 hover:text-zinc-300 transition">Terms of Service</Link>
+            <Link href="/admin/login" className="text-zinc-600 hover:text-purple-400 transition text-xs border border-zinc-700 px-3 py-1 rounded-full hover:border-purple-500/50">
+              Admin
+            </Link>
           </div>
         </div>
       </div>

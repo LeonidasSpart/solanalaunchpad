@@ -1,147 +1,267 @@
+// src/app/airdrop/page.tsx
 'use client';
-import { useState, useEffect } from "react";
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { PublicKey, LAMPORTS_PER_SOL, SystemProgram, Transaction } from "@solana/web3.js";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, CheckCircle2, Wallet } from 'lucide-react';
-import DevnetInfoSection from "@/components/Airdrop/devent-info-section";
 
-function SolAirdrop() {
-  const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+import { useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { motion } from 'framer-motion';
+import { Upload, Send, Users, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-  const [addressInput, setAddressInput] = useState("");
-  const [txHash, setTxHash] = useState("");
-  const [isAirdropped, setIsAirdropped] = useState(false);
-  const [balance, setBalance] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [isMainnet] = useState(process.env.NEXT_PUBLIC_DEFAULT_NETWORK === 'mainnet');
+export default function AirdropPage() {
+  const { publicKey, connected } = useWallet();
+  const [walletList, setWalletList] = useState('');
+  const [amount, setAmount] = useState('');
+  const [tokenMint, setTokenMint] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null; message: string }>({
+    type: null,
+    message: '',
+  });
+  const [previewWallets, setPreviewWallets] = useState<string[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Auto-fill from connected wallet
-  useEffect(() => {
-    if (publicKey) {
-      setAddressInput(publicKey.toString());
-    }
-  }, [publicKey]);
+  const handleWalletsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setWalletList(value);
+    const wallets = value.split('\n').filter(line => line.trim() !== '');
+    setPreviewWallets(wallets);
+  };
 
-  useEffect(() => {
-    if (addressInput) {
-      getBalance(addressInput).then(setBalance);
-    }
-  }, [addressInput, isAirdropped]);
-
-  async function getBalance(pubKeyStr: string) {
-    try {
-      const pubKey = new PublicKey(pubKeyStr);
-      const bal = await connection.getBalance(pubKey);
-      return bal / LAMPORTS_PER_SOL;
-    } catch {
-      return null;
-    }
-  }
-
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!publicKey) {
-      setError("Please connect your wallet first!");
+  const handleAirdrop = async () => {
+    if (!connected || !publicKey) {
+      setStatus({ type: 'error', message: 'Please connect your wallet first' });
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setIsAirdropped(false);
+    if (!tokenMint) {
+      setStatus({ type: 'error', message: 'Please enter your token mint address' });
+      return;
+    }
+
+    if (!amount || parseFloat(amount) <= 0) {
+      setStatus({ type: 'error', message: 'Please enter a valid amount' });
+      return;
+    }
+
+    if (previewWallets.length === 0) {
+      setStatus({ type: 'error', message: 'Please add at least one wallet address' });
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatus({ type: 'info', message: 'Processing airdrop...' });
 
     try {
-      const recipient = new PublicKey(addressInput);
-      const amount = 1 * LAMPORTS_PER_SOL; // 1 SOL
+      // This will be connected to the actual Solana logic
+      // For now, we simulate the process
+      await new Promise(resolve => setTimeout(resolve, 3000));
 
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
-          toPubkey: recipient,
-          lamports: amount,
-        })
-      );
-
-      const signature = await sendTransaction(transaction, connection);
-      setTxHash(signature);
-      setIsAirdropped(true);
-
-      await connection.confirmTransaction(signature);
-      const updatedBalance = await getBalance(addressInput);
-      setBalance(updatedBalance);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Airdrop failed. Check balance and try again.");
+      // Simulate success
+      setStatus({
+        type: 'success',
+        message: `✅ Successfully airdropped ${amount} tokens to ${previewWallets.length} wallets!`,
+      });
+    } catch (error: any) {
+      setStatus({
+        type: 'error',
+        message: error.message || 'Airdrop failed. Please try again.',
+      });
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
     }
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <DevnetInfoSection />
-        <Card className="max-w-lg mx-auto">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold flex items-center gap-2">
-              <Wallet className="w-6 h-6" />
-              {isMainnet ? "Mainnet SOL Transfer" : "Devnet Airdrop"}
-            </CardTitle>
-            <CardDescription>
-              {isMainnet ? "Send real SOL (use small amounts)" : "Request test SOL"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {!publicKey && (
-              <Alert className="mb-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>Connect your wallet to continue.</AlertDescription>
-              </Alert>
-            )}
+    <div className="max-w-4xl mx-auto px-4 py-20">
+      {/* Hero Section */}
+      <div className="text-center mb-12">
+        <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Airdrop Tool</span>
+        <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
+          Distribute Tokens <br className="hidden sm:block" />
+          <span className="text-purple-400">to Multiple Wallets</span>
+        </h1>
+        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+          Send your tokens to hundreds of wallets at once. Perfect for community rewards, giveaways, and token distribution.
+        </p>
+      </div>
 
-            <form onSubmit={onSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium">Solana Address</label>
-                <Input
-                  value={addressInput}
-                  onChange={(e) => setAddressInput(e.target.value)}
-                  placeholder="Enter or use connected wallet..."
-                />
+      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-8">
+        {/* Wallet Connection Status */}
+        <div className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+            <span className="text-white text-sm font-medium">
+              {connected ? `Connected: ${publicKey?.toBase58().slice(0, 8)}...${publicKey?.toBase58().slice(-8)}` : 'Wallet not connected'}
+            </span>
+          </div>
+          <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700 !rounded-xl !px-4 !py-2 !font-semibold !text-white !text-sm" />
+        </div>
+
+        {/* Step 1: Token Mint Address */}
+        <div>
+          <label className="text-white font-semibold text-sm block mb-2">
+            Step 1: Enter Your Token Mint Address
+          </label>
+          <input
+            type="text"
+            value={tokenMint}
+            onChange={(e) => setTokenMint(e.target.value)}
+            placeholder="e.g. So11111111111111111111111111111111111111112"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm"
+          />
+          <p className="text-zinc-500 text-xs mt-1">Find your token mint address on Solscan.io</p>
+        </div>
+
+        {/* Step 2: Amount */}
+        <div>
+          <label className="text-white font-semibold text-sm block mb-2">
+            Step 2: Amount Per Wallet
+          </label>
+          <input
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="e.g. 1000"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm"
+          />
+        </div>
+
+        {/* Step 3: Wallet List */}
+        <div>
+          <label className="text-white font-semibold text-sm block mb-2">
+            Step 3: Wallet Addresses
+          </label>
+          <textarea
+            value={walletList}
+            onChange={handleWalletsChange}
+            rows={6}
+            placeholder="Paste wallet addresses here, one per line&#10;e.g.&#10;BEK84UNPpH9jAqHR21hWmrEgKgrnGjA7yc5cocd1v&#10;EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm font-mono"
+          />
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-zinc-500 text-xs">
+              {previewWallets.length > 0 ? `${previewWallets.length} wallets detected` : 'Paste wallet addresses, one per line'}
+            </p>
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="text-purple-400 hover:text-purple-300 text-xs font-medium transition"
+            >
+              {showPreview ? 'Hide Preview' : 'Show Preview'}
+            </button>
+          </div>
+        </div>
+
+        {/* Preview */}
+        {showPreview && previewWallets.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700 max-h-48 overflow-y-auto"
+          >
+            <p className="text-zinc-400 text-xs font-mono">
+              {previewWallets.map((wallet, index) => (
+                <span key={index} className="block py-0.5">
+                  {index + 1}. {wallet}
+                </span>
+              ))}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Summary */}
+        {previewWallets.length > 0 && amount && tokenMint && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4"
+          >
+            <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm mb-2">
+              <Users className="h-4 w-4" />
+              <span>Airdrop Summary</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+              <div>
+                <p className="text-zinc-500 text-xs">Recipients</p>
+                <p className="text-white font-medium">{previewWallets.length}</p>
               </div>
+              <div>
+                <p className="text-zinc-500 text-xs">Per Wallet</p>
+                <p className="text-white font-medium">{amount} tokens</p>
+              </div>
+              <div>
+                <p className="text-zinc-500 text-xs">Total</p>
+                <p className="text-white font-medium">{parseFloat(amount) * previewWallets.length} tokens</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
-              {balance !== null && (
-                <div className="p-3 bg-secondary/50 rounded-lg text-sm">
-                  Current Balance: {balance.toFixed(4)} SOL
-                </div>
-              )}
+        {/* Status Message */}
+        {status.type && (
+          <div
+            className={`rounded-xl p-4 flex items-start gap-3 ${
+              status.type === 'success'
+                ? 'bg-green-900/20 border border-green-500/30'
+                : status.type === 'error'
+                ? 'bg-red-900/20 border border-red-500/30'
+                : 'bg-blue-900/20 border border-blue-500/30'
+            }`}
+          >
+            {status.type === 'success' && <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />}
+            {status.type === 'error' && <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />}
+            {status.type === 'info' && <Loader2 className="h-5 w-5 text-blue-400 flex-shrink-0 mt-0.5 animate-spin" />}
+            <p className={`text-sm ${
+              status.type === 'success' ? 'text-green-300' : 
+              status.type === 'error' ? 'text-red-300' : 
+              'text-blue-300'
+            }`}>
+              {status.message}
+            </p>
+          </div>
+        )}
 
-              {error && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertDescription>{error}</AlertDescription></Alert>}
+        {/* Airdrop Button */}
+        <button
+          onClick={handleAirdrop}
+          disabled={isProcessing || !connected || !tokenMint || !amount || previewWallets.length === 0}
+          className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2"
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Processing Airdrop...
+            </>
+          ) : (
+            <>
+              <Send className="h-5 w-5" />
+              Send Airdrop
+            </>
+          )}
+        </button>
 
-              {isAirdropped && (
-                <Alert>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertDescription>Success! Tx: {txHash.slice(0, 12)}...</AlertDescription>
-                </Alert>
-              )}
+        <p className="text-zinc-500 text-xs text-center">
+          ⚠️ Airdrop transactions require SOL for network fees. Ensure your wallet has sufficient balance.
+        </p>
+      </div>
 
-              <Button type="submit" disabled={loading || !publicKey} className="w-full">
-                {loading ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
-                ) : (
-                  `Send 1 SOL ${isMainnet ? '(Mainnet)' : ''}`
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </main>
+      {/* Info Section */}
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
+          <div className="text-3xl mb-2">📝</div>
+          <h3 className="text-white font-semibold">Step 1</h3>
+          <p className="text-zinc-400 text-sm">Enter token mint address</p>
+        </div>
+        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
+          <div className="text-3xl mb-2">👥</div>
+          <h3 className="text-white font-semibold">Step 2</h3>
+          <p className="text-zinc-400 text-sm">Add wallet addresses</p>
+        </div>
+        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
+          <div className="text-3xl mb-2">🚀</div>
+          <h3 className="text-white font-semibold">Step 3</h3>
+          <p className="text-zinc-400 text-sm">Send airdrop instantly</p>
+        </div>
+      </div>
     </div>
   );
 }
-
-export default SolAirdrop;

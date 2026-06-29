@@ -36,7 +36,7 @@ const Footer = () => {
               Create Token
             </Link>
             <Link
-              href="#"
+              href="/guide"
               className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition text-sm border border-zinc-700"
             >
               Watch Tutorial
@@ -70,7 +70,7 @@ const Footer = () => {
               <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
               <li><Link href="/guide#marketing" className="text-zinc-400 hover:text-white text-sm transition">Marketing Guide</Link></li>
               <li><Link href="/guide#security" className="text-zinc-400 hover:text-white text-sm transition">Security Guide</Link></li>
-              <li><Link href="/guide#tokenomics" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
+              <li><Link href="/tokenomics" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
             </ul>
           </div>
 

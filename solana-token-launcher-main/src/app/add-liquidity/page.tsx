@@ -8,10 +8,10 @@ import { NetworkContext } from '@/providers/providers';
 import { motion } from 'framer-motion';
 import { Coins, Wallet, Loader2, CheckCircle, AlertCircle, Info, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { getTokenDecimals, getTokenBalance } from '@/lib/raydium';
+import { getTokenDecimals, getTokenBalance, getRaydiumUrl } from '@/lib/raydium';
 
 export default function AddLiquidityPage() {
-  const { publicKey, connected, signTransaction } = useWallet();
+  const { publicKey, connected } = useWallet();
   const { network } = useContext(NetworkContext);
   const [tokenMint, setTokenMint] = useState('');
   const [solAmount, setSolAmount] = useState('');
@@ -73,7 +73,7 @@ export default function AddLiquidityPage() {
   }, [publicKey, connection]);
 
   const handleAddLiquidity = async () => {
-    if (!connected || !publicKey || !signTransaction) {
+    if (!connected || !publicKey) {
       setStatus({ type: 'error', message: 'Please connect your wallet first' });
       return;
     }
@@ -108,24 +108,20 @@ export default function AddLiquidityPage() {
 
     setLoading(true);
     setTxId('');
-    setStatus({ type: 'info', message: 'Creating liquidity pool on Raydium...' });
+    setStatus({ type: 'info', message: 'Opening Raydium to create liquidity pool...' });
 
     try {
-      const mintPubkey = new PublicKey(tokenMint);
-      
-      // Open Raydium with pre-filled values
-      const raydiumUrl = `https://raydium.io/liquidity/pool/create?mint=${tokenMint}`;
-      window.open(raydiumUrl, '_blank');
+      const url = getRaydiumUrl(tokenMint);
+      window.open(url, '_blank');
 
       setStatus({
         type: 'success',
         message: '✅ Raydium opened! Follow the steps to complete your pool creation.',
       });
-
     } catch (error: any) {
       setStatus({
         type: 'error',
-        message: error.message || 'Failed to create liquidity pool',
+        message: error.message || 'Failed to open Raydium',
       });
     } finally {
       setLoading(false);
@@ -358,12 +354,12 @@ export default function AddLiquidityPage() {
           {loading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Creating Pool...
+              Opening Raydium...
             </>
           ) : (
             <>
               <Coins className="h-5 w-5" />
-              Create Liquidity Pool
+              Add Liquidity on Raydium
             </>
           )}
         </button>

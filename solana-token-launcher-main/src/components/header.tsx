@@ -27,6 +27,9 @@ const Header = () => {
             <Link href="/airdrop" className="text-gray-400 hover:text-white transition">Airdrop</Link>
             <Link href="/create-mint" className="text-gray-400 hover:text-white transition">Create Mint</Link>
             <Link href="/tokens" className="text-gray-400 hover:text-white transition">Tokens</Link>
+            <Link href="/admin/dashboard" className="text-gray-500 hover:text-white transition text-xs border border-gray-700 px-3 py-1 rounded-full hover:border-purple-500/50">
+              Admin
+            </Link>
           </nav>
 
           {/* Network Switcher */}

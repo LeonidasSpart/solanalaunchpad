@@ -79,6 +79,7 @@ const Footer = () => {
               <li><Link href="/security" className="text-zinc-400 hover:text-white text-sm transition">Security</Link></li>
               <li><Link href="/tokenomics" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics</Link></li>
               <li><Link href="/tokenomics-calculator" className="text-zinc-400 hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
+              <li><Link href="/no-code-creator" className="text-zinc-400 hover:text-white text-sm transition">No-Code Creator</Link></li>
             </ul>
           </div>
 
@@ -90,6 +91,8 @@ const Footer = () => {
               <li><Link href="/guide" className="text-zinc-400 hover:text-white text-sm transition">SPL Token Guide</Link></li>
               <li><Link href="/revoke" className="text-zinc-400 hover:text-white text-sm transition">Revoke Authority</Link></li>
               <li><Link href="/pricing" className="text-zinc-400 hover:text-white text-sm transition">Creation Costs</Link></li>
+              <li><Link href="/why-zrp" className="text-zinc-400 hover:text-white text-sm transition">Why ZRP</Link></li>
+              <li><Link href="/affiliates" className="text-zinc-400 hover:text-white text-sm transition">Affiliates</Link></li>
               <li><Link href="/faq" className="text-zinc-400 hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/about" className="text-zinc-400 hover:text-white text-sm transition">About Us</Link></li>
               <li><Link href="/contact" className="text-zinc-400 hover:text-white text-sm transition">Contact</Link></li>

@@ -5,9 +5,14 @@ import { useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  getAssociatedTokenAddress,
+  createTransferInstruction,
+  TOKEN_PROGRAM_ID,
+  getAccount,
+} from '@solana/spl-token';
 import { motion } from 'framer-motion';
-import { Upload, Send, Users, CheckCircle, AlertCircle, Loader2, FileUp } from 'lucide-react';
+import { Send, Users, CheckCircle, AlertCircle, Loader2, FileUp, ExternalLink } from 'lucide-react';
 
 export default function AirdropPage() {
   const { publicKey, connected, signTransaction } = useWallet();
@@ -21,6 +26,7 @@ export default function AirdropPage() {
     message: '',
   });
   const [txResults, setTxResults] = useState<{ address: string; status: 'success' | 'failed'; signature?: string }[]>([]);
+  const [balance, setBalance] = useState<number | null>(null);
 
   const connection = new Connection(
     process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com',
@@ -35,7 +41,7 @@ export default function AirdropPage() {
     return walletList
       .split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0 && line.startsWith('0x') || line.length === 44);
+      .filter(line => line.length > 0 && (line.startsWith('0x') || line.length === 44));
   }, [walletList]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,6 +54,19 @@ export default function AirdropPage() {
       setWalletList(content);
     };
     reader.readAsText(file);
+  };
+
+  const checkBalance = async () => {
+    if (!connected || !publicKey || !tokenMint) return;
+
+    try {
+      const mintPubkey = new PublicKey(tokenMint);
+      const senderAta = await getAssociatedTokenAddress(mintPubkey, publicKey);
+      const accountInfo = await getAccount(connection, senderAta);
+      setBalance(Number(accountInfo.amount) / Math.pow(10, 9)); // Assuming 9 decimals
+    } catch (error) {
+      setBalance(0);
+    }
   };
 
   const handleAirdrop = async () => {
@@ -82,38 +101,53 @@ export default function AirdropPage() {
       const mintPubkey = new PublicKey(tokenMint);
       const senderAta = await getAssociatedTokenAddress(mintPubkey, publicKey);
 
+      // Get token decimals
+      let decimals = 9;
+      try {
+        const accountInfo = await getAccount(connection, mintPubkey);
+        decimals = accountInfo.decimals;
+      } catch (error) {
+        // Use default decimals if we can't fetch
+      }
+
       // Check sender's token balance
       const senderBalance = await connection.getTokenAccountBalance(senderAta);
-      const requiredTotal = amountNum * wallets.length;
-      const decimals = senderBalance.value.decimals;
       const amountInBaseUnits = amountNum * Math.pow(10, decimals);
 
-      if (senderBalance.value.uiAmount === null || senderBalance.value.uiAmount < requiredTotal) {
+      if (senderBalance.value.uiAmount === null || senderBalance.value.uiAmount < amountNum * wallets.length) {
         setStatus({
           type: 'error',
-          message: `Insufficient balance. You have ${senderBalance.value.uiAmount || 0} tokens, need ${requiredTotal}`,
+          message: `Insufficient balance. You have ${senderBalance.value.uiAmount || 0} tokens, need ${amountNum * wallets.length}`,
         });
         setIsProcessing(false);
         return;
       }
 
-      // Process each wallet
+      // Process each wallet in batches
       const results = [];
-      const batchSize = 10;
-      const batches = [];
+      const batchSize = 5; // Reduced batch size for better reliability
 
       for (let i = 0; i < wallets.length; i += batchSize) {
-        batches.push(wallets.slice(i, i + batchSize));
-      }
-
-      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        const batch = batches[batchIndex];
+        const batch = wallets.slice(i, Math.min(i + batchSize, wallets.length));
         const transaction = new Transaction();
 
         for (const walletAddress of batch) {
           try {
             const recipientPubkey = new PublicKey(walletAddress);
             const recipientAta = await getAssociatedTokenAddress(mintPubkey, recipientPubkey);
+
+            // Check if recipient has an associated token account
+            try {
+              await getAccount(connection, recipientAta);
+            } catch (error) {
+              // If recipient doesn't have an ATA, we need to create one first
+              // For simplicity in this version, we'll skip wallets without ATAs
+              results.push({
+                address: walletAddress,
+                status: 'failed' as const,
+              });
+              continue;
+            }
 
             // Create transfer instruction
             const transferIx = createTransferInstruction(
@@ -142,7 +176,12 @@ export default function AirdropPage() {
 
             const signedTx = await signTransaction(transaction);
             const signature = await connection.sendRawTransaction(signedTx.serialize());
-            await connection.confirmTransaction(signature);
+
+            // Wait for confirmation
+            const confirmation = await connection.confirmTransaction(signature);
+            if (confirmation.value.err) {
+              throw new Error('Transaction failed');
+            }
 
             // Update results for successful transactions
             for (const walletAddress of batch) {
@@ -155,7 +194,7 @@ export default function AirdropPage() {
               }
             }
 
-            setProgress({ current: Math.min(batchIndex * batchSize + batch.length, wallets.length), total: wallets.length });
+            setProgress({ current: Math.min(i + batch.length, wallets.length), total: wallets.length });
           } catch (error: any) {
             for (const walletAddress of batch) {
               if (!results.some(r => r.address === walletAddress)) {
@@ -167,7 +206,7 @@ export default function AirdropPage() {
             }
             setStatus({
               type: 'error',
-              message: `Batch ${batchIndex + 1} failed: ${error.message?.slice(0, 100) || 'Unknown error'}`,
+              message: `Batch ${Math.floor(i / batchSize) + 1} failed: ${error.message?.slice(0, 100) || 'Unknown error'}`,
             });
           }
         }
@@ -205,6 +244,7 @@ export default function AirdropPage() {
   };
 
   const wallets = parseWallets();
+  const totalAmount = wallets.length > 0 && amount ? parseFloat(amount) * wallets.length : 0;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
@@ -228,6 +268,11 @@ export default function AirdropPage() {
             <span className="text-white text-sm font-medium">
               {connected ? `Connected: ${publicKey?.toBase58().slice(0, 8)}...${publicKey?.toBase58().slice(-8)}` : 'Wallet not connected'}
             </span>
+            {connected && balance !== null && (
+              <span className="text-zinc-400 text-xs ml-2">
+                Balance: {balance.toFixed(4)} tokens
+              </span>
+            )}
           </div>
           <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700 !rounded-xl !px-4 !py-2 !font-semibold !text-white !text-sm" />
         </div>
@@ -237,13 +282,22 @@ export default function AirdropPage() {
           <label className="text-white font-semibold text-sm block mb-2">
             Step 1: Enter Your Token Mint Address
           </label>
-          <input
-            type="text"
-            value={tokenMint}
-            onChange={(e) => setTokenMint(e.target.value)}
-            placeholder="e.g. So11111111111111111111111111111111111111112"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm"
-          />
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={tokenMint}
+              onChange={(e) => setTokenMint(e.target.value)}
+              placeholder="e.g. So11111111111111111111111111111111111111112"
+              className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm"
+            />
+            <button
+              onClick={checkBalance}
+              disabled={!connected || !tokenMint}
+              className="px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-medium rounded-xl transition text-sm disabled:opacity-50"
+            >
+              Check Balance
+            </button>
+          </div>
           <p className="text-zinc-500 text-xs mt-1">Find your token mint address on Solscan.io</p>
         </div>
 
@@ -292,6 +346,34 @@ export default function AirdropPage() {
           </p>
         </div>
 
+        {/* Summary */}
+        {wallets.length > 0 && amount && tokenMint && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4"
+          >
+            <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm mb-2">
+              <Users className="h-4 w-4" />
+              <span>Airdrop Summary</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+              <div>
+                <p className="text-zinc-500 text-xs">Recipients</p>
+                <p className="text-white font-medium">{wallets.length}</p>
+              </div>
+              <div>
+                <p className="text-zinc-500 text-xs">Per Wallet</p>
+                <p className="text-white font-medium">{amount} tokens</p>
+              </div>
+              <div>
+                <p className="text-zinc-500 text-xs">Total</p>
+                <p className="text-white font-medium">{totalAmount.toLocaleString()} tokens</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Progress Bar */}
         {isProcessing && progress.total > 0 && (
           <div className="space-y-2">
@@ -335,8 +417,13 @@ export default function AirdropPage() {
         {/* Results Table */}
         {txResults.length > 0 && (
           <div className="border border-zinc-800 rounded-xl overflow-hidden">
-            <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-800">
+            <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-800 flex justify-between items-center">
               <p className="text-white font-semibold text-sm">Results</p>
+              <p className="text-zinc-400 text-xs">
+                {txResults.filter(r => r.status === 'success').length} successful
+                {' · '}
+                {txResults.filter(r => r.status === 'failed').length} failed
+              </p>
             </div>
             <div className="max-h-48 overflow-y-auto">
               {txResults.map((result, index) => (
@@ -360,9 +447,9 @@ export default function AirdropPage() {
                         href={`https://solscan.io/tx/${result.signature}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 text-xs transition"
+                        className="text-purple-400 hover:text-purple-300 text-xs transition flex items-center gap-1"
                       >
-                        View
+                        View <ExternalLink className="h-3 w-3" />
                       </a>
                     )}
                   </div>

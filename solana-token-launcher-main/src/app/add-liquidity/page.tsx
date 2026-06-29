@@ -314,8 +314,9 @@ export default function AddLiquidityPage() {
           )}
         </button>
 
+        {/* ✅ CORRECTED WARNING MESSAGE */}
         <p className="text-zinc-500 text-xs text-center">
-          ⚠️ Airdrop transactions require SOL for network fees. Ensure your wallet has sufficient balance.
+          ⚠️ Liquidity transactions require SOL for network fees. Ensure your wallet has sufficient balance.
         </p>
       </div>
 

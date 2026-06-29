@@ -3,7 +3,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { NetworkContext } from '@/providers/providers';
 import { motion } from 'framer-motion';
 import { Coins, Wallet, Loader2, CheckCircle, AlertCircle, Info, ExternalLink } from 'lucide-react';

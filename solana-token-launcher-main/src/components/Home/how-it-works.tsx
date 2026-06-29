@@ -11,7 +11,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-20 bg-zinc-950">
+    <section id="how-it-works" className="py-20 bg-zinc-950 scroll-mt-20">
       <div className="container mx-auto px-6">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold">How It Works</h2>

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "ZRP - Launch & Manage Solana Tokens",
   description: "Create, mint, and launch your own Solana tokens with ZRP. Fast, simple, and powerful",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.png",
   },
 };
 

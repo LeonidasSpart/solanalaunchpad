@@ -69,6 +69,7 @@ const Footer = () => {
               <li><Link href="/launch" className="text-zinc-400 hover:text-white text-sm transition">Launch Strategy</Link></li>
               <li><Link href="/add-liquidity" className="text-zinc-400 hover:text-white text-sm transition">Add Liquidity</Link></li>
               <li><Link href="/list-token-dex" className="text-zinc-400 hover:text-white text-sm transition">DEX Listing</Link></li>
+              <li><Link href="/dex-comparison" className="text-zinc-400 hover:text-white text-sm transition">DEX Comparison</Link></li>
               <li><Link href="/distribution" className="text-zinc-400 hover:text-white text-sm transition">Distribution</Link></li>
               <li><Link href="/airdrop-guide" className="text-zinc-400 hover:text-white text-sm transition">Airdrop Guide</Link></li>
               <li><Link href="/burn" className="text-zinc-400 hover:text-white text-sm transition">Token Burning</Link></li>

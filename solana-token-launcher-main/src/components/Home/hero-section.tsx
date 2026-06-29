@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import ShareButtons from '@/components/Home/share-buttons';
 
 export default function HeroSection() {
   return (
@@ -22,6 +23,17 @@ export default function HeroSection() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-purple-900/30 border border-purple-500/30 rounded-full px-4 py-2 mb-6">
             <span className="text-purple-400 text-sm font-medium">⚡ NO-CODE SOLANA TOKEN CREATOR</span>
+          </div>
+
+          {/* FREE Devnet Testing Banner */}
+          <div className="inline-flex items-center gap-3 bg-green-900/30 border border-green-500/30 rounded-full px-6 py-2.5 mb-6 backdrop-blur-sm">
+            <span className="relative flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            </span>
+            <span className="text-green-400 font-semibold text-sm">FREE Devnet Testing</span>
+            <span className="text-zinc-400 text-sm">|</span>
+            <span className="text-zinc-300 text-sm">Test your token with zero cost</span>
           </div>
 
           {/* Main Heading */}
@@ -52,8 +64,13 @@ export default function HeroSection() {
             </Link>
           </div>
 
+          {/* Share Buttons */}
+          <div className="mt-8">
+            <ShareButtons />
+          </div>
+
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 mt-12 text-sm text-zinc-500">
+          <div className="flex flex-wrap justify-center gap-8 mt-8 text-sm text-zinc-500">
             <div>
               <span className="text-purple-400 font-bold text-lg">10k+</span>
               <p className="text-zinc-500">Tokens Launched</p>

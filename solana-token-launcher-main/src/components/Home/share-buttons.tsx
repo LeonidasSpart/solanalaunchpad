@@ -6,8 +6,8 @@ export default function ShareButtons() {
   const url = typeof window !== 'undefined' ? window.location.origin : '';
   const text = '🚀 Create your own Solana token in under 2 minutes with ZRP! No coding required. Test for FREE on devnet.';
 
-  const shareOnTwitter = () => {
-    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+  const shareOnX = () => {
+    window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
   };
 
   const shareOnTelegram = () => {
@@ -23,9 +23,9 @@ export default function ShareButtons() {
     <div className="flex items-center justify-center gap-3">
       <span className="text-zinc-500 text-sm">Share:</span>
       <button
-        onClick={shareOnTwitter}
+        onClick={shareOnX}
         className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition"
-        aria-label="Share on Twitter"
+        aria-label="Share on X"
       >
         <Twitter className="h-4 w-4" />
       </button>

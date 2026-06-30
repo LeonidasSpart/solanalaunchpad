@@ -16,20 +16,15 @@ export default function PricingPage() {
         </p>
       </div>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-12 text-zinc-300 text-sm leading-relaxed">
-        {/* Introduction */}
-        <section>
-          <p>
-            Creating a Solana token costs money, but it's surprisingly affordable. This guide breaks down all costs so you know exactly what you'll pay. No surprises, no hidden fees, just transparent pricing.
-          </p>
-          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mt-4">
-            <p className="text-yellow-400 text-sm font-semibold">💡 Plan Before You Create</p>
-            <p className="text-zinc-400 text-sm mt-1">
-              Costs vary based on features you choose. Basic tokens cost less. Feature-rich tokens cost more. Understanding the breakdown helps you budget and choose what's right for your project.
-            </p>
-          </div>
-        </section>
+      {/* Devnet Banner */}
+      <div className="bg-blue-900/20 border border-blue-500/30 rounded-xl p-6 mb-12 text-center">
+        <h3 className="text-blue-400 font-bold text-lg mb-2">🧪 Test on Devnet — Completely FREE</h3>
+        <p className="text-blue-300/80 text-sm">
+          Create tokens on Solana Devnet with zero cost. Perfect for testing before going live.
+        </p>
+      </div>
 
+      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-12 text-zinc-300 text-sm leading-relaxed">
         {/* Base Pricing */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Base Token Creation Cost</h2>
@@ -44,41 +39,31 @@ export default function PricingPage() {
             <li>Initial token minting</li>
             <li>Platform service fees</li>
           </ul>
-          <p className="text-zinc-500 text-xs mt-2">At current SOL prices (around $100-150), this costs roughly <span className="text-white font-medium">$15-22</span>. This is a one-time fee. No recurring charges or subscriptions.</p>
         </section>
 
         {/* Optional Features */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Optional Feature Costs</h2>
-          <p className="mb-4">Beyond the base fee, you can add optional features. You only pay for what you use.</p>
+          <h2 className="text-2xl font-bold text-white mb-4">Optional Security Features</h2>
+          <p className="mb-4">Beyond the base fee, add authority revocations for maximum trust. Each adds <strong className="text-white">0.15 SOL</strong>.</p>
 
-          <h3 className="text-white font-semibold mt-4 mb-3">Authority Revocations: 0.05 SOL Each</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
             <div className="bg-black/40 rounded-xl p-3 border border-zinc-800 text-center">
-              <p className="text-zinc-400 text-xs">Mint Authority</p>
-              <p className="text-purple-400 font-bold text-lg">0.05 SOL</p>
-              <p className="text-zinc-500 text-xs">Prevents more tokens being minted</p>
+              <p className="text-zinc-400 text-xs">Revoke Mint Authority</p>
+              <p className="text-purple-400 font-bold text-lg">+0.15 SOL</p>
+              <p className="text-zinc-500 text-xs">Prevents minting more tokens</p>
             </div>
             <div className="bg-black/40 rounded-xl p-3 border border-zinc-800 text-center">
-              <p className="text-zinc-400 text-xs">Freeze Authority</p>
-              <p className="text-purple-400 font-bold text-lg">0.05 SOL</p>
-              <p className="text-zinc-500 text-xs">Prevents token accounts being frozen</p>
+              <p className="text-zinc-400 text-xs">Revoke Freeze Authority</p>
+              <p className="text-purple-400 font-bold text-lg">+0.15 SOL</p>
+              <p className="text-zinc-500 text-xs">Prevents freezing accounts</p>
             </div>
             <div className="bg-black/40 rounded-xl p-3 border border-zinc-800 text-center">
-              <p className="text-zinc-400 text-xs">Update Authority</p>
-              <p className="text-purple-400 font-bold text-lg">0.05 SOL</p>
-              <p className="text-zinc-500 text-xs">Locks metadata forever</p>
+              <p className="text-zinc-400 text-xs">Revoke Update Authority</p>
+              <p className="text-purple-400 font-bold text-lg">+0.15 SOL</p>
+              <p className="text-zinc-500 text-xs">Makes metadata permanent</p>
             </div>
           </div>
-          <p className="text-zinc-500 text-xs">You can revoke one, two, or all three. Revoking all three costs <span className="text-white font-medium">0.15 SOL</span> extra.</p>
-
-          <h3 className="text-white font-semibold mt-4 mb-3">Creator Branding: 0.05 SOL</h3>
-          <ul className="list-disc pl-5 space-y-1 text-zinc-400 text-sm">
-            <li>Creator name and bio</li>
-            <li>Social media links (X, Telegram, Discord)</li>
-            <li>Website links</li>
-            <li>Contact information</li>
-          </ul>
+          <p className="text-zinc-500 text-xs">Revoke all three for maximum security. <span className="text-white font-medium">Cannot be undone once revoked.</span></p>
         </section>
 
         {/* Total Cost Examples */}
@@ -91,40 +76,79 @@ export default function PricingPage() {
               <ul className="list-disc pl-5 mt-2 space-y-0.5 text-zinc-400 text-xs">
                 <li>Base fee: 0.15 SOL</li>
                 <li>No authority revocations</li>
-                <li>No creator branding</li>
+                <li>Social links included</li>
               </ul>
-              <p className="text-zinc-500 text-xs text-center mt-2">~$15-22</p>
             </div>
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
               <h3 className="text-white font-semibold text-center">Standard Token</h3>
-              <div className="text-2xl font-bold text-purple-400 text-center">0.20 SOL</div>
-              <ul className="list-disc pl-5 mt-2 space-y-0.5 text-zinc-400 text-xs">
-                <li>Base fee: 0.15 SOL</li>
-                <li>Creator branding: 0.05 SOL</li>
-                <li>No authority revocations</li>
-              </ul>
-              <p className="text-zinc-500 text-xs text-center mt-2">~$20-30</p>
-            </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <h3 className="text-white font-semibold text-center">Secure Token</h3>
               <div className="text-2xl font-bold text-purple-400 text-center">0.30 SOL</div>
               <ul className="list-disc pl-5 mt-2 space-y-0.5 text-zinc-400 text-xs">
                 <li>Base fee: 0.15 SOL</li>
-                <li>All revocations: 0.15 SOL</li>
-                <li>No creator branding</li>
+                <li>1 revocation: +0.15 SOL</li>
+                <li>Social links included</li>
               </ul>
-              <p className="text-zinc-500 text-xs text-center mt-2">~$30-45</p>
             </div>
             <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4">
-              <h3 className="text-white font-semibold text-center">Premium Token</h3>
-              <div className="text-2xl font-bold text-purple-400 text-center">0.35 SOL</div>
+              <h3 className="text-white font-semibold text-center">Secure Token</h3>
+              <div className="text-2xl font-bold text-purple-400 text-center">0.60 SOL</div>
               <ul className="list-disc pl-5 mt-2 space-y-0.5 text-zinc-400 text-xs">
                 <li>Base fee: 0.15 SOL</li>
-                <li>All revocations: 0.15 SOL</li>
-                <li>Creator branding: 0.05 SOL</li>
+                <li>All 3 revocations: +0.45 SOL</li>
+                <li>Social links included</li>
               </ul>
-              <p className="text-zinc-500 text-xs text-center mt-2">~$35-52</p>
             </div>
+            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+              <h3 className="text-white font-semibold text-center">Maximum Possible</h3>
+              <div className="text-2xl font-bold text-purple-400 text-center">0.60 SOL</div>
+              <ul className="list-disc pl-5 mt-2 space-y-0.5 text-zinc-400 text-xs">
+                <li>Base fee: 0.15 SOL</li>
+                <li>All revocations: +0.45 SOL</li>
+                <li>Highest trust & security</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Fee Breakdown Table */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">Detailed Fee Breakdown</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-zinc-700">
+                  <th className="py-3 text-zinc-400 text-xs font-medium">Feature</th>
+                  <th className="py-3 text-zinc-400 text-xs font-medium">Cost</th>
+                  <th className="py-3 text-zinc-400 text-xs font-medium">Description</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                <tr className="border-b border-zinc-800">
+                  <td className="py-3 text-white">Base Token Creation</td>
+                  <td className="py-3 text-purple-400 font-bold">0.15 SOL</td>
+                  <td className="py-3 text-zinc-500">Mint account, metadata, initial supply</td>
+                </tr>
+                <tr className="border-b border-zinc-800">
+                  <td className="py-3 text-white">Revoke Mint Authority</td>
+                  <td className="py-3 text-purple-400 font-bold">+0.15 SOL</td>
+                  <td className="py-3 text-zinc-500">Prevents creating more tokens</td>
+                </tr>
+                <tr className="border-b border-zinc-800">
+                  <td className="py-3 text-white">Revoke Freeze Authority</td>
+                  <td className="py-3 text-purple-400 font-bold">+0.15 SOL</td>
+                  <td className="py-3 text-zinc-500">Prevents freezing token accounts</td>
+                </tr>
+                <tr className="border-b border-zinc-800">
+                  <td className="py-3 text-white">Revoke Update Authority</td>
+                  <td className="py-3 text-purple-400 font-bold">+0.15 SOL</td>
+                  <td className="py-3 text-zinc-500">Makes metadata permanent & immutable</td>
+                </tr>
+                <tr className="border-t-2 border-purple-500">
+                  <td className="py-3 text-white font-bold">Maximum Total</td>
+                  <td className="py-3 text-green-400 font-bold text-lg">0.60 SOL</td>
+                  <td className="py-3 text-zinc-500">All features included</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </section>
 
@@ -134,69 +158,13 @@ export default function PricingPage() {
           <div className="space-y-4">
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
               <h3 className="text-white font-semibold">Blockchain Transaction Fees</h3>
-              <p className="text-zinc-400 text-sm mt-1">Each blockchain transaction costs a small fee. Solana transaction fees are tiny, typically less than <span className="text-white font-medium">0.001 SOL</span> per transaction. Budget a small amount (0.01 SOL) for various transactions.</p>
+              <p className="text-zinc-400 text-sm mt-1">Solana fees are tiny (~0.001 SOL per transaction). Budget ~0.01 SOL for all transactions.</p>
             </div>
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
               <h3 className="text-white font-semibold">Wallet Balance</h3>
-              <p className="text-zinc-400 text-sm mt-1">You need SOL in your wallet to pay fees. For a basic token, have at least <span className="text-white font-medium">0.2 SOL</span>. For premium tokens, have at least <span className="text-white font-medium">0.5 SOL</span>.</p>
-            </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <h3 className="text-white font-semibold">Liquidity Pool Costs (Post-Creation)</h3>
-              <p className="text-zinc-400 text-sm mt-1">To enable trading, you'll need to add liquidity to a DEX. This requires providing both your token and SOL. Amounts vary based on your goals.</p>
+              <p className="text-zinc-400 text-sm mt-1">Have at least <span className="text-white font-medium">0.2 SOL</span> for basic tokens. For all revocations, have at least <span className="text-white font-medium">0.7 SOL</span>.</p>
             </div>
           </div>
-        </section>
-
-        {/* Cost Comparison */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Cost Comparison: Solana vs Other Blockchains</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4 text-center">
-              <h3 className="text-white font-bold text-lg">⚡ Solana</h3>
-              <div className="text-2xl font-bold text-purple-400">0.15 SOL</div>
-              <p className="text-zinc-400 text-sm">~$15-22</p>
-              <p className="text-zinc-500 text-xs mt-2">Fast, cheap, and reliable. Best value.</p>
-            </div>
-            <div className="bg-black/40 rounded-xl p-4 text-center border border-zinc-800">
-              <h3 className="text-white font-bold text-lg">🟣 Ethereum</h3>
-              <div className="text-2xl font-bold text-red-400">$50-500+</div>
-              <p className="text-zinc-400 text-sm">Much more expensive</p>
-              <p className="text-zinc-500 text-xs mt-2">Gas fees fluctuate wildly. Slow and expensive.</p>
-            </div>
-            <div className="bg-black/40 rounded-xl p-4 text-center border border-zinc-800">
-              <h3 className="text-white font-bold text-lg">🔷 Polygon</h3>
-              <div className="text-2xl font-bold text-yellow-400">$1-10</div>
-              <p className="text-zinc-400 text-sm">Cheaper than Ethereum</p>
-              <p className="text-zinc-500 text-xs mt-2">Less established ecosystem. Solana offers better value.</p>
-            </div>
-          </div>
-          <p className="text-zinc-500 text-xs text-center mt-3">Solana's low fees make it ideal for token creation. Professional results without breaking the bank.</p>
-        </section>
-
-        {/* DIY vs Platform */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Cost Comparison: DIY vs Platform</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4">
-              <h3 className="text-white font-semibold text-center">🚀 Platform Creation (ZRP)</h3>
-              <ul className="list-disc pl-5 mt-2 space-y-1 text-zinc-400 text-xs">
-                <li>Cost: 0.15 SOL base (~$15-22)</li>
-                <li>Time: Minutes to complete</li>
-                <li>Technical knowledge: None required</li>
-                <li>Maintenance: Minimal</li>
-              </ul>
-            </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <h3 className="text-white font-semibold text-center">🛠️ Custom Development (DIY)</h3>
-              <ul className="list-disc pl-5 mt-2 space-y-1 text-zinc-400 text-xs">
-                <li>Cost: $5,000-$50,000+</li>
-                <li>Time: Weeks to months</li>
-                <li>Technical knowledge: Solana development required</li>
-                <li>Maintenance: Ongoing development and updates</li>
-              </ul>
-            </div>
-          </div>
-          <p className="text-zinc-500 text-xs text-center mt-3">For standard SPL tokens, using a platform offers the best value.</p>
         </section>
 
         {/* FAQ */}
@@ -206,25 +174,25 @@ export default function PricingPage() {
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
               <h3 className="text-white font-semibold">How much does it cost to create a Solana token?</h3>
               <p className="text-zinc-400 text-sm mt-1">
-                The base cost is <span className="text-white font-medium">0.15 SOL</span>. Optional features like authority revocations or creator branding cost extra. Total costs range from 0.15 SOL to 0.35 SOL depending on features chosen.
+                Base cost is <span className="text-white font-medium">0.15 SOL</span>. Each authority revocation adds <span className="text-white font-medium">0.15 SOL</span>. Max total is <span className="text-white font-medium">0.60 SOL</span>.
               </p>
             </div>
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
               <h3 className="text-white font-semibold">Are there any hidden fees?</h3>
               <p className="text-zinc-400 text-sm mt-1">
-                No. ZRP shows all fees upfront with no hidden charges. Everything is transparent.
+                No. Every fee is shown in your wallet before you sign. We simulate transactions so you know exactly what you'll pay.
               </p>
             </div>
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
               <h3 className="text-white font-semibold">Can I create a token for free?</h3>
               <p className="text-zinc-400 text-sm mt-1">
-                You can test on <span className="text-white font-medium">Devnet for FREE</span>. For mainnet, the minimum cost is 0.15 SOL for basic token creation.
+                Yes! <span className="text-white font-medium">Devnet testing is completely FREE.</span> You only pay when launching on mainnet.
               </p>
             </div>
             <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <h3 className="text-white font-semibold">Do I pay monthly or just once?</h3>
+              <h3 className="text-white font-semibold">What if the transaction fails?</h3>
               <p className="text-zinc-400 text-sm mt-1">
-                You pay once when creating the token. No monthly fees, subscriptions, or recurring charges.
+                Your SOL is safe. Failed transactions don't deduct fees. We simulate every transaction before asking for your signature.
               </p>
             </div>
           </div>

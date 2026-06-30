@@ -1,18 +1,18 @@
 'use client';
 
-import { Shield, Lock, CheckCircle, Zap } from 'lucide-react';
+import { Lock, CheckCircle, Zap, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const badges = [
   {
-    icon: Shield,
-    title: 'Audited Smart Contracts',
-    description: 'Secure and verified'
-  },
-  {
     icon: Lock,
     title: 'Non-Custodial',
     description: 'You control your keys'
+  },
+  {
+    icon: Eye,
+    title: 'Open Source',
+    description: 'Publicly auditable code'
   },
   {
     icon: CheckCircle,
@@ -31,8 +31,8 @@ export default function TrustBadges() {
     <section className="py-16 bg-black">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-2xl font-bold text-white mb-2">Trusted by Thousands</h2>
-          <p className="text-zinc-400 text-sm">Industry-standard security and compliance</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Built for Trust</h2>
+          <p className="text-zinc-400 text-sm">Transparent, secure, and user-controlled</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {badges.map((badge, index) => {

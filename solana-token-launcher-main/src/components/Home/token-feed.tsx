@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import Link from 'next/link';  // ← ADD THIS IMPORT
+import Link from 'next/link';
 
 interface Token {
   id: string;
@@ -14,18 +14,18 @@ interface Token {
 
 export default function TokenFeed() {
   const [tokens] = useState<Token[]>([
-    { id: '1', name: 'ZRPDEEPSEEK', symbol: 'ZDP', network: 'Devnet', timestamp: 'Just now' },
-    { id: '2', name: 'SolToken', symbol: 'SOLT', network: 'Devnet', timestamp: '1 min ago' },
-    { id: '3', name: 'Memecoin', symbol: 'MEME', network: 'Devnet', timestamp: '3 min ago' },
-    { id: '4', name: 'LaunchToken', symbol: 'LUN', network: 'Devnet', timestamp: '5 min ago' }
+    { id: '1', name: 'ExampleToken', symbol: 'EXMPL', network: 'Devnet', timestamp: 'Example' },
+    { id: '2', name: 'DemoCoin', symbol: 'DEMO', network: 'Devnet', timestamp: 'Example' },
+    { id: '3', name: 'TestToken', symbol: 'TEST', network: 'Mainnet', timestamp: 'Example' },
+    { id: '4', name: 'SampleCoin', symbol: 'SMPL', network: 'Devnet', timestamp: 'Example' }
   ]);
 
   return (
     <section className="py-20 bg-black">
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-white mb-4">🪙 Live Token Feed</h2>
-          <p className="text-zinc-400">See what tokens are being created right now</p>
+          <h2 className="text-4xl font-bold text-white mb-4">🪙 Example Activity</h2>
+          <p className="text-zinc-400">This is how the live token feed will look once tokens are created</p>
         </div>
 
         <div className="bg-zinc-900 rounded-xl border border-zinc-800 overflow-hidden">
@@ -33,7 +33,7 @@ export default function TokenFeed() {
             <div>Token</div>
             <div>Symbol</div>
             <div>Network</div>
-            <div className="text-right">Time</div>
+            <div className="text-right">Status</div>
           </div>
 
           <div className="divide-y divide-zinc-800">
@@ -58,7 +58,7 @@ export default function TokenFeed() {
                     {token.network}
                   </span>
                 </div>
-                <div className="text-zinc-500 text-right">{token.timestamp}</div>
+                <div className="text-zinc-500 text-right text-xs italic">{token.timestamp}</div>
               </motion.div>
             ))}
           </div>

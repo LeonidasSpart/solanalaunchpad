@@ -1,80 +1,101 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { 
   Flame, 
   AlertTriangle, 
   CheckCircle, 
-  XCircle,
-  ArrowRight,
-  Shield,
   Lock,
   Info,
-  ChevronDown
+  ExternalLink,
+  RefreshCw,
+  ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
-
-interface LPToken {
-  mint: string;
-  name: string;
-  symbol: string;
-  balance: number;
-  poolName: string;
-  value: string;
-}
+import { burnLPTokens, fetchLPTokens, LPToken } from '@/lib/burn-lp';
 
 export default function BurnLPPage() {
-  const { connected, publicKey } = useWallet();
+  const { connected, publicKey, signTransaction } = useWallet();
+  const { connection } = useConnection();
+  
   const [lpTokens, setLpTokens] = useState<LPToken[]>([]);
   const [selectedToken, setSelectedToken] = useState<LPToken | null>(null);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isBurning, setIsBurning] = useState(false);
   const [burnComplete, setBurnComplete] = useState(false);
+  const [txSignature, setTxSignature] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Mock LP tokens for demo - replace with actual API call
-  useEffect(() => {
-    if (connected) {
-      // This would be replaced with actual API call to fetch LP tokens
-      setLpTokens([
-        {
-          mint: '7xKX...3f9A',
-          name: 'ZRP-SOL LP',
-          symbol: 'ZRP-SOL',
-          balance: 1500,
-          poolName: 'Raydium V4',
-          value: '~2.5 SOL'
-        },
-        {
-          mint: '9bPL...7k2E',
-          name: 'MOON-SOL LP',
-          symbol: 'MOON-SOL',
-          balance: 5000,
-          poolName: 'Orca Whirlpool',
-          value: '~1.2 SOL'
-        }
-      ]);
+  const loadLPTokens = useCallback(async () => {
+    if (!publicKey || !connection) return;
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const tokens = await fetchLPTokens(connection, publicKey);
+      setLpTokens(tokens);
+    } catch (err) {
+      setError('Failed to load LP tokens. Please try again.');
+      console.error('Error loading LP tokens:', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [connected]);
+  }, [publicKey, connection]);
+
+  useEffect(() => {
+    if (connected && publicKey) {
+      loadLPTokens();
+    } else {
+      setLpTokens([]);
+      setSelectedToken(null);
+    }
+  }, [connected, publicKey, loadLPTokens]);
 
   const handleBurn = async () => {
-    if (!selectedToken || !isConfirmed) return;
-    
+    if (!selectedToken || !isConfirmed || !publicKey || !signTransaction) {
+      setError('Please connect your wallet and confirm the burn.');
+      return;
+    }
+
     setIsBurning(true);
-    
-    // Simulate burn transaction
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    setIsBurning(false);
-    setBurnComplete(true);
+    setError('');
+
+    try {
+      const signature = await burnLPTokens({
+        connection,
+        wallet: publicKey,
+        signTransaction,
+        lpToken: selectedToken,
+      });
+
+      setTxSignature(signature);
+      setBurnComplete(true);
+      
+      // Refresh token list after burn
+      await loadLPTokens();
+    } catch (err: any) {
+      setError(err.message || 'Transaction failed. Please try again.');
+      console.error('Burn error:', err);
+    } finally {
+      setIsBurning(false);
+    }
   };
 
   const resetForm = () => {
     setSelectedToken(null);
     setIsConfirmed(false);
     setBurnComplete(false);
+    setTxSignature('');
+    setError('');
+  };
+
+  const getExplorerUrl = (sig: string) => {
+    return `https://solscan.io/tx/${sig}`;
   };
 
   return (
@@ -88,7 +109,9 @@ export default function BurnLPPage() {
         >
           <div className="inline-flex items-center gap-2 bg-[#9945ff]/10 border border-[#9945ff]/20 rounded-full px-4 py-1.5 mb-6">
             <Flame className="h-3.5 w-3.5 text-[#9945ff]" />
-            <span className="text-xs font-semibold text-[#9945ff] uppercase tracking-wider">Liquidity Locker</span>
+            <span className="text-xs font-semibold text-[#9945ff] uppercase tracking-wider">
+              Liquidity Locker
+            </span>
           </div>
           
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
@@ -117,6 +140,23 @@ export default function BurnLPPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Error Banner */}
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {!connected ? (
           /* Wallet Not Connected */
@@ -156,7 +196,15 @@ export default function BurnLPPage() {
             <div className="bg-[#0a0a0f] rounded-xl p-4 mb-8 max-w-md mx-auto text-left">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-zinc-500">Transaction</span>
-                <span className="text-zinc-300 font-mono">3xTR...1m8P</span>
+                <a 
+                  href={getExplorerUrl(txSignature)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[#9945ff] hover:text-[#b279ff] font-mono flex items-center gap-1"
+                >
+                  {txSignature.slice(0, 4)}...{txSignature.slice(-4)}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-zinc-500">Tokens Burned</span>
@@ -193,24 +241,60 @@ export default function BurnLPPage() {
           >
             {/* Step 1: Select LP Token */}
             <div className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center">
-                  <span className="text-[#9945ff] font-bold">1</span>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center">
+                    <span className="text-[#9945ff] font-bold">1</span>
+                  </div>
+                  <h3 className="text-white font-semibold">Select LP Token</h3>
                 </div>
-                <h3 className="text-white font-semibold">Select LP Token</h3>
+                <button
+                  onClick={loadLPTokens}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
               </div>
 
-              {lpTokens.length === 0 ? (
+              {isLoading ? (
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 border-2 border-[#9945ff]/30 border-t-[#9945ff] rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-zinc-500">Loading LP tokens...</p>
+                </div>
+              ) : lpTokens.length === 0 ? (
                 <div className="text-center py-8 text-zinc-500">
                   <p>No LP tokens found in your wallet.</p>
-                  <p className="text-sm mt-2">Add liquidity first to see your LP tokens here.</p>
+                  <p className="text-sm mt-2">Add liquidity first on Raydium or Orca to see your LP tokens here.</p>
+                  <div className="flex gap-3 justify-center mt-4">
+                    <a 
+                      href="https://raydium.io/liquidity-pools/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[#9945ff] hover:text-[#b279ff] text-sm flex items-center gap-1"
+                    >
+                      Raydium <ExternalLink className="h-3 w-3" />
+                    </a>
+                    <a 
+                      href="https://orca.so/pools" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[#9945ff] hover:text-[#b279ff] text-sm flex items-center gap-1"
+                    >
+                      Orca <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {lpTokens.map((token) => (
                     <button
                       key={token.mint}
-                      onClick={() => setSelectedToken(token)}
+                      onClick={() => {
+                        setSelectedToken(token);
+                        setIsConfirmed(false);
+                      }}
                       className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
                         selectedToken?.mint === token.mint
                           ? 'bg-[#9945ff]/10 border-[#9945ff]/50'
@@ -237,79 +321,82 @@ export default function BurnLPPage() {
             </div>
 
             {/* Step 2: Confirm */}
-            {selectedToken && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center">
-                    <span className="text-[#9945ff] font-bold">2</span>
+            <AnimatePresence>
+              {selectedToken && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6"
+                >
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center">
+                      <span className="text-[#9945ff] font-bold">2</span>
+                    </div>
+                    <h3 className="text-white font-semibold">Confirm Burn</h3>
                   </div>
-                  <h3 className="text-white font-semibold">Confirm Burn</h3>
-                </div>
 
-                <div className="bg-[#0a0a0f] rounded-xl p-4 mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-zinc-500 text-sm">LP Token</span>
-                    <span className="text-white font-medium">{selectedToken.name}</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-zinc-500 text-sm">Balance</span>
-                    <span className="text-white font-medium">{selectedToken.balance.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-zinc-500 text-sm">Pool</span>
-                    <span className="text-white font-medium">{selectedToken.poolName}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-500 text-sm">Estimated Value</span>
-                    <span className="text-[#14f195] font-medium">{selectedToken.value}</span>
-                  </div>
-                </div>
-
-                <label className="flex items-start gap-3 cursor-pointer mb-6">
-                  <div className="relative flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={isConfirmed}
-                      onChange={(e) => setIsConfirmed(e.target.checked)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 rounded border border-zinc-600 peer-checked:bg-[#9945ff] peer-checked:border-[#9945ff] transition-all flex items-center justify-center">
-                      {isConfirmed && <CheckCircle className="h-3.5 w-3.5 text-white" />}
+                  <div className="bg-[#0a0a0f] rounded-xl p-4 mb-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-zinc-500 text-sm">LP Token</span>
+                      <span className="text-white font-medium">{selectedToken.name}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-zinc-500 text-sm">Balance</span>
+                      <span className="text-white font-medium">{selectedToken.balance.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-zinc-500 text-sm">Pool</span>
+                      <span className="text-white font-medium">{selectedToken.poolName}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-500 text-sm">Estimated Value</span>
+                      <span className="text-[#14f195] font-medium">{selectedToken.value}</span>
                     </div>
                   </div>
-                  <span className="text-zinc-400 text-sm">
-                    I understand this is <span className="text-amber-400 font-semibold">irreversible</span>. 
-                    Once burned, these LP tokens are destroyed forever and the liquidity cannot be withdrawn by anyone.
-                  </span>
-                </label>
 
-                <button
-                  onClick={handleBurn}
-                  disabled={!isConfirmed || isBurning}
-                  className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold transition-all ${
-                    isConfirmed && !isBurning
-                      ? 'bg-gradient-to-r from-[#9945ff] to-[#7c3aed] hover:from-[#b279ff] hover:to-[#9945ff] text-white shadow-lg shadow-[#9945ff]/25'
-                      : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                  }`}
-                >
-                  {isBurning ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Burning LP Tokens...
-                    </>
-                  ) : (
-                    <>
-                      <Flame className="h-5 w-5" />
-                      Burn LP Tokens Permanently
-                    </>
-                  )}
-                </button>
-              </motion.div>
-            )}
+                  <label className="flex items-start gap-3 cursor-pointer mb-6">
+                    <div className="relative flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={isConfirmed}
+                        onChange={(e) => setIsConfirmed(e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-5 h-5 rounded border border-zinc-600 peer-checked:bg-[#9945ff] peer-checked:border-[#9945ff] transition-all flex items-center justify-center">
+                        {isConfirmed && <CheckCircle className="h-3.5 w-3.5 text-white" />}
+                      </div>
+                    </div>
+                    <span className="text-zinc-400 text-sm">
+                      I understand this is <span className="text-amber-400 font-semibold">irreversible</span>. 
+                      Once burned, these LP tokens are destroyed forever and the liquidity cannot be withdrawn by anyone.
+                    </span>
+                  </label>
+
+                  <button
+                    onClick={handleBurn}
+                    disabled={!isConfirmed || isBurning}
+                    className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold transition-all ${
+                      isConfirmed && !isBurning
+                        ? 'bg-gradient-to-r from-[#9945ff] to-[#7c3aed] hover:from-[#b279ff] hover:to-[#9945ff] text-white shadow-lg shadow-[#9945ff]/25'
+                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                    }`}
+                  >
+                    {isBurning ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Burning LP Tokens...
+                      </>
+                    ) : (
+                      <>
+                        <Flame className="h-5 w-5" />
+                        Burn LP Tokens Permanently
+                      </>
+                    )}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Info Box */}
             <div className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6">

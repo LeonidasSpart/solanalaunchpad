@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { useState } from 'react';
-import { Menu, X, Zap, Rocket, ChevronDown, Droplets, Lock, Gift } from 'lucide-react';
+import { Menu, X, Zap, Rocket, ChevronDown, Droplets, Lock, Gift, Flame } from 'lucide-react';
 
 const Header = () => {
   const pathname = usePathname();
@@ -28,6 +28,7 @@ const Header = () => {
     { href: '/add-liquidity', label: 'Add Liquidity', icon: <Droplets className="h-4 w-4" /> },
     { href: '/revoke', label: 'Revoke Authority', icon: <Lock className="h-4 w-4" /> },
     { href: '/airdrop', label: 'Airdrop', icon: <Gift className="h-4 w-4" /> },
+    { href: '/burn-lp', label: 'Burn LP', icon: <Flame className="h-4 w-4" /> },
   ];
 
   const otherLinks = [

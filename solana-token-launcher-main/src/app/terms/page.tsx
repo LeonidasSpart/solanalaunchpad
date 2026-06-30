@@ -111,7 +111,7 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-white mb-3">14. Contact Information</h2>
-          <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:support@zrp.io" className="text-purple-400 hover:underline">support@zrp.io</a> or through our <a href="/contact" className="text-purple-400 hover:underline">contact page</a>.</p>
+          <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:support@zrp.one" className="text-purple-400 hover:underline">support@zrp.one</a> or through our <a href="/contact" className="text-purple-400 hover:underline">contact page</a>.</p>
         </section>
 
         <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mt-6">

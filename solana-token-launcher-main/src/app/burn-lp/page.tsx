@@ -15,12 +15,21 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { burnLPTokens, fetchLPTokens, LPToken } from '@/lib/burn-lp';
-import { useNetworkStore } from '@/lib/network-store';
 
 export default function BurnLPPage() {
   const { connected, publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
-  const { network } = useNetworkStore();
+  
+  const [network, setNetwork] = useState<'devnet' | 'mainnet'>('mainnet');
+  
+  useEffect(() => {
+    const rpcUrl = connection.rpcEndpoint;
+    if (rpcUrl.includes('devnet')) {
+      setNetwork('devnet');
+    } else {
+      setNetwork('mainnet');
+    }
+  }, [connection]);
   
   const [lpTokens, setLpTokens] = useState<LPToken[]>([]);
   const [selectedToken, setSelectedToken] = useState<LPToken | null>(null);

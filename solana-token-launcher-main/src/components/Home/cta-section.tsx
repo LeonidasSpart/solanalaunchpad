@@ -17,7 +17,7 @@ export default function CtaSection() {
             Ready to launch your <span className="text-purple-400">Solana token</span>?
           </h2>
           <p className="text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
-            Join thousands of projects already using our platform to create and manage their tokens.
+            Create, test, and launch your token with confidence. Free devnet testing, transparent mainnet pricing.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">

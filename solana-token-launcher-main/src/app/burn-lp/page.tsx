@@ -12,14 +12,15 @@ import {
   Info,
   ExternalLink,
   RefreshCw,
-  ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { burnLPTokens, fetchLPTokens, LPToken } from '@/lib/burn-lp';
+import { useNetworkStore } from '@/lib/network-store';
 
 export default function BurnLPPage() {
   const { connected, publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
+  const { network } = useNetworkStore();
   
   const [lpTokens, setLpTokens] = useState<LPToken[]>([]);
   const [selectedToken, setSelectedToken] = useState<LPToken | null>(null);
@@ -37,15 +38,14 @@ export default function BurnLPPage() {
     setError('');
     
     try {
-      const tokens = await fetchLPTokens(connection, publicKey);
+      const tokens = await fetchLPTokens(connection, publicKey, network);
       setLpTokens(tokens);
-    } catch (err) {
-      setError('Failed to load LP tokens. Please try again.');
-      console.error('Error loading LP tokens:', err);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load LP tokens.');
     } finally {
       setIsLoading(false);
     }
-  }, [publicKey, connection]);
+  }, [publicKey, connection, network]);
 
   useEffect(() => {
     if (connected && publicKey) {
@@ -54,7 +54,7 @@ export default function BurnLPPage() {
       setLpTokens([]);
       setSelectedToken(null);
     }
-  }, [connected, publicKey, loadLPTokens]);
+  }, [connected, publicKey, network, loadLPTokens]);
 
   const handleBurn = async () => {
     if (!selectedToken || !isConfirmed || !publicKey || !signTransaction) {
@@ -75,12 +75,9 @@ export default function BurnLPPage() {
 
       setTxSignature(signature);
       setBurnComplete(true);
-      
-      // Refresh token list after burn
       await loadLPTokens();
     } catch (err: any) {
       setError(err.message || 'Transaction failed. Please try again.');
-      console.error('Burn error:', err);
     } finally {
       setIsBurning(false);
     }
@@ -95,7 +92,9 @@ export default function BurnLPPage() {
   };
 
   const getExplorerUrl = (sig: string) => {
-    return `https://solscan.io/tx/${sig}`;
+    return network === 'devnet' 
+      ? `https://explorer.solana.com/tx/${sig}?cluster=devnet`
+      : `https://solscan.io/tx/${sig}`;
   };
 
   return (
@@ -302,9 +301,20 @@ export default function BurnLPPage() {
                       }`}
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#9945ff]/20 to-[#14f195]/20 flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">{token.symbol[0]}</span>
-                        </div>
+                        {token.logo ? (
+                          <img 
+                            src={token.logo} 
+                            alt={token.symbol} 
+                            className="w-10 h-10 rounded-lg object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#9945ff]/20 to-[#14f195]/20 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">{token.symbol[0]}</span>
+                          </div>
+                        )}
                         <div className="text-left">
                           <div className="text-white font-medium">{token.name}</div>
                           <div className="text-zinc-500 text-sm">{token.poolName}</div>

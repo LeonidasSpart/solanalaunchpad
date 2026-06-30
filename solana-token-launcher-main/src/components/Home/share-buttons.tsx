@@ -1,6 +1,7 @@
 'use client';
 
-import { Twitter, Send, Share2 } from 'lucide-react';
+import { FaXTwitter } from 'react-icons/fa6';
+import { Send, Share2 } from 'lucide-react';
 
 export default function ShareButtons() {
   const url = typeof window !== 'undefined' ? window.location.origin : '';
@@ -27,7 +28,7 @@ export default function ShareButtons() {
         className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition"
         aria-label="Share on X"
       >
-        <Twitter className="h-4 w-4" />
+        <FaXTwitter className="h-4 w-4" />
       </button>
       <button
         onClick={shareOnTelegram}

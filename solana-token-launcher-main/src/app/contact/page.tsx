@@ -2,7 +2,21 @@
 'use client';
 
 import { useState } from 'react';
-import { Mail, MessageSquare, Send, Twitter, Github, ExternalLink } from 'lucide-react';
+import { Mail, MessageCircle, Send, Github, ExternalLink } from 'lucide-react';
+
+// Custom X icon component
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -27,17 +41,25 @@ export default function ContactPage() {
     setStatus({ type: null, message: '' });
 
     try {
-      // For now, we'll simulate sending
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+
       setStatus({
         type: 'success',
-        message: '✅ Message sent! We\'ll get back to you soon.',
+        message: '✅ Message sent! We\'ll get back to you at contact@zrp.one soon.',
       });
       setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (error) {
       setStatus({
         type: 'error',
-        message: '❌ Something went wrong. Please try again or email us directly.',
+        message: '❌ Something went wrong. Please email us directly at contact@zrp.one.',
       });
     } finally {
       setIsSubmitting(false);
@@ -78,7 +100,7 @@ export default function ContactPage() {
           <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-purple-900/20 flex items-center justify-center">
-                <Twitter className="h-5 w-5 text-purple-400" />
+                <XIcon className="h-5 w-5 text-purple-400" />
               </div>
               <h3 className="text-white font-semibold">X (Twitter)</h3>
             </div>
@@ -95,7 +117,7 @@ export default function ContactPage() {
           <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-lg bg-purple-900/20 flex items-center justify-center">
-                <MessageSquare className="h-5 w-5 text-purple-400" />
+                <MessageCircle className="h-5 w-5 text-purple-400" />
               </div>
               <h3 className="text-white font-semibold">Discord</h3>
             </div>
@@ -131,7 +153,7 @@ export default function ContactPage() {
         <div className="md:col-span-2 bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800">
           <h2 className="text-2xl font-bold text-white mb-2">Send Us a Message</h2>
           <p className="text-zinc-400 text-sm mb-6">
-            Fill out the form below and we'll get back to you as soon as possible.
+            Fill out the form below and we'll get back to you at contact@zrp.one.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">

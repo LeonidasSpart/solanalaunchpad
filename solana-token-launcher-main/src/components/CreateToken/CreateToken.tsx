@@ -11,6 +11,9 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, Rocket, CheckCircle, ExternalLink } from 'lucide-react';
 import { NetworkContext } from '@/providers/providers';
 
+const MAX_IMAGE_SIZE_MB = 5;
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
+
 const CreateToken = () => {
   const { publicKey, signTransaction } = useWallet();
   const { network } = useContext(NetworkContext);
@@ -44,11 +47,34 @@ const CreateToken = () => {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
+    
+    if (selectedFile) {
+      // Validate file size
+      if (selectedFile.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+        setStatus(`❌ Image must be under ${MAX_IMAGE_SIZE_MB}MB`);
+        setFile(null);
+        setImagePreview(null);
+        return;
+      }
+      
+      // Validate file type
+      if (!ALLOWED_IMAGE_TYPES.includes(selectedFile.type)) {
+        setStatus(`❌ Only PNG, JPEG, GIF, or WebP images allowed`);
+        setFile(null);
+        setImagePreview(null);
+        return;
+      }
+      
+      setStatus(''); // Clear any previous error
+    }
+
     setFile(selectedFile);
     if (selectedFile) {
       const reader = new FileReader();
       reader.onloadend = () => setImagePreview(reader.result as string);
       reader.readAsDataURL(selectedFile);
+    } else {
+      setImagePreview(null);
     }
   };
 
@@ -58,25 +84,14 @@ const CreateToken = () => {
         amount: 'FREE', 
         label: 'Free testing on Devnet • No SOL required', 
         badge: '🧪 Free Devnet Testing',
-        details: '0 SOL'
-      };
-    }
-
-    // Check if all revokes are selected (Premium)
-    const allRevokes = revokeMint && revokeFreeze && revokeUpdate;
-    
-    if (allRevokes) {
-      return {
-        amount: '0.5 SOL',
-        label: 'Premium Package • All authorities revoked',
-        badge: '⭐ Premium',
-        details: 'Revoke Mint, Freeze & Update • Social Links included'
+        details: '0 SOL',
+        numericAmount: 0,
       };
     }
 
     // Base fee for mainnet
     let baseFee = 0.15;
-    let details = [];
+    const details: string[] = [];
 
     if (revokeMint) {
       baseFee += 0.15;
@@ -91,15 +106,15 @@ const CreateToken = () => {
       details.push('Revoke Update: +0.15 SOL');
     }
 
-    const totalFee = baseFee.toFixed(2);
+    const totalFee = baseFee;
     const detailText = details.length > 0 ? details.join(' • ') : 'No authority revocations';
 
     return {
-      amount: `${totalFee} SOL`,
+      amount: `${totalFee.toFixed(2)} SOL`,
       label: `Launch on Mainnet • Network rent included`,
       badge: `🔴 Live on Mainnet`,
       details: detailText,
-      total: totalFee
+      numericAmount: totalFee,
     };
   };
 
@@ -153,6 +168,11 @@ const CreateToken = () => {
         revokeUpdate,
         signTransaction,
         network,
+        // NEW: Pass social links to backend
+        website: formData.website.trim() || undefined,
+        twitter: formData.twitter.trim() || undefined,
+        telegram: formData.telegram.trim() || undefined,
+        discord: formData.discord.trim() || undefined,
       });
 
       setTxId(signature);
@@ -162,7 +182,9 @@ const CreateToken = () => {
       let errorMessage = 'Unknown error occurred';
 
       if (error.message?.includes('insufficient')) {
-        errorMessage = 'Insufficient SOL balance. You need at least 0.55 SOL.';
+        // Dynamic error message based on actual fee
+        const requiredSol = fee.numericAmount > 0 ? fee.numericAmount + 0.05 : 0;
+        errorMessage = `Insufficient SOL balance. You need at least ${requiredSol.toFixed(2)} SOL.`;
       } else if (error.message?.includes('rejected') || error.message?.includes('User rejected')) {
         errorMessage = 'Transaction was rejected in wallet.';
       } else if (error.message?.includes('NFT.Storage')) {
@@ -316,6 +338,7 @@ const CreateToken = () => {
             accept="image/png,image/jpeg,image/gif,image/webp"
             className="bg-zinc-800 border-zinc-700 text-white"
           />
+          <p className="text-xs text-zinc-500 mt-1">Max {MAX_IMAGE_SIZE_MB}MB • PNG, JPEG, GIF, or WebP</p>
           {imagePreview && (
             <img
               src={imagePreview}
@@ -331,21 +354,21 @@ const CreateToken = () => {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-white">Revoke Mint Authority</p>
-              <p className="text-sm text-zinc-500">No more tokens can be minted</p>
+              <p className="text-sm text-zinc-500">No more tokens can be minted (+0.15 SOL)</p>
             </div>
             <Switch checked={revokeMint} onCheckedChange={setRevokeMint} />
           </div>
           <div className="flex justify-between items-center">
             <div>
               <p className="text-white">Revoke Freeze Authority</p>
-              <p className="text-sm text-zinc-500">Token accounts cannot be frozen</p>
+              <p className="text-sm text-zinc-500">Token accounts cannot be frozen (+0.15 SOL)</p>
             </div>
             <Switch checked={revokeFreeze} onCheckedChange={setRevokeFreeze} />
           </div>
           <div className="flex justify-between items-center">
             <div>
               <p className="text-white">Revoke Update Authority</p>
-              <p className="text-sm text-zinc-500">Metadata becomes immutable</p>
+              <p className="text-sm text-zinc-500">Metadata becomes immutable (+0.15 SOL)</p>
             </div>
             <Switch checked={revokeUpdate} onCheckedChange={setRevokeUpdate} />
           </div>

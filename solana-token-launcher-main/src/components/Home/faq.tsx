@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, HelpCircle, MessageCircle, Rocket, Settings, DollarSign, TrendingUp, Shield, BarChart3, Wrench, Sparkles } from 'lucide-react';
 
 const faqData = [
   {
     category: 'Getting Started',
-    icon: '🚀',
+    icon: Rocket,
+    iconColor: 'text-purple-400',
+    bgColor: 'bg-purple-500/10',
+    borderColor: 'border-purple-500/20',
     questions: [
       {
         q: 'What is a Solana token creator?',
@@ -26,7 +30,7 @@ const faqData = [
       },
       {
         q: 'Which wallet do I need?',
-        a: 'ZRP supports common Solana wallets including Phantom, Solflare, Torus, and Ledger. Use whichever supported wallet you prefer.'
+        a: 'ZRP supports common Solana wallets including Phantom, Solflare, Backpack, and Ledger. Use whichever supported wallet you prefer.'
       },
       {
         q: 'How much SOL do I need before I start?',
@@ -40,7 +44,10 @@ const faqData = [
   },
   {
     category: 'Token Setup & Configuration',
-    icon: '⚙️',
+    icon: Settings,
+    iconColor: 'text-blue-400',
+    bgColor: 'bg-blue-500/10',
+    borderColor: 'border-blue-500/20',
     questions: [
       {
         q: 'What are token decimals and what should I choose?',
@@ -74,7 +81,10 @@ const faqData = [
   },
   {
     category: 'Costs & Fees',
-    icon: '💰',
+    icon: DollarSign,
+    iconColor: 'text-emerald-400',
+    bgColor: 'bg-emerald-500/10',
+    borderColor: 'border-emerald-500/20',
     questions: [
       {
         q: 'How much does it cost to create a Solana token?',
@@ -96,7 +106,10 @@ const faqData = [
   },
   {
     category: 'After Minting - Trading & Listing',
-    icon: '📈',
+    icon: TrendingUp,
+    iconColor: 'text-amber-400',
+    bgColor: 'bg-amber-500/10',
+    borderColor: 'border-amber-500/20',
     questions: [
       {
         q: 'Can I add liquidity after minting?',
@@ -134,7 +147,10 @@ const faqData = [
   },
   {
     category: 'Security & Trust',
-    icon: '🔒',
+    icon: Shield,
+    iconColor: 'text-cyan-400',
+    bgColor: 'bg-cyan-500/10',
+    borderColor: 'border-cyan-500/20',
     questions: [
       {
         q: 'Is it safe to use ZRP?',
@@ -156,7 +172,10 @@ const faqData = [
   },
   {
     category: 'Tokenomics & Strategy',
-    icon: '📊',
+    icon: BarChart3,
+    iconColor: 'text-rose-400',
+    bgColor: 'bg-rose-500/10',
+    borderColor: 'border-rose-500/20',
     questions: [
       {
         q: 'What is tokenomics and why does it matter?',
@@ -186,7 +205,10 @@ const faqData = [
   },
   {
     category: 'Technical & Advanced',
-    icon: '🔧',
+    icon: Wrench,
+    iconColor: 'text-zinc-400',
+    bgColor: 'bg-zinc-500/10',
+    borderColor: 'border-zinc-500/20',
     questions: [
       {
         q: 'What is Metaplex and does my token use it?',
@@ -221,78 +243,146 @@ const faqData = [
 ];
 
 export default function FAQ() {
-  const [openIndex, setOpenIndex] = useState<{ [key: string]: number | null }>({});
+  const [openIndex, setOpenIndex] = useState<string | null>(null);
 
-  const toggleQuestion = (categoryIndex: number, questionIndex: number) => {
-    const key = `${categoryIndex}-${questionIndex}`;
-    setOpenIndex((prev) => ({
-      ...prev,
-      [key]: prev[key] === questionIndex ? null : questionIndex
-    }));
+  const toggleQuestion = (key: string) => {
+    setOpenIndex((prev) => (prev === key ? null : key));
   };
 
-  const isOpen = (categoryIndex: number, questionIndex: number) => {
-    const key = `${categoryIndex}-${questionIndex}`;
-    return openIndex[key] === questionIndex;
-  };
+  const isOpen = (key: string) => openIndex === key;
 
   return (
-    <section className="py-20 bg-black">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Frequently Asked Questions
+    <section id="faq" className="py-24 bg-gradient-to-b from-black via-zinc-950/30 to-black relative overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/[0.02] rounded-full blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
+        {/* Section Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 mb-6">
+            <HelpCircle className="h-3.5 w-3.5 text-purple-400" />
+            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Support</span>
+          </div>
+          
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
+            Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Questions</span>
           </h2>
-          <p className="text-zinc-400">
+          
+          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
             Everything you need to know about creating Solana tokens — no jargon, straight answers.
           </p>
-        </div>
+        </motion.div>
 
-        {faqData.map((category, catIndex) => (
-          <div key={catIndex} className="mb-8">
-            {/* Category Header */}
-            <div className="flex items-center gap-3 mb-4 pb-2 border-b border-zinc-800">
-              <span className="text-2xl">{category.icon}</span>
-              <h3 className="text-xl font-bold text-white">{category.category}</h3>
-            </div>
-
-            {/* Questions */}
-            <div className="space-y-3">
-              {category.questions.map((faq, qIndex) => (
-                <div
-                  key={qIndex}
-                  className="bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden hover:border-zinc-700 transition"
-                >
-                  <button
-                    className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-zinc-800/30 transition"
-                    onClick={() => toggleQuestion(catIndex, qIndex)}
-                  >
-                    <span className="text-white font-medium text-sm md:text-base">{faq.q}</span>
-                    <ChevronDown
-                      className={`h-5 w-5 text-zinc-400 transition-transform duration-200 flex-shrink-0 ml-4 ${
-                        isOpen(catIndex, qIndex) ? 'rotate-180' : ''
-                      }`}
-                    />
-                  </button>
-                  {isOpen(catIndex, qIndex) && (
-                    <div className="px-6 pb-4 text-zinc-300 text-sm border-t border-zinc-800 pt-3 leading-relaxed">
-                      {faq.a}
-                    </div>
-                  )}
+        {/* FAQ Categories */}
+        <div className="space-y-10">
+          {faqData.map((category, catIndex) => {
+            const Icon = category.icon;
+            return (
+              <motion.div
+                key={catIndex}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: catIndex * 0.05, duration: 0.5 }}
+                viewport={{ once: true, margin: "-50px" }}
+              >
+                {/* Category Header */}
+                <div className="flex items-center gap-3 mb-5 pb-3 border-b border-zinc-800/80">
+                  <div className={`w-10 h-10 rounded-xl ${category.bgColor} flex items-center justify-center border ${category.borderColor}`}>
+                    <Icon className={`h-5 w-5 ${category.iconColor}`} />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">{category.category}</h3>
+                  <span className="ml-auto text-xs text-zinc-500 bg-zinc-800/50 px-2.5 py-1 rounded-full">
+                    {category.questions.length} questions
+                  </span>
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
 
-        <div className="mt-8 text-center">
-          <p className="text-zinc-500 text-sm">
-            Still have questions?{' '}
-            <a href="#" className="text-purple-400 hover:text-purple-300 transition">
-              Contact us
-            </a>
-          </p>
+                {/* Questions */}
+                <div className="space-y-3">
+                  {category.questions.map((faq, qIndex) => {
+                    const key = `${catIndex}-${qIndex}`;
+                    const isExpanded = isOpen(key);
+                    
+                    return (
+                      <div
+                        key={qIndex}
+                        className={`bg-zinc-900/40 backdrop-blur-sm rounded-xl border transition-all duration-300 overflow-hidden ${
+                          isExpanded 
+                            ? 'border-zinc-700 shadow-lg shadow-purple-500/5' 
+                            : 'border-zinc-800/80 hover:border-zinc-700'
+                        }`}
+                      >
+                        <button
+                          className="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-zinc-800/30 transition-colors"
+                          onClick={() => toggleQuestion(key)}
+                        >
+                          <span className="text-white font-medium text-sm sm:text-base pr-4">{faq.q}</span>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                            isExpanded 
+                              ? 'bg-purple-500/20 rotate-180' 
+                              : 'bg-zinc-800/50'
+                          }`}>
+                            <ChevronDown
+                              className={`h-4 w-4 transition-colors duration-300 ${
+                                isExpanded ? 'text-purple-400' : 'text-zinc-500'
+                              }`}
+                            />
+                          </div>
+                        </button>
+                        
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-5 sm:px-6 pb-5 text-zinc-300 text-sm sm:text-base leading-relaxed border-t border-zinc-800/50 pt-4">
+                                {faq.a}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
+
+        {/* Contact CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          viewport={{ once: true }}
+          className="mt-16 text-center"
+        >
+          <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-purple-900/20 via-purple-900/10 to-blue-900/20 border border-purple-500/20 rounded-2xl px-8 py-5 backdrop-blur-sm">
+            <MessageCircle className="h-6 w-6 text-purple-400" />
+            <div className="text-left">
+              <div className="text-white font-semibold">Still have questions?</div>
+              <div className="text-sm text-zinc-400">We&apos;re here to help you launch</div>
+            </div>
+            <a 
+              href="/contact"
+              className="ml-0 sm:ml-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
+            >
+              Contact Us
+            </a>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

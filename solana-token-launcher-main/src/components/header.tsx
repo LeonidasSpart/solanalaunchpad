@@ -33,18 +33,26 @@ const Header = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Logo — YOUR ACTUAL LOGO RESTORED */}
           <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
-            <div className="relative w-9 h-9 rounded-xl bg-gradient-to-br from-[#9945ff] to-[#14f195] flex items-center justify-center">
-              <span className="text-white font-bold text-lg">Z</span>
+            <div className="relative">
+              <Image
+                src="/logo.png"
+                alt="ZRP Logo"
+                width={38}
+                height={38}
+                className="rounded-xl"
+                priority
+              />
+              <div className="absolute inset-0 rounded-xl bg-[#9945ff]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-white">ZRP</span>
+              <span className="text-lg font-bold tracking-tight text-white group-hover:text-[#9945ff] transition">ZRP</span>
               <span className="text-[10px] text-zinc-500 -mt-1 tracking-wider uppercase">Token Launcher</span>
             </div>
           </Link>
 
-          {/* Center CTA — Like competitor but better */}
+          {/* Center CTA */}
           <div className="hidden md:flex items-center">
             <Link
               href="/create-mint"
@@ -80,7 +88,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Menu — Minimal like competitor */}
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-[#9945ff]/10 py-4 space-y-2">
             <Link

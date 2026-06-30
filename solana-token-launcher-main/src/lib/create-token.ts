@@ -313,6 +313,31 @@ export async function createToken({
     throw new Error(`Transaction failed: ${confirmation.value.err.toString()}`);
   }
 
+  // 9. SAVE TO DATABASE (best effort — don't fail if DB save fails)
+  try {
+    fetch('/api/tokens', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mint_address: mint.toBase58(),
+        name,
+        symbol,
+        description,
+        image_url: imageUrl,
+        metadata_uri: metadataUri,
+        network,
+        creator_wallet: wallet.toBase58(),
+        supply: Number(supplyInBaseUnits),
+        decimals,
+        revoke_mint: revokeMint,
+        revoke_freeze: revokeFreeze,
+        revoke_update: revokeUpdate,
+      }),
+    }).catch(err => console.error('DB save failed:', err));
+  } catch (err) {
+    console.error('Failed to save token to DB:', err);
+  }
+
   return txId;
 }
 

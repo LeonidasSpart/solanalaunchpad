@@ -2,54 +2,54 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Check, X } from 'lucide-react';
+import { Check, X, Info } from 'lucide-react';
 
 const plans = [
   {
     name: 'Free',
     price: '$0',
-    description: 'Test on devnet',
+    description: 'Test on devnet with zero cost',
     features: [
       { name: 'Devnet Testing', included: true },
-      { name: 'Test SOL Faucet', included: true },
       { name: 'Token Creation', included: true },
+      { name: 'IPFS Image Storage', included: true },
+      { name: 'Social Links', included: true },
       { name: 'Mainnet Launch', included: false },
-      { name: 'Revoke Authorities', included: false },
-      { name: 'Social Links', included: false },
+      { name: 'Authority Revocations', included: false },
     ],
-    button: 'Get Started',
+    button: 'Test Free',
     buttonColor: 'bg-zinc-800 hover:bg-zinc-700',
     popular: false
   },
   {
-    name: 'Standard',
+    name: 'Basic',
     price: '0.15 SOL',
     description: 'Launch on mainnet',
     features: [
       { name: 'Devnet Testing', included: true },
-      { name: 'Test SOL Faucet', included: true },
-      { name: 'Token Creation', included: true },
       { name: 'Mainnet Launch', included: true },
-      { name: 'Revoke Authorities', included: false },
-      { name: 'Social Links', included: false },
+      { name: 'Token Creation', included: true },
+      { name: 'IPFS Image Storage', included: true },
+      { name: 'Social Links', included: true },
+      { name: 'Authority Revocations', included: false },
     ],
     button: 'Launch Token',
     buttonColor: 'bg-purple-600 hover:bg-purple-700',
     popular: true
   },
   {
-    name: 'Premium',
-    price: '0.5 SOL',
-    description: 'Everything included',
+    name: 'Secure',
+    price: '0.60 SOL',
+    description: 'All authorities revoked',
     features: [
-      { name: 'Devnet Testing', included: true },
-      { name: 'Test SOL Faucet', included: true },
-      { name: 'Token Creation', included: true },
-      { name: 'Mainnet Launch', included: true },
-      { name: 'Revoke Authorities', included: true },
-      { name: 'Social Links', included: true },
+      { name: 'Everything in Basic', included: true },
+      { name: 'Revoke Mint Authority', included: true },
+      { name: 'Revoke Freeze Authority', included: true },
+      { name: 'Revoke Update Authority', included: true },
+      { name: 'Immutable Metadata', included: true },
+      { name: 'Maximum Trust', included: true },
     ],
-    button: 'Launch Premium',
+    button: 'Launch Secure',
     buttonColor: 'bg-purple-600 hover:bg-purple-700',
     popular: false
   }
@@ -63,6 +63,7 @@ export default function PricingTable() {
           <h2 className="text-4xl font-bold text-white mb-4">Simple, Transparent Pricing</h2>
           <p className="text-zinc-400 max-w-2xl mx-auto">
             Start for free on devnet. Pay only when you&apos;re ready to launch on mainnet.
+            No subscriptions, no hidden fees.
           </p>
         </div>
 
@@ -114,6 +115,17 @@ export default function PricingTable() {
               </Link>
             </motion.div>
           ))}
+        </div>
+
+        {/* Fee breakdown note */}
+        <div className="mt-8 text-center">
+          <p className="text-zinc-500 text-sm flex items-center justify-center gap-2">
+            <Info className="h-4 w-4" />
+            Each authority revocation adds 0.15 SOL. 
+            <Link href="/pricing" className="text-purple-400 hover:text-purple-300 underline">
+              See full pricing breakdown
+            </Link>
+          </p>
         </div>
       </div>
     </section>

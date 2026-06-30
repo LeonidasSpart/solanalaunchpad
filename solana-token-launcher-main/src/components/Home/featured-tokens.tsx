@@ -1,38 +1,34 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ArrowUpRight, Star } from 'lucide-react';
+import { ArrowUpRight, Info } from 'lucide-react';
 
 const tokens = [
   {
-    name: 'ZRPDEEPSEEK',
-    symbol: 'ZDP',
-    price: '$1.23',
-    change: '+12.5%',
+    name: 'ExampleToken',
+    symbol: 'EXMPL',
+    description: 'Basic token with standard metadata',
     icon: '🤖',
     color: 'from-purple-500/20 to-purple-600/5'
   },
   {
-    name: 'SolToken',
-    symbol: 'SOLT',
-    price: '$32.45',
-    change: '+8.2%',
+    name: 'DemoCoin',
+    symbol: 'DEMO',
+    description: 'Token with revoked mint authority',
     icon: '🪙',
     color: 'from-blue-500/20 to-blue-600/5'
   },
   {
-    name: 'LunaToken',
-    symbol: 'LUN',
-    price: '$0.89',
-    change: '+5.7%',
+    name: 'TestToken',
+    symbol: 'TEST',
+    description: 'Token with all authorities revoked',
     icon: '🌙',
     color: 'from-emerald-500/20 to-emerald-600/5'
   },
   {
-    name: 'StarToken',
-    symbol: 'STR',
-    price: '$1.23',
-    change: '-2.1%',
+    name: 'SampleCoin',
+    symbol: 'SMPL',
+    description: 'Token with full branding and social links',
     icon: '⭐',
     color: 'from-yellow-500/20 to-yellow-600/5'
   },
@@ -49,18 +45,17 @@ export default function FeaturedTokens() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Featured</span>
+          <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Examples</span>
           <h2 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
-            Popular Tokens <span className="text-purple-400">Launched on ZRP</span>
+            Example <span className="text-purple-400">Token Previews</span>
           </h2>
           <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-            Discover some of the most popular tokens created by our community
+            These are example tokens showing what your token could look like on Solana
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {tokens.map((token, index) => {
-            const isPositive = token.change.startsWith('+');
             return (
               <motion.div
                 key={index}
@@ -80,22 +75,13 @@ export default function FeaturedTokens() {
                         <p className="text-zinc-500 text-xs">{token.symbol}</p>
                       </div>
                     </div>
-                    <div className={`flex items-center gap-1 text-sm font-medium ${
-                      isPositive ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      <ArrowUpRight className={`h-3 w-3 ${isPositive ? '' : 'rotate-180'}`} />
-                      {token.change}
+                    <div className="flex items-center gap-1 text-xs text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-full">
+                      <Info className="h-3 w-3" />
+                      <span>Example</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-white">{token.price}</span>
-                    <div className="flex items-center gap-0.5">
-                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                      <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-                      <Star className="h-3 w-3 text-yellow-400/30" />
-                    </div>
+                  <div className="mt-4">
+                    <p className="text-zinc-400 text-sm">{token.description}</p>
                   </div>
                 </div>
               </motion.div>

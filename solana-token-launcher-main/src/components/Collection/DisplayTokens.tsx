@@ -6,7 +6,17 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getTokenMetadata, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Coins, AlertCircle, ExternalLink, Copy, Check, Globe } from 'lucide-react';
+import { 
+  Loader2, 
+  Coins, 
+  AlertCircle, 
+  ExternalLink, 
+  Copy, 
+  Check, 
+  Globe,
+  User,
+  Globe2
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import EmptyCollection from '@/components/Collection/EmptyCollection';
 import { RPC_URLS, NETWORKS } from '@/lib/constants';
@@ -20,14 +30,21 @@ interface TokenData {
   balance: number;
   decimals: number;
   uri: string;
+  creator_wallet?: string;
+  created_at?: string;
+  revoke_mint?: boolean;
+  revoke_freeze?: boolean;
+  revoke_update?: boolean;
 }
 
 type NetworkType = 'devnet' | 'mainnet';
+type ViewMode = 'my' | 'all';
 
 const DisplayTokens = () => {
   const wallet = useWallet();
   const router = useRouter();
   const [network, setNetwork] = useState<NetworkType>('devnet');
+  const [viewMode, setViewMode] = useState<ViewMode>('my');
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -136,9 +153,44 @@ const DisplayTokens = () => {
     }
   }, [wallet.publicKey, connection]);
 
+  const fetchAllTokens = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/tokens?network=${network}&limit=50`);
+      if (!response.ok) throw new Error('Failed to fetch tokens');
+      const data = await response.json();
+      setTokens(data.map((t: any) => ({
+        mint: t.mint_address,
+        name: t.name,
+        symbol: t.symbol,
+        image: t.image_url || '/placeholder.svg?height=200&width=200',
+        description: t.description,
+        balance: Number(t.supply) / Math.pow(10, t.decimals),
+        decimals: t.decimals,
+        uri: t.metadata_uri,
+        creator_wallet: t.creator_wallet,
+        created_at: t.created_at,
+        revoke_mint: t.revoke_mint,
+        revoke_freeze: t.revoke_freeze,
+        revoke_update: t.revoke_update,
+      })));
+    } catch (err) {
+      console.error('Error fetching all tokens:', err);
+      setError('Failed to fetch tokens from database.');
+    } finally {
+      setLoading(false);
+    }
+  }, [network]);
+
   useEffect(() => {
-    fetchWalletTokens();
-  }, [fetchWalletTokens]);
+    if (viewMode === 'my') {
+      fetchWalletTokens();
+    } else {
+      fetchAllTokens();
+    }
+  }, [viewMode, fetchWalletTokens, fetchAllTokens]);
 
   const handleCopyMint = (mint: string) => {
     navigator.clipboard.writeText(mint);
@@ -154,7 +206,7 @@ const DisplayTokens = () => {
     ? 'https://solscan.io/token/' 
     : 'https://solscan.io/token/?cluster=devnet';
 
-  if (!wallet.publicKey) {
+  if (!wallet.publicKey && viewMode === 'my') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
         <motion.div
@@ -179,45 +231,75 @@ const DisplayTokens = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* Header with Network Toggle */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Your Token Collection</h1>
-              <p className="text-zinc-400">
-                Connected: {wallet.publicKey.toBase58().slice(0, 6)}...{wallet.publicKey.toBase58().slice(-6)}
-              </p>
+              <h1 className="text-3xl font-bold text-white mb-2">Token Explorer</h1>
+              {wallet.publicKey && (
+                <p className="text-zinc-400 text-sm">
+                  Connected: {wallet.publicKey.toBase58().slice(0, 6)}...{wallet.publicKey.toBase58().slice(-6)}
+                </p>
+              )}
             </div>
             
-            {/* Network Toggle */}
-            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5">
-              <button
-                onClick={() => setNetwork('devnet')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  network === 'devnet'
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                }`}
-              >
-                <Globe className="h-4 w-4" />
-                Devnet
-              </button>
-              <button
-                onClick={() => setNetwork('mainnet')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  network === 'mainnet'
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                }`}
-              >
-                <Globe className="h-4 w-4" />
-                Mainnet
-              </button>
+            <div className="flex flex-wrap items-center gap-3">
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5">
+                <button
+                  onClick={() => setViewMode('my')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    viewMode === 'my'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  <User className="h-4 w-4" />
+                  My Tokens
+                </button>
+                <button
+                  onClick={() => setViewMode('all')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    viewMode === 'all'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  <Globe2 className="h-4 w-4" />
+                  All Tokens
+                </button>
+              </div>
+
+              {/* Network Toggle */}
+              <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5">
+                <button
+                  onClick={() => setNetwork('devnet')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    network === 'devnet'
+                      ? 'bg-purple-600 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  <Globe className="h-4 w-4" />
+                  Devnet
+                </button>
+                <button
+                  onClick={() => setNetwork('mainnet')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    network === 'mainnet'
+                      ? 'bg-purple-600 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                  }`}
+                >
+                  <Globe className="h-4 w-4" />
+                  Mainnet
+                </button>
+              </div>
             </div>
           </div>
           
@@ -231,7 +313,10 @@ const DisplayTokens = () => {
               {network === 'mainnet' ? '⚡ Live Mainnet' : '🧪 Devnet Testing'}
             </span>
             <span className="text-sm text-zinc-500">
-              {tokens.length} token{tokens.length !== 1 ? 's' : ''} found
+              {viewMode === 'my' ? 'Your wallet tokens' : 'All tokens created on ZRP'}
+            </span>
+            <span className="text-sm text-zinc-500">
+              • {tokens.length} token{tokens.length !== 1 ? 's' : ''}
             </span>
           </div>
         </motion.div>
@@ -239,7 +324,9 @@ const DisplayTokens = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-purple-400 mb-4" />
-            <span className="text-zinc-400">Loading your {network} tokens...</span>
+            <span className="text-zinc-400">
+              {viewMode === 'my' ? 'Loading your tokens...' : 'Loading all tokens...'}
+            </span>
           </div>
         ) : error ? (
           <motion.div
@@ -250,7 +337,7 @@ const DisplayTokens = () => {
             <AlertCircle className="h-8 w-8 text-red-400 mx-auto mb-3" />
             <p className="text-red-400">{error}</p>
             <button
-              onClick={fetchWalletTokens}
+              onClick={viewMode === 'my' ? fetchWalletTokens : fetchAllTokens}
               className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
             >
               Try Again
@@ -259,7 +346,7 @@ const DisplayTokens = () => {
         ) : tokens.length > 0 ? (
           <AnimatePresence mode="wait">
             <motion.div
-              key={network}
+              key={`${viewMode}-${network}`}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               initial="hidden"
               animate="visible"
@@ -291,6 +378,11 @@ const DisplayTokens = () => {
                           {token.balance.toLocaleString()} {token.symbol}
                         </span>
                       </div>
+                      {viewMode === 'all' && token.revoke_mint && token.revoke_freeze && token.revoke_update && (
+                        <div className="absolute top-3 left-3 bg-green-500/20 backdrop-blur-sm rounded-full px-2 py-1">
+                          <span className="text-xs font-semibold text-green-400">✓ Fully Secure</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-5">
@@ -304,6 +396,13 @@ const DisplayTokens = () => {
                       {token.description && (
                         <p className="text-sm text-zinc-400 line-clamp-2 mb-4">
                           {token.description}
+                        </p>
+                      )}
+
+                      {viewMode === 'all' && token.creator_wallet && (
+                        <p className="text-xs text-zinc-500 mb-3">
+                          Created by: {token.creator_wallet.slice(0, 6)}...{token.creator_wallet.slice(-6)}
+                          {token.created_at && ` • ${new Date(token.created_at).toLocaleDateString()}`}
                         </p>
                       )}
 

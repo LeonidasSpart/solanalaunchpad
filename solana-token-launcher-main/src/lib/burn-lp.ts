@@ -2,215 +2,226 @@ import {
   Connection, 
   PublicKey, 
   Transaction,
-  LAMPORTS_PER_SOL
 } from '@solana/web3.js';
 import {
   createTransferInstruction,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountInstruction,
   TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
   getAccount,
-  getMint
 } from '@solana/spl-token';
 
-// Known LP token programs / common LP token mints
-// Raydium LP tokens use the standard SPL token program
-// Orca LP tokens also use standard SPL token program
-const KNOWN_LP_PROGRAMS = [
-  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA', // SPL Token
-  'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb', // Token-2022
-];
+// ─── Helius Integration ─────────────────────────────────────────────
 
-// Common DEX LP token identifiers (by pool program or known patterns)
-// In production, you'd use a more robust method (Jupiter API, Helius, etc.)
-const KNOWN_POOL_PROGRAMS = [
-  '675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8', // Raydium AMM
-  '6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P', // Pump.fun
-  'whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc', // Orca Whirlpool
-];
+const HELIUS_API_KEY = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
+if (!HELIUS_API_KEY) {
+  throw new Error('NEXT_PUBLIC_HELIUS_API_KEY is required');
+}
+
+const HELIUS_RPC_DEVNET = `https://devnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+const HELIUS_RPC_MAINNET = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+
+function getHeliusRpc(network: 'devnet' | 'mainnet' = 'mainnet'): string {
+  return network === 'devnet' ? HELIUS_RPC_DEVNET : HELIUS_RPC_MAINNET;
+}
+
+interface HeliusTokenMetadata {
+  mint: string;
+  onChainData?: {
+    name?: string;
+    symbol?: string;
+    uri?: string;
+  };
+  offChainData?: {
+    name?: string;
+    symbol?: string;
+    image?: string;
+  };
+}
+
+async function getHeliusTokenMetadata(
+  mints: string[],
+  network: 'devnet' | 'mainnet'
+): Promise<HeliusTokenMetadata[]> {
+  const baseUrl = network === 'devnet' 
+    ? 'https://api-devnet.helius.xyz/v0'
+    : 'https://api.helius.xyz/v0';
+    
+  const response = await fetch(`${baseUrl}/token-metadata?api-key=${HELIUS_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mintAccounts: mints }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Helius metadata error: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+// ─── Types ────────────────────────────────────────────────────────
 
 export interface LPToken {
   mint: string;
   name: string;
   symbol: string;
   balance: number;
+  rawBalance: bigint;        // ← Added: precise BigInt for tx
+  decimals: number;
   poolName: string;
   value: string;
-  decimals: number;
-  ata: string; // Associated token account address
+  ata: string;
+  logo?: string;
 }
 
-// Burn address - no one has the private key
-const BURN_ADDRESS = new PublicKey('11111111111111111111111111111111');
-
-// Alternative: Use the token mint itself as burn destination (more reliable)
-// const getBurnDestination = (mint: PublicKey) => mint;
-
-/**
- * Fetch LP tokens from wallet
- * This checks all token accounts and filters for likely LP tokens
- */
-export async function fetchLPTokens(
-  connection: Connection,
-  wallet: PublicKey
-): Promise<LPToken[]> {
-  const lpTokens: LPToken[] = [];
-
-  try {
-    // Get all token accounts for this wallet
-    const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-      wallet,
-      { programId: TOKEN_PROGRAM_ID }
-    );
-
-    // Also check Token-2022
-    const token2022Accounts = await connection.getParsedTokenAccountsByOwner(
-      wallet,
-      { programId: new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb') }
-    );
-
-    const allAccounts = [...tokenAccounts.value, ...token2022Accounts.value];
-
-    for (const accountInfo of allAccounts) {
-      const parsed = accountInfo.account.data.parsed;
-      const mint = parsed.info.mint;
-      const balance = Number(parsed.info.tokenAmount.amount);
-      const decimals = parsed.info.tokenAmount.decimals;
-      const uiBalance = parsed.info.tokenAmount.uiAmount || 0;
-
-      // Skip zero balance accounts
-      if (balance === 0) continue;
-
-      // Check if this looks like an LP token
-      const isLPToken = await checkIfLPToken(connection, new PublicKey(mint));
-
-      if (isLPToken) {
-        const lpToken: LPToken = {
-          mint,
-          name: isLPToken.name,
-          symbol: isLPToken.symbol,
-          balance: uiBalance,
-          poolName: isLPToken.poolName,
-          value: '~Calculating...', // You'd fetch real value from pool data
-          decimals,
-          ata: accountInfo.pubkey.toBase58(),
-        };
-
-        lpTokens.push(lpToken);
-      }
-    }
-
-    return lpTokens;
-  } catch (error) {
-    console.error('Error fetching LP tokens:', error);
-    throw new Error('Failed to fetch LP tokens from wallet');
-  }
-}
-
-/**
- * Check if a token mint is an LP token
- * This uses heuristics and known patterns. In production, use a DEX API or indexing service.
- */
-async function checkIfLPToken(
-  connection: Connection,
-  mint: PublicKey
-): Promise<{ name: string; symbol: string; poolName: string } | null> {
-  try {
-    // Method 1: Check if mint is in a known LP token list (you'd maintain this)
-    // For now, we'll use a heuristic approach
-
-    // Get mint info
-    const mintInfo = await getMint(connection, mint);
-    
-    // LP tokens typically have 6 or 9 decimals
-    if (mintInfo.decimals !== 6 && mintInfo.decimals !== 9) {
-      return null;
-    }
-
-    // Try to fetch metadata (Metaplex)
-    const metadata = await fetchTokenMetadata(connection, mint);
-    
-    if (metadata) {
-      const name = metadata.name || '';
-      const symbol = metadata.symbol || '';
-      
-      // Check if name/symbol indicates LP token
-      const lpIndicators = ['LP', 'lp', 'Liquidity', 'RAY', 'ORCA', 'Whirlpool'];
-      const isLP = lpIndicators.some(ind => 
-        name.includes(ind) || symbol.includes(ind)
-      );
-
-      if (isLP) {
-        let poolName = 'Unknown DEX';
-        if (name.includes('RAY') || symbol.includes('RAY')) poolName = 'Raydium';
-        else if (name.includes('ORCA') || symbol.includes('ORCA')) poolName = 'Orca';
-        else if (name.includes('Whirlpool')) poolName = 'Orca Whirlpool';
-        else if (name.includes('Pump')) poolName = 'Pump.fun';
-
-        return { name, symbol, poolName };
-      }
-    }
-
-    // Method 2: Check if token is associated with known pool programs
-    // This requires more complex account analysis - simplified here
-    
-    return null;
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * Fetch Metaplex metadata for a token
- */
-async function fetchTokenMetadata(connection: Connection, mint: PublicKey) {
-  try {
-    const METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
-    
-    const [metadataPDA] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        METADATA_PROGRAM_ID.toBuffer(),
-        mint.toBuffer(),
-      ],
-      METADATA_PROGRAM_ID
-    );
-
-    const accountInfo = await connection.getAccountInfo(metadataPDA);
-    if (!accountInfo) return null;
-
-    // Parse metadata (simplified - use @metaplex-foundation/mpl-token-metadata in production)
-    const data = accountInfo.data;
-    
-    // Skip header (1 byte key + 1 byte update auth + 32 bytes mint + ...)
-    let offset = 1 + 1 + 32;
-    
-    // Read name length and name
-    const nameLen = data.readUInt32LE(offset);
-    offset += 4;
-    const name = data.slice(offset, offset + nameLen).toString('utf8').replace(/\0/g, '');
-    offset += nameLen;
-    
-    // Read symbol length and symbol
-    const symbolLen = data.readUInt32LE(offset);
-    offset += 4;
-    const symbol = data.slice(offset, offset + symbolLen).toString('utf8').replace(/\0/g, '');
-
-    return { name: name.trim(), symbol: symbol.trim() };
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
- * Burn LP tokens by transferring to burn address
- */
 export interface BurnLPParams {
   connection: Connection;
   wallet: PublicKey;
   signTransaction: (transaction: Transaction) => Promise<Transaction>;
   lpToken: LPToken;
 }
+
+// ─── LP Token Detection ───────────────────────────────────────────
+
+const LP_PATTERNS = [
+  { regex: /raydium|ray/i, pool: 'Raydium' },
+  { regex: /orca|whirlpool/i, pool: 'Orca' },
+  { regex: /meteora/i, pool: 'Meteora' },
+  { regex: /lifinity/i, pool: 'Lifinity' },
+  { regex: /cropper/i, pool: 'Cropper' },
+  { regex: /pool|lp|liquidity/i, pool: 'DEX Pool' },
+  { regex: /pump/i, pool: 'Pump.fun' },
+];
+
+function identifyLPToken(meta: HeliusTokenMetadata): { 
+  name: string; 
+  symbol: string; 
+  poolName: string 
+} | null {
+  const name = meta.onChainData?.name || meta.offChainData?.name || '';
+  const symbol = meta.onChainData?.symbol || meta.offChainData?.symbol || '';
+
+  for (const pattern of LP_PATTERNS) {
+    if (pattern.regex.test(name) || pattern.regex.test(symbol)) {
+      return {
+        name: name || `${pattern.pool} LP`,
+        symbol: symbol || 'LP',
+        poolName: pattern.pool,
+      };
+    }
+  }
+
+  return null;
+}
+
+// ─── Fetch LP Tokens ──────────────────────────────────────────────
+
+export async function fetchLPTokens(
+  connection: Connection,
+  wallet: PublicKey,
+  network: 'devnet' | 'mainnet' = 'mainnet'
+): Promise<LPToken[]> {
+  const walletStr = wallet.toBase58();
+
+  try {
+    // Use Helius RPC for faster token account fetching
+    const rpc = getHeliusRpc(network);
+    
+    const [tokenResponse, token2022Response] = await Promise.all([
+      fetch(rpc, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'token-accounts',
+          method: 'getTokenAccountsByOwner',
+          params: [
+            walletStr,
+            { programId: TOKEN_PROGRAM_ID.toBase58() },
+            { encoding: 'jsonParsed' },
+          ],
+        }),
+      }),
+      fetch(rpc, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 'token2022-accounts',
+          method: 'getTokenAccountsByOwner',
+          params: [
+            walletStr,
+            { programId: TOKEN_2022_PROGRAM_ID.toBase58() },
+            { encoding: 'jsonParsed' },
+          ],
+        }),
+      }),
+    ]);
+
+    const [tokenData, token2022Data] = await Promise.all([
+      tokenResponse.json(),
+      token2022Response.json(),
+    ]);
+
+    const allAccounts = [
+      ...(tokenData.result?.value || []),
+      ...(token2022Data.result?.value || []),
+    ];
+
+    // Filter non-zero balances
+    const nonZeroAccounts = allAccounts.filter((item: any) => {
+      const amount = Number(item.account.data.parsed.info.tokenAmount.amount);
+      return amount > 0;
+    });
+
+    if (nonZeroAccounts.length === 0) return [];
+
+    // Fetch metadata in batch via Helius
+    const mints = nonZeroAccounts.map((item: any) => 
+      item.account.data.parsed.info.mint
+    );
+    
+    const metadata = await getHeliusTokenMetadata(mints, network);
+
+    const lpTokens: LPToken[] = [];
+
+    for (const item of nonZeroAccounts) {
+      const parsed = item.account.data.parsed.info;
+      const mint = parsed.mint;
+      const decimals = parsed.tokenAmount.decimals;
+      const rawAmount = BigInt(parsed.tokenAmount.amount);
+      const uiAmount = Number(parsed.tokenAmount.uiAmount) || 0;
+
+      const meta = metadata.find((m) => m.mint === mint);
+      if (!meta) continue;
+
+      const lpInfo = identifyLPToken(meta);
+      if (!lpInfo) continue;
+
+      lpTokens.push({
+        mint,
+        name: lpInfo.name,
+        symbol: lpInfo.symbol,
+        balance: uiAmount,
+        rawBalance: rawAmount,        // ← Precise BigInt from RPC
+        decimals,
+        poolName: lpInfo.poolName,
+        value: '~Value TBD',          // ← Fetch from DEX API in v2
+        ata: item.pubkey,
+        logo: meta.offChainData?.image,
+      });
+    }
+
+    return lpTokens;
+  } catch (error: any) {
+    console.error('Error fetching LP tokens:', error);
+    throw new Error(error.message || 'Failed to fetch LP tokens');
+  }
+}
+
+// ─── Burn LP Tokens ───────────────────────────────────────────────
 
 export async function burnLPTokens({
   connection,
@@ -222,23 +233,19 @@ export async function burnLPTokens({
     const mint = new PublicKey(lpToken.mint);
     const sourceATA = new PublicKey(lpToken.ata);
     
-    // Use the token mint itself as burn destination (most reliable)
-    // No one can access tokens at the mint address
+    // Burn destination: the token mint itself (no one can access)
     const burnDestination = mint;
-
-    // Get the burn destination ATA (may not exist)
     const burnATA = getAssociatedTokenAddressSync(mint, burnDestination, true);
 
     const transaction = new Transaction();
-    
-    // Check if burn ATA exists, if not create it
+
+    // Create burn ATA if it doesn't exist
     try {
       await getAccount(connection, burnATA);
     } catch {
-      // ATA doesn't exist, create it
       transaction.add(
         createAssociatedTokenAccountInstruction(
-          wallet, // payer
+          wallet,        // payer
           burnATA,
           burnDestination,
           mint
@@ -246,15 +253,13 @@ export async function burnLPTokens({
       );
     }
 
-    // Add transfer instruction - send ALL LP tokens
-    const balance = BigInt(Math.floor(lpToken.balance * Math.pow(10, lpToken.decimals)));
-    
+    // Transfer ALL LP tokens using rawBalance (precise BigInt)
     transaction.add(
       createTransferInstruction(
         sourceATA,
         burnATA,
         wallet,
-        balance,
+        lpToken.rawBalance,     // ← Uses precise BigInt, no float conversion
         [],
         TOKEN_PROGRAM_ID
       )
@@ -265,16 +270,14 @@ export async function burnLPTokens({
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = wallet;
 
-    // Simulate first
+    // Simulate first (catches errors before wallet popup)
     const simulation = await connection.simulateTransaction(transaction);
     if (simulation.value.err) {
       throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
     }
 
-    // Sign
+    // Sign & send
     const signed = await signTransaction(transaction);
-
-    // Send
     const signature = await connection.sendRawTransaction(signed.serialize(), {
       skipPreflight: false,
       preflightCommitment: 'confirmed',

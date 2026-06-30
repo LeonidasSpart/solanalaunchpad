@@ -6,7 +6,7 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getTokenMetadata, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Coins, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
+import { Loader2, Coins, AlertCircle, ExternalLink, Copy, Check, Globe } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import EmptyCollection from '@/components/Collection/EmptyCollection';
 import { RPC_URLS, NETWORKS } from '@/lib/constants';
@@ -22,15 +22,21 @@ interface TokenData {
   uri: string;
 }
 
+type NetworkType = 'devnet' | 'mainnet';
+
 const DisplayTokens = () => {
   const wallet = useWallet();
   const router = useRouter();
+  const [network, setNetwork] = useState<NetworkType>('devnet');
   const [tokens, setTokens] = useState<TokenData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedMint, setCopiedMint] = useState<string | null>(null);
 
-  const connection = new Connection(RPC_URLS[NETWORKS.DEVNET], 'confirmed');
+  const connection = new Connection(
+    network === 'mainnet' ? RPC_URLS[NETWORKS.MAINNET] : RPC_URLS[NETWORKS.DEVNET],
+    'confirmed'
+  );
 
   const fetchMetadataFromUri = async (uri: string): Promise<any> => {
     try {
@@ -52,7 +58,6 @@ const DisplayTokens = () => {
     setError(null);
 
     try {
-      // Get all token accounts owned by the wallet
       const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
         wallet.publicKey,
         { programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') }
@@ -65,11 +70,9 @@ const DisplayTokens = () => {
         const balance = Number(tokenAmount.uiAmount);
         const decimals = tokenAmount.decimals;
 
-        // Skip tokens with 0 balance
         if (balance === 0) return null;
 
         try {
-          // Fetch on-chain metadata
           const metadata = await getTokenMetadata(
             connection,
             new PublicKey(mintAddress),
@@ -108,7 +111,6 @@ const DisplayTokens = () => {
             uri,
           } as TokenData;
         } catch {
-          // If metadata fetch fails, return basic info
           return {
             mint: mintAddress,
             name: 'Unknown Token',
@@ -124,10 +126,7 @@ const DisplayTokens = () => {
 
       const results = await Promise.all(tokenDataPromises);
       const validTokens = results.filter((t): t is TokenData => t !== null);
-      
-      // Sort by balance descending
       validTokens.sort((a, b) => b.balance - a.balance);
-      
       setTokens(validTokens);
     } catch (err) {
       console.error('Error fetching tokens:', err);
@@ -151,7 +150,10 @@ const DisplayTokens = () => {
     router.push(`/tokens/${mint}`);
   };
 
-  // Not connected state
+  const solscanBaseUrl = network === 'mainnet' 
+    ? 'https://solscan.io/token/' 
+    : 'https://solscan.io/token/?cluster=devnet';
+
   if (!wallet.publicKey) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
@@ -166,7 +168,7 @@ const DisplayTokens = () => {
           </div>
           <h2 className="text-2xl font-bold text-white mb-3">Your Token Collection</h2>
           <p className="text-zinc-400 mb-8">
-            Connect your wallet to view all your SPL tokens created on Solana.
+            Connect your wallet to view all your SPL tokens on {network === 'mainnet' ? 'Mainnet' : 'Devnet'}.
           </p>
           <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700 !rounded-xl !px-6 !py-3 !font-semibold !text-white" />
         </motion.div>
@@ -177,30 +179,69 @@ const DisplayTokens = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+        {/* Header with Network Toggle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Your Token Collection</h1>
-          <p className="text-zinc-400">
-            Connected: {wallet.publicKey.toBase58().slice(0, 6)}...{wallet.publicKey.toBase58().slice(-6)}
-          </p>
-          <p className="text-sm text-zinc-500 mt-1">
-            {tokens.length} token{tokens.length !== 1 ? 's' : ''} found
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Your Token Collection</h1>
+              <p className="text-zinc-400">
+                Connected: {wallet.publicKey.toBase58().slice(0, 6)}...{wallet.publicKey.toBase58().slice(-6)}
+              </p>
+            </div>
+            
+            {/* Network Toggle */}
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5">
+              <button
+                onClick={() => setNetwork('devnet')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  network === 'devnet'
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <Globe className="h-4 w-4" />
+                Devnet
+              </button>
+              <button
+                onClick={() => setNetwork('mainnet')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  network === 'mainnet'
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/25'
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                }`}
+              >
+                <Globe className="h-4 w-4" />
+                Mainnet
+              </button>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+              network === 'mainnet' 
+                ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+                : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${network === 'mainnet' ? 'bg-green-400' : 'bg-yellow-400'}`} />
+              {network === 'mainnet' ? '⚡ Live Mainnet' : '🧪 Devnet Testing'}
+            </span>
+            <span className="text-sm text-zinc-500">
+              {tokens.length} token{tokens.length !== 1 ? 's' : ''} found
+            </span>
+          </div>
         </motion.div>
 
-        {/* Loading */}
         {loading ? (
           <div className="flex flex-col items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-purple-400 mb-4" />
-            <span className="text-zinc-400">Loading your tokens...</span>
+            <span className="text-zinc-400">Loading your {network} tokens...</span>
           </div>
         ) : error ? (
-          /* Error */
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -216,9 +257,9 @@ const DisplayTokens = () => {
             </button>
           </motion.div>
         ) : tokens.length > 0 ? (
-          /* Token Grid */
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             <motion.div
+              key={network}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
               initial="hidden"
               animate="visible"
@@ -236,7 +277,6 @@ const DisplayTokens = () => {
                   className="group"
                 >
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-purple-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
-                    {/* Image */}
                     <div className="relative h-48 bg-zinc-800 overflow-hidden">
                       <img
                         src={token.image}
@@ -253,7 +293,6 @@ const DisplayTokens = () => {
                       </div>
                     </div>
 
-                    {/* Content */}
                     <div className="p-5">
                       <div className="flex items-start justify-between mb-2">
                         <div>
@@ -268,7 +307,6 @@ const DisplayTokens = () => {
                         </p>
                       )}
 
-                      {/* Mint Address */}
                       <div className="flex items-center gap-2 bg-zinc-800/50 rounded-lg p-2 mb-4">
                         <span className="text-xs text-zinc-500 font-mono truncate flex-1">
                           {token.mint.slice(0, 12)}...{token.mint.slice(-8)}
@@ -285,7 +323,7 @@ const DisplayTokens = () => {
                           )}
                         </button>
                         <a
-                          href={`https://solscan.io/token/${token.mint}`}
+                          href={`${solscanBaseUrl}${token.mint}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors"
@@ -295,7 +333,6 @@ const DisplayTokens = () => {
                         </a>
                       </div>
 
-                      {/* Actions */}
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleViewToken(token.mint)}
@@ -312,7 +349,6 @@ const DisplayTokens = () => {
             </motion.div>
           </AnimatePresence>
         ) : (
-          /* Empty State */
           <EmptyCollection />
         )}
       </div>

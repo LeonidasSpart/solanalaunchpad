@@ -12,54 +12,32 @@ import {
   getAccount,
 } from '@solana/spl-token';
 
-// ─── Helius Integration ─────────────────────────────────────────────
+// ─── Extract Helius API Key from RPC URL ─────────────────────────
 
-const HELIUS_API_KEY = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
-if (!HELIUS_API_KEY) {
-  throw new Error('NEXT_PUBLIC_HELIUS_API_KEY is required');
-}
-
-const HELIUS_RPC_DEVNET = `https://devnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
-const HELIUS_RPC_MAINNET = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
-
-function getHeliusRpc(network: 'devnet' | 'mainnet' = 'mainnet'): string {
-  return network === 'devnet' ? HELIUS_RPC_DEVNET : HELIUS_RPC_MAINNET;
-}
-
-interface HeliusTokenMetadata {
-  mint: string;
-  onChainData?: {
-    name?: string;
-    symbol?: string;
-    uri?: string;
+function getHeliusKey(): string {
+  // Try to extract from your existing RPC URL env vars
+  const devnetUrl = process.env.NEXT_PUBLIC_RPC_URL || '';
+  const mainnetUrl = process.env.NEXT_PUBLIC_RPC_URL_MAINNET || '';
+  
+  const extractKey = (url: string): string | null => {
+    const match = url.match(/api-key=([a-f0-9-]+)/i);
+    return match ? match[1] : null;
   };
-  offChainData?: {
-    name?: string;
-    symbol?: string;
-    image?: string;
-  };
-}
 
-async function getHeliusTokenMetadata(
-  mints: string[],
-  network: 'devnet' | 'mainnet'
-): Promise<HeliusTokenMetadata[]> {
-  const baseUrl = network === 'devnet' 
-    ? 'https://api-devnet.helius.xyz/v0'
-    : 'https://api.helius.xyz/v0';
-    
-  const response = await fetch(`${baseUrl}/token-metadata?api-key=${HELIUS_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ mintAccounts: mints }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Helius metadata error: ${response.status}`);
+  const key = extractKey(devnetUrl) || extractKey(mainnetUrl);
+  
+  if (!key) {
+    throw new Error('Helius API key not found in RPC URLs. Please check NEXT_PUBLIC_RPC_URL or NEXT_PUBLIC_RPC_URL_MAINNET.');
   }
 
-  return response.json();
+  return key;
 }
+
+const HELIUS_KEY = getHeliusKey();
+const rpc = (net: 'devnet' | 'mainnet') => 
+  `https://${net}.helius-rpc.com/?api-key=${HELIUS_KEY}`;
+const api = (net: 'devnet' | 'mainnet') => 
+  `https://api${net === 'devnet' ? '-devnet' : ''}.helius.xyz/v0`;
 
 // ─── Types ────────────────────────────────────────────────────────
 
@@ -68,7 +46,7 @@ export interface LPToken {
   name: string;
   symbol: string;
   balance: number;
-  rawBalance: bigint;        // ← Added: precise BigInt for tx
+  rawBalance: bigint;
   decimals: number;
   poolName: string;
   value: string;
@@ -79,11 +57,11 @@ export interface LPToken {
 export interface BurnLPParams {
   connection: Connection;
   wallet: PublicKey;
-  signTransaction: (transaction: Transaction) => Promise<Transaction>;
+  signTransaction: (tx: Transaction) => Promise<Transaction>;
   lpToken: LPToken;
 }
 
-// ─── LP Token Detection ───────────────────────────────────────────
+// ─── LP Detection Patterns ────────────────────────────────────────
 
 const LP_PATTERNS = [
   { regex: /raydium|ray/i, pool: 'Raydium' },
@@ -95,24 +73,33 @@ const LP_PATTERNS = [
   { regex: /pump/i, pool: 'Pump.fun' },
 ];
 
-function identifyLPToken(meta: HeliusTokenMetadata): { 
-  name: string; 
-  symbol: string; 
-  poolName: string 
-} | null {
-  const name = meta.onChainData?.name || meta.offChainData?.name || '';
-  const symbol = meta.onChainData?.symbol || meta.offChainData?.symbol || '';
+// ─── Helius: Fetch Token Metadata ─────────────────────────────────
 
-  for (const pattern of LP_PATTERNS) {
-    if (pattern.regex.test(name) || pattern.regex.test(symbol)) {
+async function heliusMetadata(mints: string[], network: 'devnet' | 'mainnet') {
+  const res = await fetch(`${api(network)}/token-metadata?api-key=${HELIUS_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mintAccounts: mints }),
+  });
+  if (!res.ok) throw new Error('Helius metadata failed');
+  return res.json();
+}
+
+// ─── Identify LP Token from Metadata ─────────────────────────────
+
+function identifyLP(meta: any): { name: string; symbol: string; poolName: string } | null {
+  const name = meta?.onChainData?.name || meta?.offChainData?.name || '';
+  const symbol = meta?.onChainData?.symbol || meta?.offChainData?.symbol || '';
+
+  for (const p of LP_PATTERNS) {
+    if (p.regex.test(name) || p.regex.test(symbol)) {
       return {
-        name: name || `${pattern.pool} LP`,
+        name: name || `${p.pool} LP`,
         symbol: symbol || 'LP',
-        poolName: pattern.pool,
+        poolName: p.pool,
       };
     }
   }
-
   return null;
 }
 
@@ -123,102 +110,66 @@ export async function fetchLPTokens(
   wallet: PublicKey,
   network: 'devnet' | 'mainnet' = 'mainnet'
 ): Promise<LPToken[]> {
-  const walletStr = wallet.toBase58();
+  const w = wallet.toBase58();
 
-  try {
-    // Use Helius RPC for faster token account fetching
-    const rpc = getHeliusRpc(network);
-    
-    const [tokenResponse, token2022Response] = await Promise.all([
-      fetch(rpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'token-accounts',
-          method: 'getTokenAccountsByOwner',
-          params: [
-            walletStr,
-            { programId: TOKEN_PROGRAM_ID.toBase58() },
-            { encoding: 'jsonParsed' },
-          ],
-        }),
+  const [t1, t2] = await Promise.all([
+    fetch(rpc(network), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1,
+        method: 'getTokenAccountsByOwner',
+        params: [w, { programId: TOKEN_PROGRAM_ID.toBase58() }, { encoding: 'jsonParsed' }],
       }),
-      fetch(rpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'token2022-accounts',
-          method: 'getTokenAccountsByOwner',
-          params: [
-            walletStr,
-            { programId: TOKEN_2022_PROGRAM_ID.toBase58() },
-            { encoding: 'jsonParsed' },
-          ],
-        }),
+    }),
+    fetch(rpc(network), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 2,
+        method: 'getTokenAccountsByOwner',
+        params: [w, { programId: TOKEN_2022_PROGRAM_ID.toBase58() }, { encoding: 'jsonParsed' }],
       }),
-    ]);
+    }),
+  ]);
 
-    const [tokenData, token2022Data] = await Promise.all([
-      tokenResponse.json(),
-      token2022Response.json(),
-    ]);
+  const [d1, d2] = await Promise.all([t1.json(), t2.json()]);
+  const accounts = [...(d1.result?.value || []), ...(d2.result?.value || [])];
 
-    const allAccounts = [
-      ...(tokenData.result?.value || []),
-      ...(token2022Data.result?.value || []),
-    ];
+  const nonZero = accounts.filter((a: any) => 
+    Number(a.account.data.parsed.info.tokenAmount.amount) > 0
+  );
 
-    // Filter non-zero balances
-    const nonZeroAccounts = allAccounts.filter((item: any) => {
-      const amount = Number(item.account.data.parsed.info.tokenAmount.amount);
-      return amount > 0;
+  if (nonZero.length === 0) return [];
+
+  const mints = nonZero.map((a: any) => a.account.data.parsed.info.mint);
+  const metadata = await heliusMetadata(mints, network);
+
+  const results: LPToken[] = [];
+
+  for (const item of nonZero) {
+    const p = item.account.data.parsed.info;
+    const meta = metadata.find((m: any) => m.mint === p.mint);
+    if (!meta) continue;
+
+    const lp = identifyLP(meta);
+    if (!lp) continue;
+
+    results.push({
+      mint: p.mint,
+      name: lp.name,
+      symbol: lp.symbol,
+      balance: Number(p.tokenAmount.uiAmount) || 0,
+      rawBalance: BigInt(p.tokenAmount.amount),
+      decimals: p.tokenAmount.decimals,
+      poolName: lp.poolName,
+      value: '~Value TBD',
+      ata: item.pubkey,
+      logo: meta.offChainData?.image,
     });
-
-    if (nonZeroAccounts.length === 0) return [];
-
-    // Fetch metadata in batch via Helius
-    const mints = nonZeroAccounts.map((item: any) => 
-      item.account.data.parsed.info.mint
-    );
-    
-    const metadata = await getHeliusTokenMetadata(mints, network);
-
-    const lpTokens: LPToken[] = [];
-
-    for (const item of nonZeroAccounts) {
-      const parsed = item.account.data.parsed.info;
-      const mint = parsed.mint;
-      const decimals = parsed.tokenAmount.decimals;
-      const rawAmount = BigInt(parsed.tokenAmount.amount);
-      const uiAmount = Number(parsed.tokenAmount.uiAmount) || 0;
-
-      const meta = metadata.find((m) => m.mint === mint);
-      if (!meta) continue;
-
-      const lpInfo = identifyLPToken(meta);
-      if (!lpInfo) continue;
-
-      lpTokens.push({
-        mint,
-        name: lpInfo.name,
-        symbol: lpInfo.symbol,
-        balance: uiAmount,
-        rawBalance: rawAmount,        // ← Precise BigInt from RPC
-        decimals,
-        poolName: lpInfo.poolName,
-        value: '~Value TBD',          // ← Fetch from DEX API in v2
-        ata: item.pubkey,
-        logo: meta.offChainData?.image,
-      });
-    }
-
-    return lpTokens;
-  } catch (error: any) {
-    console.error('Error fetching LP tokens:', error);
-    throw new Error(error.message || 'Failed to fetch LP tokens');
   }
+
+  return results;
 }
 
 // ─── Burn LP Tokens ───────────────────────────────────────────────
@@ -229,73 +180,36 @@ export async function burnLPTokens({
   signTransaction,
   lpToken,
 }: BurnLPParams): Promise<string> {
+  const mint = new PublicKey(lpToken.mint);
+  const source = new PublicKey(lpToken.ata);
+  const burnDest = mint;
+  const burnATA = getAssociatedTokenAddressSync(mint, burnDest, true);
+
+  const tx = new Transaction();
+
   try {
-    const mint = new PublicKey(lpToken.mint);
-    const sourceATA = new PublicKey(lpToken.ata);
-    
-    // Burn destination: the token mint itself (no one can access)
-    const burnDestination = mint;
-    const burnATA = getAssociatedTokenAddressSync(mint, burnDestination, true);
-
-    const transaction = new Transaction();
-
-    // Create burn ATA if it doesn't exist
-    try {
-      await getAccount(connection, burnATA);
-    } catch {
-      transaction.add(
-        createAssociatedTokenAccountInstruction(
-          wallet,        // payer
-          burnATA,
-          burnDestination,
-          mint
-        )
-      );
-    }
-
-    // Transfer ALL LP tokens using rawBalance (precise BigInt)
-    transaction.add(
-      createTransferInstruction(
-        sourceATA,
-        burnATA,
-        wallet,
-        lpToken.rawBalance,     // ← Uses precise BigInt, no float conversion
-        [],
-        TOKEN_PROGRAM_ID
-      )
-    );
-
-    // Get fresh blockhash
-    const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = wallet;
-
-    // Simulate first (catches errors before wallet popup)
-    const simulation = await connection.simulateTransaction(transaction);
-    if (simulation.value.err) {
-      throw new Error(`Simulation failed: ${JSON.stringify(simulation.value.err)}`);
-    }
-
-    // Sign & send
-    const signed = await signTransaction(transaction);
-    const signature = await connection.sendRawTransaction(signed.serialize(), {
-      skipPreflight: false,
-      preflightCommitment: 'confirmed',
-    });
-
-    // Confirm
-    const confirmation = await connection.confirmTransaction(
-      { signature, blockhash, lastValidBlockHeight },
-      'confirmed'
-    );
-
-    if (confirmation.value.err) {
-      throw new Error(`Transaction failed: ${confirmation.value.err.toString()}`);
-    }
-
-    return signature;
-  } catch (error: any) {
-    console.error('Burn LP error:', error);
-    throw new Error(error.message || 'Failed to burn LP tokens');
+    await getAccount(connection, burnATA);
+  } catch {
+    tx.add(createAssociatedTokenAccountInstruction(wallet, burnATA, burnDest, mint));
   }
+
+  tx.add(createTransferInstruction(source, burnATA, wallet, lpToken.rawBalance, [], TOKEN_PROGRAM_ID));
+
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+  tx.recentBlockhash = blockhash;
+  tx.feePayer = wallet;
+
+  const sim = await connection.simulateTransaction(tx);
+  if (sim.value.err) throw new Error(`Sim failed: ${JSON.stringify(sim.value.err)}`);
+
+  const signed = await signTransaction(tx);
+  const sig = await connection.sendRawTransaction(signed.serialize(), {
+    skipPreflight: false,
+    preflightCommitment: 'confirmed',
+  });
+
+  const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
+  if (conf.value.err) throw new Error(`Tx failed: ${conf.value.err}`);
+
+  return sig;
 }

@@ -11,11 +11,13 @@ import TrustBadges from '@/components/Home/trust-badges';
 import PricingTable from '@/components/Home/pricing-table';
 import TokenFeed from '@/components/Home/token-feed';
 import WelcomePopup from '@/components/Home/welcome-popup';
+import CookieBanner from '@/components/cookie-banner';
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <WelcomePopup />
+      <CookieBanner />
       <HeroSection />
       <TrustBadges />
       <TokenCounter />

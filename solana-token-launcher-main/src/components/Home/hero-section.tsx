@@ -69,11 +69,11 @@ export default function HeroSection() {
             <ShareButtons />
           </div>
 
-          {/* Stats */}
+          {/* Stats - FIXED */}
           <div className="flex flex-wrap justify-center gap-8 mt-8 text-sm text-zinc-500">
             <div>
-              <span className="text-purple-400 font-bold text-lg">10k+</span>
-              <p className="text-zinc-500">Tokens Launched</p>
+              <span className="text-purple-400 font-bold text-lg">Open Source</span>
+              <p className="text-zinc-500">Code on GitHub</p>
             </div>
             <div>
               <span className="text-purple-400 font-bold text-lg">&lt;60s</span>

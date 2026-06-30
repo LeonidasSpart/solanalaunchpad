@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { useState } from 'react';
-import { Menu, X, Zap, ChevronDown, Shield, Github } from 'lucide-react';
+import { Menu, X, Zap, ChevronDown } from 'lucide-react';
 
 const Header = () => {
   const pathname = usePathname();
@@ -23,8 +23,6 @@ const Header = () => {
   const dropdownLinks = [
     { href: '/about', label: 'About' },
     { href: '/contact', label: 'Contact' },
-    { href: '/privacy', label: 'Privacy' },
-    { href: '/terms', label: 'Terms' },
   ];
 
   const isActive = (path: string) => {
@@ -117,17 +115,6 @@ const Header = () => {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            {/* GitHub Link */}
-            <a
-              href="https://github.com/LeonidasSpart/solanalaunchpad"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl transition"
-            >
-              <Github className="h-4 w-4" />
-              <span>Open Source</span>
-            </a>
-
             {/* Network Switcher */}
             <div className="hidden sm:block">
               <NetworkSwitcher />
@@ -179,15 +166,6 @@ const Header = () => {
                 </Link>
               ))}
             </div>
-            <a
-              href="https://github.com/LeonidasSpart/solanalaunchpad"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2.5 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800/50 rounded-xl transition"
-            >
-              <Github className="h-4 w-4" />
-              Open Source
-            </a>
           </div>
         )}
       </div>

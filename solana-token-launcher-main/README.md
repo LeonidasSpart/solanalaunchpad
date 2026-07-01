@@ -12,7 +12,7 @@ A production-ready web application for creating and deploying custom tokens on t
 
 ## 🌐 Live Demo
 
-**🚀 Try it now:** [https://solanalaunchpad-production.up.railway.app/](https://solanalaunchpad-production.up.railway.app/)
+**🚀 Try it now:** [https://zrp.one/](https://zrp.one/)
 
 ---
 

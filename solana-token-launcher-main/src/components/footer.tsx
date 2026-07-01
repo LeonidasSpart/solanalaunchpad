@@ -129,6 +129,7 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Guides</h4>
             <ul className="space-y-2.5">
+              <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">SPL Token Guide</Link></li>
               <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">How to Create Token</Link></li>
               <li><Link href="/checklist" className="text-[#BDDBDB] hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
               <li><Link href="/launch" className="text-[#BDDBDB] hover:text-white text-sm transition">Launch Strategy</Link></li>
@@ -138,6 +139,7 @@ const Footer = () => {
               <li><Link href="/distribution" className="text-[#BDDBDB] hover:text-white text-sm transition">Distribution</Link></li>
               <li><Link href="/airdrop-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Guide</Link></li>
               <li><Link href="/burn" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Burning</Link></li>
+              <li><Link href="/revoke-authority" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority Guide</Link></li>
               <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
               <li><Link href="/meme-vs-utility" className="text-[#BDDBDB] hover:text-white text-sm transition">Meme vs Utility</Link></li>
               <li><Link href="/community" className="text-[#BDDBDB] hover:text-white text-sm transition">Community Building</Link></li>
@@ -146,7 +148,6 @@ const Footer = () => {
               <li><Link href="/tokenomics" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics</Link></li>
               <li><Link href="/tokenomics-calculator" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
               <li><Link href="/no-code-creator" className="text-[#BDDBDB] hover:text-white text-sm transition">No-Code Creator</Link></li>
-              <li><Link href="/revoke-authority" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority Guide</Link></li>
             </ul>
           </div>
 
@@ -155,7 +156,6 @@ const Footer = () => {
             <h4 className="text-white font-semibold text-sm mb-4">Resources</h4>
             <ul className="space-y-2.5">
               <li><Link href="/blog" className="text-[#BDDBDB] hover:text-white text-sm transition">Blog</Link></li>
-              <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">SPL Token Guide</Link></li>
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
               <li><Link href="/why-zrp" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
               <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>

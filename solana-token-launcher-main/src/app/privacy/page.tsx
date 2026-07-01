@@ -3,10 +3,10 @@ export default function PrivacyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       <h1 className="text-4xl font-bold text-white text-center mb-4">Privacy Policy</h1>
-      <p className="text-zinc-400 text-center mb-2">Your privacy is important to us. Learn how we collect, use, and protect your information.</p>
-      <p className="text-zinc-500 text-center text-sm mb-12">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      <p className="text-[#BDDBDB] text-center mb-2">Your privacy is important to us. Learn how we collect, use, and protect your information.</p>
+      <p className="text-[#BDDBDB] text-center text-sm mb-12">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-6 text-zinc-300 text-sm leading-relaxed">
+      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-6 text-[#BDDBDB] text-sm leading-relaxed">
         <section>
           <h2 className="text-xl font-bold text-white mb-3">Information We Collect</h2>
           <p>We collect minimal information necessary to provide our token creation services:</p>
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
 
         <section>
           <h2 className="text-xl font-bold text-white mb-3">Contact Us</h2>
-          <p>If you have any questions about this privacy policy or our data practices, please contact us at <a href="mailto:support@zrp.one" className="text-purple-400 hover:underline">support@zrp.one</a> or through our <a href="/contact" className="text-purple-400 hover:underline">contact page</a>.</p>
+          <p>If you have any questions about this privacy policy or our data practices, please contact us at <a href="mailto:support@zrp.one" className="text-[#FF2D2D] hover:text-[#B10000] transition">support@zrp.one</a> or through our <a href="/contact" className="text-[#FF2D2D] hover:text-[#B10000] transition">contact page</a>.</p>
         </section>
       </div>
     </div>

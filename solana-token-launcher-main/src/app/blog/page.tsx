@@ -82,7 +82,7 @@ export default function BlogPage() {
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
           ZRP Blog
         </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
           Practical guides for every stage of your token launch — from liquidity pools and DEX listings to building holder trust and getting listed on CoinGecko.
         </p>
       </div>
@@ -90,17 +90,17 @@ export default function BlogPage() {
       {/* Featured Post */}
       {featuredPost && (
         <div className="mb-16">
-          <h2 className="text-sm font-semibold text-purple-400 uppercase tracking-wider mb-4">Featured Article</h2>
+          <h2 className="text-sm font-semibold text-[#FF2D2D] uppercase tracking-wider mb-4">Featured Article</h2>
           <Link href={featuredPost.slug} className="block group">
-            <div className="bg-zinc-900 rounded-2xl p-6 md:p-8 border border-zinc-800 hover:border-purple-500/50 transition-all">
+            <div className="bg-[#0D0D0D] rounded-2xl p-6 md:p-8 border border-[#1a1a1a] hover:border-[#FF2D2D]/50 transition-all">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="flex-1">
-                  <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">{featuredPost.category}</span>
-                  <h3 className="text-2xl font-bold text-white mt-2 group-hover:text-purple-400 transition">
+                  <span className="text-xs font-medium text-[#FF2D2D] uppercase tracking-wider">{featuredPost.category}</span>
+                  <h3 className="text-2xl font-bold text-white mt-2 group-hover:text-[#FF2D2D] transition">
                     {featuredPost.title}
                   </h3>
-                  <p className="text-zinc-400 mt-2">{featuredPost.excerpt}</p>
-                  <div className="flex items-center gap-4 mt-4 text-sm text-zinc-500">
+                  <p className="text-[#BDDBDB] mt-2">{featuredPost.excerpt}</p>
+                  <div className="flex items-center gap-4 mt-4 text-sm text-[#BDDBDB]">
                     <span>{featuredPost.date}</span>
                     <span>•</span>
                     <span>{featuredPost.readTime}</span>
@@ -108,8 +108,8 @@ export default function BlogPage() {
                     <span>By {featuredPost.author}</span>
                   </div>
                 </div>
-                <div className="flex-shrink-0 bg-purple-600/10 rounded-xl px-4 py-2 border border-purple-500/20">
-                  <span className="text-purple-400 text-sm font-semibold">Featured</span>
+                <div className="flex-shrink-0 bg-[#FF2D2D]/10 rounded-xl px-4 py-2 border border-[#FF2D2D]/20">
+                  <span className="text-[#FF2D2D] text-sm font-semibold">Featured</span>
                 </div>
               </div>
             </div>
@@ -119,25 +119,25 @@ export default function BlogPage() {
 
       {/* Category Filter (Placeholder) */}
       <div className="flex flex-wrap gap-2 mb-8">
-        <button className="px-4 py-2 bg-purple-600 text-white text-sm rounded-full font-medium">All</button>
-        <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-full font-medium transition">Guides</button>
-        <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-full font-medium transition">Liquidity</button>
-        <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-full font-medium transition">Security</button>
-        <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-full font-medium transition">Marketing</button>
-        <button className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm rounded-full font-medium transition">Strategy</button>
+        <button className="px-4 py-2 bg-[#FF2D2D] text-white text-sm rounded-full font-medium">All</button>
+        <button className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-sm rounded-full font-medium transition">Guides</button>
+        <button className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-sm rounded-full font-medium transition">Liquidity</button>
+        <button className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-sm rounded-full font-medium transition">Security</button>
+        <button className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-sm rounded-full font-medium transition">Marketing</button>
+        <button className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-sm rounded-full font-medium transition">Strategy</button>
       </div>
 
       {/* Blog Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {regularPosts.map((post) => (
           <Link key={post.id} href={post.slug} className="group">
-            <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 hover:border-purple-500/50 transition-all h-full flex flex-col">
-              <span className="text-xs font-medium text-purple-400 uppercase tracking-wider">{post.category}</span>
-              <h3 className="text-lg font-bold text-white mt-2 group-hover:text-purple-400 transition">
+            <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] hover:border-[#FF2D2D]/50 transition-all h-full flex flex-col">
+              <span className="text-xs font-medium text-[#FF2D2D] uppercase tracking-wider">{post.category}</span>
+              <h3 className="text-lg font-bold text-white mt-2 group-hover:text-[#FF2D2D] transition">
                 {post.title}
               </h3>
-              <p className="text-zinc-400 text-sm mt-2 flex-1">{post.excerpt}</p>
-              <div className="flex items-center gap-3 mt-4 text-xs text-zinc-500">
+              <p className="text-[#BDDBDB] text-sm mt-2 flex-1">{post.excerpt}</p>
+              <div className="flex items-center gap-3 mt-4 text-xs text-[#BDDBDB]">
                 <span>{post.date}</span>
                 <span>•</span>
                 <span>{post.readTime}</span>
@@ -148,16 +148,16 @@ export default function BlogPage() {
       </div>
 
       {/* Newsletter Signup */}
-      <div className="mt-16 bg-zinc-900 rounded-2xl p-8 border border-zinc-800 text-center">
+      <div className="mt-16 bg-[#0D0D0D] rounded-2xl p-8 border border-[#1a1a1a] text-center">
         <h2 className="text-2xl font-bold text-white mb-2">📬 Stay Updated</h2>
-        <p className="text-zinc-400 mb-6">Get the latest guides and strategies delivered to your inbox.</p>
+        <p className="text-[#BDDBDB] mb-6">Get the latest guides and strategies delivered to your inbox.</p>
         <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
           <input
             type="email"
             placeholder="Enter your email"
-            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+            className="flex-1 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
           />
-          <button className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition">
+          <button className="px-6 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition">
             Subscribe
           </button>
         </div>

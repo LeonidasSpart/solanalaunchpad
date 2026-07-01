@@ -107,7 +107,7 @@ export default function BurnLPPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] pt-20 pb-20">
+    <div className="min-h-screen bg-[#050505] pt-20 pb-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <motion.div
@@ -115,17 +115,17 @@ export default function BurnLPPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 bg-[#9945ff]/10 border border-[#9945ff]/20 rounded-full px-4 py-1.5 mb-6">
-            <Flame className="h-3.5 w-3.5 text-[#9945ff]" />
-            <span className="text-xs font-semibold text-[#9945ff] uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-6">
+            <Flame className="h-3.5 w-3.5 text-[#FF2D2D]" />
+            <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">
               Liquidity Locker
             </span>
           </div>
           
           <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">
-            Burn Your <span className="text-[#14f195]">LP Tokens</span>
+            Burn Your <span className="text-[#FF2D2D]">LP Tokens</span>
           </h1>
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-lg text-[#BDDBDB] max-w-2xl mx-auto">
             Permanently lock your liquidity by burning LP tokens. The ultimate trust signal for your community.
           </p>
         </motion.div>
@@ -135,13 +135,13 @@ export default function BurnLPPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 mb-8"
+          className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-2xl p-6 mb-8"
         >
           <div className="flex items-start gap-4">
-            <AlertTriangle className="h-6 w-6 text-amber-400 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="h-6 w-6 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-amber-400 font-semibold mb-2">This is irreversible</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
+              <h3 className="text-[#FF2D2D] font-semibold mb-2">This is irreversible</h3>
+              <p className="text-[#BDDBDB] text-sm leading-relaxed">
                 Burning LP tokens destroys them permanently. The liquidity stays locked in the pool forever. 
                 No one — including you — can ever withdraw it. This is the strongest possible signal that you cannot rug pull.
               </p>
@@ -156,11 +156,11 @@ export default function BurnLPPage() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6"
+              className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-2xl p-4 mb-6"
             >
               <div className="flex items-start gap-3">
-                <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-red-400 text-sm">{error}</p>
+                <AlertTriangle className="h-5 w-5 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
+                <p className="text-[#FF2D2D] text-sm">{error}</p>
               </div>
             </motion.div>
           )}
@@ -172,54 +172,54 @@ export default function BurnLPPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-12 text-center"
+            className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-2xl p-12 text-center"
           >
-            <div className="w-16 h-16 rounded-2xl bg-[#9945ff]/10 flex items-center justify-center mx-auto mb-6">
-              <Lock className="h-8 w-8 text-[#9945ff]" />
+            <div className="w-16 h-16 rounded-2xl bg-[#FF2D2D]/10 flex items-center justify-center mx-auto mb-6">
+              <Lock className="h-8 w-8 text-[#FF2D2D]" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h2>
-            <p className="text-zinc-400 mb-8 max-w-md mx-auto">
+            <p className="text-[#BDDBDB] mb-8 max-w-md mx-auto">
               Connect your wallet to see your LP tokens and burn them permanently.
             </p>
-            <WalletMultiButton className="!bg-gradient-to-r !from-[#9945ff] !to-[#7c3aed] hover:!from-[#b279ff] hover:!to-[#9945ff] !rounded-xl !px-8 !py-3 !font-semibold !text-white !shadow-lg !shadow-[#9945ff]/25" />
+            <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-8 !py-3 !font-semibold !text-white !shadow-lg !shadow-[#FF2D2D]/25" />
           </motion.div>
         ) : burnComplete ? (
           /* Burn Complete */
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#111111] border border-[#14f195]/20 rounded-2xl p-12 text-center"
+            className="bg-[#0D0D0D] border border-[#FF2D2D]/20 rounded-2xl p-12 text-center"
           >
-            <div className="w-20 h-20 rounded-full bg-[#14f195]/10 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="h-10 w-10 text-[#14f195]" />
+            <div className="w-20 h-20 rounded-full bg-[#FF2D2D]/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-10 w-10 text-[#FF2D2D]" />
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">LP Tokens Burned!</h2>
-            <p className="text-zinc-400 mb-2">
+            <p className="text-[#BDDBDB] mb-2">
               Your <span className="text-white font-semibold">{selectedToken?.name}</span> LP tokens have been permanently destroyed.
             </p>
-            <p className="text-[#14f195] text-sm mb-8">
+            <p className="text-[#FF2D2D] text-sm mb-8">
               Liquidity is now locked forever. Your community can trust you.
             </p>
             
-            <div className="bg-[#0a0a0f] rounded-xl p-4 mb-8 max-w-md mx-auto text-left">
+            <div className="bg-[#050505] rounded-xl p-4 mb-8 max-w-md mx-auto text-left">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-500">Transaction</span>
+                <span className="text-[#BDDBDB]">Transaction</span>
                 <a 
                   href={getExplorerUrl(txSignature)} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="text-[#9945ff] hover:text-[#b279ff] font-mono flex items-center gap-1"
+                  className="text-[#FF2D2D] hover:text-[#B10000] font-mono flex items-center gap-1 transition"
                 >
                   {txSignature.slice(0, 4)}...{txSignature.slice(-4)}
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-zinc-500">Tokens Burned</span>
+                <span className="text-[#BDDBDB]">Tokens Burned</span>
                 <span className="text-white">{selectedToken?.balance.toLocaleString()} LP</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-500">Pool</span>
+                <span className="text-[#BDDBDB]">Pool</span>
                 <span className="text-white">{selectedToken?.poolName}</span>
               </div>
             </div>
@@ -227,13 +227,13 @@ export default function BurnLPPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={resetForm}
-                className="px-6 py-3 bg-[#9945ff] hover:bg-[#b279ff] text-white font-semibold rounded-xl transition"
+                className="px-6 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
               >
                 Burn Another LP
               </button>
               <Link
                 href="/tokens"
-                className="px-6 py-3 bg-[#1a1a1a] hover:bg-[#222222] text-zinc-300 font-medium rounded-xl border border-zinc-800 transition"
+                className="px-6 py-3 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] font-medium rounded-xl border border-[#1a1a1a] transition"
               >
                 View Your Tokens
               </Link>
@@ -248,18 +248,18 @@ export default function BurnLPPage() {
             className="space-y-6"
           >
             {/* Step 1: Select LP Token */}
-            <div className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6">
+            <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center">
-                    <span className="text-[#9945ff] font-bold">1</span>
+                  <div className="w-8 h-8 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center">
+                    <span className="text-[#FF2D2D] font-bold">1</span>
                   </div>
                   <h3 className="text-white font-semibold">Select LP Token</h3>
                 </div>
                 <button
                   onClick={loadLPTokens}
                   disabled={isLoading}
-                  className="flex items-center gap-2 text-sm text-zinc-400 hover:text-white transition"
+                  className="flex items-center gap-2 text-sm text-[#BDDBDB] hover:text-white transition"
                 >
                   <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
                   Refresh
@@ -268,11 +268,11 @@ export default function BurnLPPage() {
 
               {isLoading ? (
                 <div className="text-center py-12">
-                  <div className="w-8 h-8 border-2 border-[#9945ff]/30 border-t-[#9945ff] rounded-full animate-spin mx-auto mb-4" />
-                  <p className="text-zinc-500">Loading LP tokens...</p>
+                  <div className="w-8 h-8 border-2 border-[#FF2D2D]/30 border-t-[#FF2D2D] rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-[#BDDBDB]">Loading LP tokens...</p>
                 </div>
               ) : lpTokens.length === 0 ? (
-                <div className="text-center py-8 text-zinc-500">
+                <div className="text-center py-8 text-[#BDDBDB]">
                   <p>No LP tokens found in your wallet.</p>
                   <p className="text-sm mt-2">Add liquidity first on Raydium or Orca to see your LP tokens here.</p>
                   <div className="flex gap-3 justify-center mt-4">
@@ -280,7 +280,7 @@ export default function BurnLPPage() {
                       href="https://raydium.io/liquidity-pools/" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-[#9945ff] hover:text-[#b279ff] text-sm flex items-center gap-1"
+                      className="text-[#FF2D2D] hover:text-[#B10000] text-sm flex items-center gap-1 transition"
                     >
                       Raydium <ExternalLink className="h-3 w-3" />
                     </a>
@@ -288,7 +288,7 @@ export default function BurnLPPage() {
                       href="https://orca.so/pools" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-[#9945ff] hover:text-[#b279ff] text-sm flex items-center gap-1"
+                      className="text-[#FF2D2D] hover:text-[#B10000] text-sm flex items-center gap-1 transition"
                     >
                       Orca <ExternalLink className="h-3 w-3" />
                     </a>
@@ -305,8 +305,8 @@ export default function BurnLPPage() {
                       }}
                       className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
                         selectedToken?.mint === token.mint
-                          ? 'bg-[#9945ff]/10 border-[#9945ff]/50'
-                          : 'bg-[#0a0a0f] border-[#1a1a1a] hover:border-zinc-700'
+                          ? 'bg-[#FF2D2D]/10 border-[#FF2D2D]/50'
+                          : 'bg-[#050505] border-[#1a1a1a] hover:border-[#FF2D2D]/30'
                       }`}
                     >
                       <div className="flex items-center gap-4">
@@ -320,18 +320,18 @@ export default function BurnLPPage() {
                             }}
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#9945ff]/20 to-[#14f195]/20 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#FF2D2D]/20 to-[#FF2D2D]/20 flex items-center justify-center">
                             <span className="text-white font-bold text-sm">{token.symbol[0]}</span>
                           </div>
                         )}
                         <div className="text-left">
                           <div className="text-white font-medium">{token.name}</div>
-                          <div className="text-zinc-500 text-sm">{token.poolName}</div>
+                          <div className="text-[#BDDBDB] text-sm">{token.poolName}</div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="text-white font-medium">{token.balance.toLocaleString()} LP</div>
-                        <div className="text-zinc-500 text-sm">{token.value}</div>
+                        <div className="text-[#BDDBDB] text-sm">{token.value}</div>
                       </div>
                     </button>
                   ))}
@@ -346,31 +346,31 @@ export default function BurnLPPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6"
+                  className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-2xl p-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center">
-                      <span className="text-[#9945ff] font-bold">2</span>
+                    <div className="w-8 h-8 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center">
+                      <span className="text-[#FF2D2D] font-bold">2</span>
                     </div>
                     <h3 className="text-white font-semibold">Confirm Burn</h3>
                   </div>
 
-                  <div className="bg-[#0a0a0f] rounded-xl p-4 mb-6">
+                  <div className="bg-[#050505] rounded-xl p-4 mb-6">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-zinc-500 text-sm">LP Token</span>
+                      <span className="text-[#BDDBDB] text-sm">LP Token</span>
                       <span className="text-white font-medium">{selectedToken.name}</span>
                     </div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-zinc-500 text-sm">Balance</span>
+                      <span className="text-[#BDDBDB] text-sm">Balance</span>
                       <span className="text-white font-medium">{selectedToken.balance.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-zinc-500 text-sm">Pool</span>
+                      <span className="text-[#BDDBDB] text-sm">Pool</span>
                       <span className="text-white font-medium">{selectedToken.poolName}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-zinc-500 text-sm">Estimated Value</span>
-                      <span className="text-[#14f195] font-medium">{selectedToken.value}</span>
+                      <span className="text-[#BDDBDB] text-sm">Estimated Value</span>
+                      <span className="text-[#FF2D2D] font-medium">{selectedToken.value}</span>
                     </div>
                   </div>
 
@@ -382,12 +382,12 @@ export default function BurnLPPage() {
                         onChange={(e) => setIsConfirmed(e.target.checked)}
                         className="peer sr-only"
                       />
-                      <div className="w-5 h-5 rounded border border-zinc-600 peer-checked:bg-[#9945ff] peer-checked:border-[#9945ff] transition-all flex items-center justify-center">
+                      <div className="w-5 h-5 rounded border border-[#1a1a1a] peer-checked:bg-[#FF2D2D] peer-checked:border-[#FF2D2D] transition-all flex items-center justify-center">
                         {isConfirmed && <CheckCircle className="h-3.5 w-3.5 text-white" />}
                       </div>
                     </div>
-                    <span className="text-zinc-400 text-sm">
-                      I understand this is <span className="text-amber-400 font-semibold">irreversible</span>. 
+                    <span className="text-[#BDDBDB] text-sm">
+                      I understand this is <span className="text-[#FF2D2D] font-semibold">irreversible</span>. 
                       Once burned, these LP tokens are destroyed forever and the liquidity cannot be withdrawn by anyone.
                     </span>
                   </label>
@@ -397,8 +397,8 @@ export default function BurnLPPage() {
                     disabled={!isConfirmed || isBurning}
                     className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-semibold transition-all ${
                       isConfirmed && !isBurning
-                        ? 'bg-gradient-to-r from-[#9945ff] to-[#7c3aed] hover:from-[#b279ff] hover:to-[#9945ff] text-white shadow-lg shadow-[#9945ff]/25'
-                        : 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                        ? 'bg-[#FF2D2D] hover:bg-[#B10000] text-white shadow-lg shadow-[#FF2D2D]/25'
+                        : 'bg-[#1a1a1a] text-[#BDDBDB] cursor-not-allowed'
                     }`}
                   >
                     {isBurning ? (
@@ -418,17 +418,17 @@ export default function BurnLPPage() {
             </AnimatePresence>
 
             {/* Info Box */}
-            <div className="bg-[#111111] border border-[#1a1a1a] rounded-2xl p-6">
+            <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-2xl p-6">
               <div className="flex items-start gap-3">
-                <Info className="h-5 w-5 text-[#9945ff] flex-shrink-0 mt-0.5" />
+                <Info className="h-5 w-5 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-white font-medium mb-2">What are LP tokens?</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed mb-3">
+                  <p className="text-[#BDDBDB] text-sm leading-relaxed mb-3">
                     When you add liquidity to a pool (e.g., on Raydium or Orca), the pool gives you LP tokens 
                     that act as a claim ticket on the SOL and tokens held in the pool. Whoever holds them can withdraw that liquidity.
                   </p>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    <span className="text-[#14f195] font-semibold">Burning them destroys the ticket</span>, so the liquidity stays 
+                  <p className="text-[#BDDBDB] text-sm leading-relaxed">
+                    <span className="text-[#FF2D2D] font-semibold">Burning them destroys the ticket</span>, so the liquidity stays 
                     locked in the pool permanently. This is the strongest trust signal you can give your community.
                   </p>
                 </div>
@@ -444,8 +444,8 @@ export default function BurnLPPage() {
           transition={{ delay: 0.4 }}
           className="mt-12 text-center"
         >
-          <p className="text-zinc-500 text-sm">
-            Need help? <Link href="/contact" className="text-[#9945ff] hover:text-[#b279ff] transition">Contact us</Link>
+          <p className="text-[#BDDBDB] text-sm">
+            Need help? <Link href="/contact" className="text-[#FF2D2D] hover:text-[#B10000] transition">Contact us</Link>
           </p>
         </motion.div>
       </div>

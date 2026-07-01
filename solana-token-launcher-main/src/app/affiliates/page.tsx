@@ -189,7 +189,7 @@ export default function AffiliatesPage() {
             <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">❓ Common Questions</h3>
               <ul className="list-disc pl-5 mt-1 space-y-1 text-[#BDDBDB] text-sm">
-                <li><span className="text-white">When do I receive payouts?</span> Payout details are coming in v2. Your referrals are tracked now.</li>
+                <li><span className="text-white">When do I receive payouts?</span> Your payout arrives immediately when the referral creates their token.</li>
                 <li><span className="text-white">Do referred users pay more?</span> No. The price they pay is identical — your commission comes from our share.</li>
                 <li><span className="text-white">Can I have multiple links?</span> Each wallet address generates one link. Use different wallets for different campaigns.</li>
                 <li><span className="text-white">What counts as a conversion?</span> Any token successfully minted through your referral link with a confirmed on-chain payment.</li>

@@ -8,9 +8,9 @@ const faqData = [
   {
     category: 'Getting Started',
     icon: Rocket,
-    iconColor: 'text-purple-400',
-    bgColor: 'bg-purple-500/10',
-    borderColor: 'border-purple-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'What is a Solana token creator?',
@@ -45,9 +45,9 @@ const faqData = [
   {
     category: 'Token Setup & Configuration',
     icon: Settings,
-    iconColor: 'text-blue-400',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'What are token decimals and what should I choose?',
@@ -82,9 +82,9 @@ const faqData = [
   {
     category: 'Costs & Fees',
     icon: DollarSign,
-    iconColor: 'text-emerald-400',
-    bgColor: 'bg-emerald-500/10',
-    borderColor: 'border-emerald-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'How much does it cost to create a Solana token?',
@@ -107,9 +107,9 @@ const faqData = [
   {
     category: 'After Minting - Trading & Listing',
     icon: TrendingUp,
-    iconColor: 'text-amber-400',
-    bgColor: 'bg-amber-500/10',
-    borderColor: 'border-amber-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'Can I add liquidity after minting?',
@@ -148,9 +148,9 @@ const faqData = [
   {
     category: 'Security & Trust',
     icon: Shield,
-    iconColor: 'text-cyan-400',
-    bgColor: 'bg-cyan-500/10',
-    borderColor: 'border-cyan-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'Is it safe to use ZRP?',
@@ -173,9 +173,9 @@ const faqData = [
   {
     category: 'Tokenomics & Strategy',
     icon: BarChart3,
-    iconColor: 'text-rose-400',
-    bgColor: 'bg-rose-500/10',
-    borderColor: 'border-rose-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'What is tokenomics and why does it matter?',
@@ -206,9 +206,9 @@ const faqData = [
   {
     category: 'Technical & Advanced',
     icon: Wrench,
-    iconColor: 'text-zinc-400',
-    bgColor: 'bg-zinc-500/10',
-    borderColor: 'border-zinc-500/20',
+    iconColor: 'text-[#FF2D2D]',
+    bgColor: 'bg-[#FF2D2D]/10',
+    borderColor: 'border-[#FF2D2D]/20',
     questions: [
       {
         q: 'What is Metaplex and does my token use it?',
@@ -252,10 +252,10 @@ export default function FAQ() {
   const isOpen = (key: string) => openIndex === key;
 
   return (
-    <section id="faq" className="py-24 bg-gradient-to-b from-black via-zinc-950/30 to-black relative overflow-hidden">
+    <section id="faq" className="py-24 bg-[#050505] relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/[0.02] rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#FF2D2D]/[0.02] rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
@@ -267,16 +267,16 @@ export default function FAQ() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 mb-6">
-            <HelpCircle className="h-3.5 w-3.5 text-purple-400" />
-            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Support</span>
+          <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-6">
+            <HelpCircle className="h-3.5 w-3.5 text-[#FF2D2D]" />
+            <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">Support</span>
           </div>
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
-            Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Questions</span>
+            Frequently Asked <span className="text-[#FF2D2D]">Questions</span>
           </h2>
           
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-lg text-[#BDDBDB] max-w-2xl mx-auto">
             Everything you need to know about creating Solana tokens — no jargon, straight answers.
           </p>
         </motion.div>
@@ -294,12 +294,12 @@ export default function FAQ() {
                 viewport={{ once: true, margin: "-50px" }}
               >
                 {/* Category Header */}
-                <div className="flex items-center gap-3 mb-5 pb-3 border-b border-zinc-800/80">
+                <div className="flex items-center gap-3 mb-5 pb-3 border-b border-[#1a1a1a]">
                   <div className={`w-10 h-10 rounded-xl ${category.bgColor} flex items-center justify-center border ${category.borderColor}`}>
                     <Icon className={`h-5 w-5 ${category.iconColor}`} />
                   </div>
                   <h3 className="text-lg font-bold text-white">{category.category}</h3>
-                  <span className="ml-auto text-xs text-zinc-500 bg-zinc-800/50 px-2.5 py-1 rounded-full">
+                  <span className="ml-auto text-xs text-[#BDDBDB] bg-[#0D0D0D] px-2.5 py-1 rounded-full">
                     {category.questions.length} questions
                   </span>
                 </div>
@@ -313,25 +313,25 @@ export default function FAQ() {
                     return (
                       <div
                         key={qIndex}
-                        className={`bg-zinc-900/40 backdrop-blur-sm rounded-xl border transition-all duration-300 overflow-hidden ${
+                        className={`bg-[#0D0D0D]/40 backdrop-blur-sm rounded-xl border transition-all duration-300 overflow-hidden ${
                           isExpanded 
-                            ? 'border-zinc-700 shadow-lg shadow-purple-500/5' 
-                            : 'border-zinc-800/80 hover:border-zinc-700'
+                            ? 'border-[#FF2D2D]/40 shadow-lg shadow-[#FF2D2D]/5' 
+                            : 'border-[#1a1a1a] hover:border-[#FF2D2D]/30'
                         }`}
                       >
                         <button
-                          className="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-zinc-800/30 transition-colors"
+                          className="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-[#1a1a1a]/30 transition-colors"
                           onClick={() => toggleQuestion(key)}
                         >
                           <span className="text-white font-medium text-sm sm:text-base pr-4">{faq.q}</span>
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
                             isExpanded 
-                              ? 'bg-purple-500/20 rotate-180' 
-                              : 'bg-zinc-800/50'
+                              ? 'bg-[#FF2D2D]/20 rotate-180' 
+                              : 'bg-[#0D0D0D]'
                           }`}>
                             <ChevronDown
                               className={`h-4 w-4 transition-colors duration-300 ${
-                                isExpanded ? 'text-purple-400' : 'text-zinc-500'
+                                isExpanded ? 'text-[#FF2D2D]' : 'text-[#BDDBDB]'
                               }`}
                             />
                           </div>
@@ -346,7 +346,7 @@ export default function FAQ() {
                               transition={{ duration: 0.3, ease: 'easeInOut' }}
                               className="overflow-hidden"
                             >
-                              <div className="px-5 sm:px-6 pb-5 text-zinc-300 text-sm sm:text-base leading-relaxed border-t border-zinc-800/50 pt-4">
+                              <div className="px-5 sm:px-6 pb-5 text-[#BDDBDB] text-sm sm:text-base leading-relaxed border-t border-[#1a1a1a] pt-4">
                                 {faq.a}
                               </div>
                             </motion.div>
@@ -369,15 +369,15 @@ export default function FAQ() {
           viewport={{ once: true }}
           className="mt-16 text-center"
         >
-          <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-purple-900/20 via-purple-900/10 to-blue-900/20 border border-purple-500/20 rounded-2xl px-8 py-5 backdrop-blur-sm">
-            <MessageCircle className="h-6 w-6 text-purple-400" />
+          <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-[#FF2D2D]/20 via-[#FF2D2D]/10 to-[#FF2D2D]/20 border border-[#FF2D2D]/20 rounded-2xl px-8 py-5 backdrop-blur-sm">
+            <MessageCircle className="h-6 w-6 text-[#FF2D2D]" />
             <div className="text-left">
               <div className="text-white font-semibold">Still have questions?</div>
-              <div className="text-sm text-zinc-400">We&apos;re here to help you launch</div>
+              <div className="text-sm text-[#BDDBDB]">We&apos;re here to help you launch</div>
             </div>
             <a 
               href="/contact"
-              className="ml-0 sm:ml-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
+              className="ml-0 sm:ml-4 bg-[#FF2D2D] hover:bg-[#B10000] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25 hover:shadow-[#FF2D2D]/40"
             >
               Contact Us
             </a>

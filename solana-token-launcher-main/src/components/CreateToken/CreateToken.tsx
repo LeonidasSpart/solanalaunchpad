@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, ChangeEvent, useContext } from 'react';
+import React, { useState, ChangeEvent, useContext, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp
 const CreateToken = () => {
   const { publicKey, signTransaction } = useWallet();
   const { network } = useContext(NetworkContext);
+  const searchParams = useSearchParams();
 
   // ===== TEMPLATE STATE =====
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
@@ -86,6 +88,25 @@ const CreateToken = () => {
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState('');
   const [txId, setTxId] = useState('');
+
+  // ===== URL PARAM HANDLER =====
+  const templateFromUrl = searchParams.get('template');
+
+  useEffect(() => {
+    if (templateFromUrl && templates[templateFromUrl as keyof typeof templates]) {
+      const t = templates[templateFromUrl as keyof typeof templates];
+      setSelectedTemplate(templateFromUrl);
+      setFormData(prev => ({
+        ...prev,
+        supply: t.supply,
+        decimals: t.decimals,
+      }));
+      setRevokeMint(t.revokeMint);
+      setRevokeFreeze(t.revokeFreeze);
+      setRevokeUpdate(t.revokeUpdate);
+    }
+  }, [templateFromUrl]);
+  // ===== END URL PARAM HANDLER =====
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

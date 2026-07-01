@@ -9,49 +9,49 @@ const HowItWorks = () => {
       icon: Wallet, 
       title: 'Connect Wallet', 
       desc: 'Use Phantom, Solflare, Backpack, or any Solana wallet. No seed phrase required.',
-      color: 'from-purple-500/20 to-purple-600/5',
-      borderColor: 'group-hover:border-purple-500/50',
-      iconBg: 'bg-purple-500/10 group-hover:bg-purple-500/20',
-      iconColor: 'text-purple-400',
+      color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+      borderColor: 'group-hover:border-[#FF2D2D]/50',
+      iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+      iconColor: 'text-[#FF2D2D]',
       step: '01'
     },
     { 
       icon: Edit3, 
       title: 'Add Details', 
       desc: 'Name, symbol, supply, logo, and social links. Full branding included free.',
-      color: 'from-blue-500/20 to-blue-600/5',
-      borderColor: 'group-hover:border-blue-500/50',
-      iconBg: 'bg-blue-500/10 group-hover:bg-blue-500/20',
-      iconColor: 'text-blue-400',
+      color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+      borderColor: 'group-hover:border-[#FF2D2D]/50',
+      iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+      iconColor: 'text-[#FF2D2D]',
       step: '02'
     },
     { 
       icon: CheckCircle, 
       title: 'Review & Confirm', 
       desc: 'Approve the transaction in your wallet. We simulate first so you know the exact cost.',
-      color: 'from-emerald-500/20 to-emerald-600/5',
-      borderColor: 'group-hover:border-emerald-500/50',
-      iconBg: 'bg-emerald-500/10 group-hover:bg-emerald-500/20',
-      iconColor: 'text-emerald-400',
+      color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+      borderColor: 'group-hover:border-[#FF2D2D]/50',
+      iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+      iconColor: 'text-[#FF2D2D]',
       step: '03'
     },
     { 
       icon: Rocket, 
       title: 'Token Minted', 
       desc: 'Your token is live on Solana in under 60 seconds. Instant visibility on explorers.',
-      color: 'from-amber-500/20 to-amber-600/5',
-      borderColor: 'group-hover:border-amber-500/50',
-      iconBg: 'bg-amber-500/10 group-hover:bg-amber-500/20',
-      iconColor: 'text-amber-400',
+      color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+      borderColor: 'group-hover:border-[#FF2D2D]/50',
+      iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+      iconColor: 'text-[#FF2D2D]',
       step: '04'
     },
   ];
 
   return (
-    <section id="how-it-works" className="py-24 bg-black relative overflow-hidden scroll-mt-20">
+    <section id="how-it-works" className="py-24 bg-[#050505] relative overflow-hidden scroll-mt-20">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/[0.02] rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#FF2D2D]/[0.02] rounded-full blur-3xl" />
       </div>
 
       {/* Grid pattern */}
@@ -66,16 +66,16 @@ const HowItWorks = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 mb-6">
-            <Zap className="h-3.5 w-3.5 text-purple-400" />
-            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Easy as 1-2-3-4</span>
+          <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-6">
+            <Zap className="h-3.5 w-3.5 text-[#FF2D2D]" />
+            <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">Easy as 1-2-3-4</span>
           </div>
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
-            How It <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Works</span>
+            How It <span className="text-[#FF2D2D]">Works</span>
           </h2>
           
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-lg text-[#BDDBDB] max-w-2xl mx-auto">
             Four simple steps from idea to on-chain token. No coding, no complexity, no waiting.
           </p>
         </motion.div>
@@ -91,11 +91,11 @@ const HowItWorks = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.12, duration: 0.5 }}
                 viewport={{ once: true, margin: "-50px" }}
-                className={`group relative bg-gradient-to-br ${step.color} backdrop-blur-sm rounded-2xl border border-zinc-800/80 ${step.borderColor} p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/5`}
+                className={`group relative bg-gradient-to-br ${step.color} backdrop-blur-sm rounded-2xl border border-[#1a1a1a] ${step.borderColor} p-8 transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl hover:shadow-[#FF2D2D]/5`}
               >
                 {/* Step Number */}
-                <div className="absolute -top-3 left-6 bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1">
-                  <span className="text-xs font-mono font-bold text-zinc-500 group-hover:text-purple-400 transition-colors">
+                <div className="absolute -top-3 left-6 bg-[#0D0D0D] border border-[#1a1a1a] rounded-lg px-2.5 py-1">
+                  <span className="text-xs font-mono font-bold text-[#BDDBDB] group-hover:text-[#FF2D2D] transition-colors">
                     {step.step}
                   </span>
                 </div>
@@ -103,7 +103,7 @@ const HowItWorks = () => {
                 {/* Connector Arrow (hidden on mobile, last item) */}
                 {index < steps.length - 1 && (
                   <div className="hidden md:block absolute -right-4 top-1/2 -translate-y-1/2 z-10">
-                    <ArrowRight className="h-5 w-5 text-zinc-700 group-hover:text-purple-500/50 transition-colors" />
+                    <ArrowRight className="h-5 w-5 text-[#1a1a1a] group-hover:text-[#FF2D2D]/50 transition-colors" />
                   </div>
                 )}
 
@@ -113,10 +113,10 @@ const HowItWorks = () => {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-zinc-300 transition-all duration-300">
+                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#FF2D2D] transition-all duration-300">
                   {step.title}
                 </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed group-hover:text-zinc-300 transition-colors duration-300">
+                <p className="text-sm text-[#BDDBDB] leading-relaxed group-hover:text-white transition-colors duration-300">
                   {step.desc}
                 </p>
 
@@ -135,15 +135,15 @@ const HowItWorks = () => {
           viewport={{ once: true }}
           className="mt-16 text-center"
         >
-          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-purple-900/20 via-purple-900/10 to-blue-900/20 border border-purple-500/20 rounded-2xl px-8 py-5 backdrop-blur-sm">
-            <Sparkles className="h-5 w-5 text-purple-400" />
+          <div className="inline-flex items-center gap-4 bg-gradient-to-r from-[#FF2D2D]/20 via-[#FF2D2D]/10 to-[#FF2D2D]/20 border border-[#FF2D2D]/20 rounded-2xl px-8 py-5 backdrop-blur-sm">
+            <Sparkles className="h-5 w-5 text-[#FF2D2D]" />
             <div className="text-left">
               <div className="text-white font-semibold">Ready to launch?</div>
-              <div className="text-sm text-zinc-400">Your token can be live in under 60 seconds</div>
+              <div className="text-sm text-[#BDDBDB]">Your token can be live in under 60 seconds</div>
             </div>
             <a 
               href="/create-mint"
-              className="ml-4 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 flex items-center gap-2"
+              className="ml-4 bg-[#FF2D2D] hover:bg-[#B10000] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25 hover:shadow-[#FF2D2D]/40 flex items-center gap-2"
             >
               Start Now <ArrowRight className="h-4 w-4" />
             </a>

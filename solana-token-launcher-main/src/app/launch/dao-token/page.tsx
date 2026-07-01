@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { Rocket, Shield, Landmark, Vote, ArrowRight, Users } from 'lucide-react';
+import { Rocket, Shield, Landmark, Vote, ArrowRight, Users, Settings } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Create DAO Governance Token on Solana | ZRP',

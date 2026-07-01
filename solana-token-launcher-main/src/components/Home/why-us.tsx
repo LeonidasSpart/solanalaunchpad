@@ -38,13 +38,13 @@ const features = [
 
 export default function WhyUs() {
   return (
-    <section id="why-us" className="py-24 bg-[#0a0a0a] relative overflow-hidden">
-      {/* Subtle Solana green glow */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#14f195]/[0.03] rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#9945ff]/[0.03] rounded-full blur-3xl" />
+    <section id="why-us" className="py-24 bg-[#050505] relative overflow-hidden">
+      {/* ZRP Red glow */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#FF2D2D]/[0.04] rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#FF2D2D]/[0.02] rounded-full blur-3xl" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Section Header — Clean, no badge */}
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -53,14 +53,14 @@ export default function WhyUs() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-5 tracking-tight">
-            Why Choose <span className="text-[#14f195]">ZRP</span>?
+            Why Choose <span className="text-[#FF2D2D]">ZRP</span>?
           </h2>
-          <p className="text-lg text-zinc-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-[#BDDBDB] max-w-2xl mx-auto leading-relaxed">
             The only open-source platform that lets you test your token for FREE on devnet before launching on mainnet.
           </p>
         </motion.div>
 
-        {/* Features Grid — Clean dark cards, single accent color */}
+        {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {features.map((feature, index) => {
             const Icon = feature.icon;
@@ -71,18 +71,18 @@ export default function WhyUs() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.08, duration: 0.5 }}
                 viewport={{ once: true, margin: "-50px" }}
-                className="group bg-[#111111] rounded-2xl p-7 border border-[#1a1a1a] hover:border-[#9945ff]/30 transition-all duration-400 hover:-translate-y-0.5"
+                className="group bg-[#0D0D0D] rounded-2xl p-7 border border-[#1a1a1a] hover:border-[#FF2D2D]/40 transition-all duration-400 hover:-translate-y-0.5"
               >
-                {/* Icon — Solana purple, clean */}
-                <div className="w-11 h-11 rounded-xl bg-[#9945ff]/10 flex items-center justify-center mb-5 group-hover:bg-[#9945ff]/15 transition-colors">
-                  <Icon className="h-5 w-5 text-[#9945ff]" />
+                {/* Icon — ZRP Red */}
+                <div className="w-11 h-11 rounded-xl bg-[#FF2D2D]/10 flex items-center justify-center mb-5 group-hover:bg-[#FF2D2D]/20 transition-colors">
+                  <Icon className="h-5 w-5 text-[#FF2D2D]" />
                 </div>
 
                 {/* Content */}
                 <h3 className="text-lg font-semibold text-white mb-2.5">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-zinc-500 leading-relaxed group-hover:text-zinc-400 transition-colors">
+                <p className="text-sm text-[#BDDBDB] leading-relaxed group-hover:text-white transition-colors">
                   {feature.description}
                 </p>
               </motion.div>
@@ -90,7 +90,7 @@ export default function WhyUs() {
           })}
         </div>
 
-        {/* Bottom CTA — Clean, minimal */}
+        {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -100,7 +100,7 @@ export default function WhyUs() {
         >
           <a 
             href="/create-mint"
-            className="inline-flex items-center gap-2 bg-[#9945ff] hover:bg-[#b279ff] text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-300"
+            className="inline-flex items-center gap-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold px-7 py-3.5 rounded-xl transition-all duration-300"
           >
             Start Creating
             <ArrowRight className="h-4 w-4" />

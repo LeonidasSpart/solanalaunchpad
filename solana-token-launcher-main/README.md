@@ -1,5 +1,4 @@
-
-readme_content = """# ZRP — No-Code Solana Token Creator
+# ZRP — No-Code Solana Token Creator
 
 <p align="center">
   <a href="https://zrp.one">

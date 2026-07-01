@@ -182,26 +182,26 @@ export default function AirdropPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       <div className="text-center mb-12">
-        <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Airdrop Tool</span>
+        <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Airdrop Tool</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
           Distribute Tokens <br className="hidden sm:block" />
-          <span className="text-purple-400">to Multiple Wallets</span>
+          <span className="text-[#FF2D2D]">to Multiple Wallets</span>
         </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
           Send your tokens to hundreds of wallets at once. Perfect for community rewards, giveaways, and token distribution.
         </p>
       </div>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-8">
+      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-8">
         {/* Wallet Connection */}
-        <div className="flex items-center justify-between bg-zinc-800/50 rounded-xl p-4 border border-zinc-700">
+        <div className="flex items-center justify-between bg-[#1a1a1a]/50 rounded-xl p-4 border border-[#1a1a1a]">
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-400' : 'bg-red-400'}`} />
+            <div className={`w-3 h-3 rounded-full ${connected ? 'bg-[#FF2D2D]' : 'bg-[#BDDBDB]'}`} />
             <span className="text-white text-sm font-medium">
               {connected ? `Connected: ${publicKey?.toBase58().slice(0, 8)}...${publicKey?.toBase58().slice(-8)}` : 'Wallet not connected'}
             </span>
           </div>
-          <WalletMultiButton className="!bg-purple-600 hover:!bg-purple-700 !rounded-xl !px-4 !py-2 !font-semibold !text-white !text-sm" />
+          <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-4 !py-2 !font-semibold !text-white !text-sm" />
         </div>
 
         {/* Token Mint */}
@@ -212,9 +212,9 @@ export default function AirdropPage() {
             value={tokenMint}
             onChange={(e) => setTokenMint(e.target.value)}
             placeholder="e.g. So11111111111111111111111111111111111111112"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm"
+            className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm"
           />
-          <p className="text-zinc-500 text-xs mt-1">Find your token mint address on Solscan.io</p>
+          <p className="text-[#BDDBDB] text-xs mt-1">Find your token mint address on Solscan.io</p>
         </div>
 
         {/* Amount */}
@@ -225,7 +225,7 @@ export default function AirdropPage() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="e.g. 1000"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm"
+            className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm"
           />
         </div>
 
@@ -233,7 +233,7 @@ export default function AirdropPage() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-white font-semibold text-sm">Step 3: Wallet Addresses</label>
-            <label className="cursor-pointer bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium px-3 py-1.5 rounded-lg transition">
+            <label className="cursor-pointer bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-xs font-medium px-3 py-1.5 rounded-lg transition">
               Upload CSV
               <input type="file" accept=".csv,.txt" onChange={handleFileUpload} className="hidden" />
             </label>
@@ -243,28 +243,28 @@ export default function AirdropPage() {
             onChange={(e) => setWalletList(e.target.value)}
             rows={6}
             placeholder="Paste wallet addresses here, one per line"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500 text-sm font-mono"
+            className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm font-mono"
           />
-          <p className="text-zinc-500 text-xs mt-1">{wallets.length > 0 ? `${wallets.length} wallets detected` : 'Paste wallet addresses, one per line'}</p>
+          <p className="text-[#BDDBDB] text-xs mt-1">{wallets.length > 0 ? `${wallets.length} wallets detected` : 'Paste wallet addresses, one per line'}</p>
         </div>
 
         {/* Summary */}
         {wallets.length > 0 && amount && tokenMint && (
-          <div className="bg-purple-900/20 border border-purple-500/30 rounded-xl p-4">
-            <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm mb-2">
+          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-[#FF2D2D] font-semibold text-sm mb-2">
               <span>Airdrop Summary</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
               <div>
-                <p className="text-zinc-500 text-xs">Recipients</p>
+                <p className="text-[#BDDBDB] text-xs">Recipients</p>
                 <p className="text-white font-medium">{wallets.length}</p>
               </div>
               <div>
-                <p className="text-zinc-500 text-xs">Per Wallet</p>
+                <p className="text-[#BDDBDB] text-xs">Per Wallet</p>
                 <p className="text-white font-medium">{amount} tokens</p>
               </div>
               <div>
-                <p className="text-zinc-500 text-xs">Total</p>
+                <p className="text-[#BDDBDB] text-xs">Total</p>
                 <p className="text-white font-medium">{totalAmount.toLocaleString()} tokens</p>
               </div>
             </div>
@@ -275,11 +275,11 @@ export default function AirdropPage() {
         {isProcessing && progress.total > 0 && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-zinc-400">Progress</span>
-              <span className="text-zinc-400">{progress.current} / {progress.total}</span>
+              <span className="text-[#BDDBDB]">Progress</span>
+              <span className="text-[#BDDBDB]">{progress.current} / {progress.total}</span>
             </div>
-            <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
-              <div className="bg-purple-600 h-2 transition-all duration-500 rounded-full" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
+            <div className="w-full bg-[#1a1a1a] rounded-full h-2 overflow-hidden">
+              <div className="bg-[#FF2D2D] h-2 transition-all duration-500 rounded-full" style={{ width: `${(progress.current / progress.total) * 100}%` }} />
             </div>
           </div>
         )}
@@ -287,11 +287,11 @@ export default function AirdropPage() {
         {/* Status */}
         {status.type && (
           <div className={`rounded-xl p-4 ${
-            status.type === 'success' ? 'bg-green-900/20 border border-green-500/30' :
-            status.type === 'error' ? 'bg-red-900/20 border border-red-500/30' :
-            'bg-blue-900/20 border border-blue-500/30'
+            status.type === 'success' ? 'bg-[#FF2D2D]/10 border border-[#FF2D2D]/30' :
+            status.type === 'error' ? 'bg-[#FF2D2D]/10 border border-[#FF2D2D]/30' :
+            'bg-[#FF2D2D]/10 border border-[#FF2D2D]/30'
           }`}>
-            <p className={`text-sm ${status.type === 'success' ? 'text-green-300' : status.type === 'error' ? 'text-red-300' : 'text-blue-300'}`}>
+            <p className={`text-sm ${status.type === 'success' ? 'text-[#FF2D2D]' : status.type === 'error' ? 'text-[#FF2D2D]' : 'text-[#BDDBDB]'}`}>
               {status.message}
             </p>
           </div>
@@ -299,23 +299,23 @@ export default function AirdropPage() {
 
         {/* Results */}
         {txResults.length > 0 && (
-          <div className="border border-zinc-800 rounded-xl overflow-hidden">
-            <div className="bg-zinc-800/50 px-4 py-3 border-b border-zinc-800 flex justify-between items-center">
+          <div className="border border-[#1a1a1a] rounded-xl overflow-hidden">
+            <div className="bg-[#1a1a1a]/50 px-4 py-3 border-b border-[#1a1a1a] flex justify-between items-center">
               <p className="text-white font-semibold text-sm">Results</p>
-              <p className="text-zinc-400 text-xs">
+              <p className="text-[#BDDBDB] text-xs">
                 {txResults.filter(r => r.status === 'success').length} successful · {txResults.filter(r => r.status === 'failed').length} failed
               </p>
             </div>
             <div className="max-h-48 overflow-y-auto">
               {txResults.map((result, index) => (
-                <div key={index} className={`flex items-center justify-between px-4 py-2 border-b border-zinc-800/50 text-sm ${result.status === 'success' ? 'bg-green-900/10' : 'bg-red-900/10'}`}>
-                  <span className="text-zinc-300 font-mono text-xs truncate max-w-xs">{result.address}</span>
+                <div key={index} className={`flex items-center justify-between px-4 py-2 border-b border-[#1a1a1a]/50 text-sm ${result.status === 'success' ? 'bg-[#FF2D2D]/10' : 'bg-[#FF2D2D]/10'}`}>
+                  <span className="text-[#BDDBDB] font-mono text-xs truncate max-w-xs">{result.address}</span>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs font-medium ${result.status === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                    <span className={`text-xs font-medium ${result.status === 'success' ? 'text-[#FF2D2D]' : 'text-[#FF2D2D]'}`}>
                       {result.status === 'success' ? '✅ Success' : '❌ Failed'}
                     </span>
                     {result.signature && (
-                      <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 text-xs transition">View</a>
+                      <a href={`https://solscan.io/tx/${result.signature}`} target="_blank" rel="noopener noreferrer" className="text-[#FF2D2D] hover:text-[#B10000] text-xs transition">View</a>
                     )}
                   </div>
                 </div>
@@ -328,29 +328,29 @@ export default function AirdropPage() {
         <button
           onClick={handleAirdrop}
           disabled={isProcessing || !connected || !tokenMint || !amount || wallets.length === 0}
-          className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2"
+          className="w-full bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2"
         >
           {isProcessing ? 'Processing Airdrop...' : 'Send Airdrop'}
         </button>
 
-        <p className="text-zinc-500 text-xs text-center">⚠️ Airdrop transactions require SOL for network fees. Ensure your wallet has sufficient balance.</p>
+        <p className="text-[#BDDBDB] text-xs text-center">⚠️ Airdrop transactions require SOL for network fees. Ensure your wallet has sufficient balance.</p>
       </div>
 
       <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
           <div className="text-3xl mb-2">📝</div>
           <h3 className="text-white font-semibold">Step 1</h3>
-          <p className="text-zinc-400 text-sm">Enter token mint address</p>
+          <p className="text-[#BDDBDB] text-sm">Enter token mint address</p>
         </div>
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
           <div className="text-3xl mb-2">👥</div>
           <h3 className="text-white font-semibold">Step 2</h3>
-          <p className="text-zinc-400 text-sm">Add wallet addresses</p>
+          <p className="text-[#BDDBDB] text-sm">Add wallet addresses</p>
         </div>
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 text-center">
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
           <div className="text-3xl mb-2">🚀</div>
           <h3 className="text-white font-semibold">Step 3</h3>
-          <p className="text-zinc-400 text-sm">Send airdrop instantly</p>
+          <p className="text-[#BDDBDB] text-sm">Send airdrop instantly</p>
         </div>
       </div>
     </div>

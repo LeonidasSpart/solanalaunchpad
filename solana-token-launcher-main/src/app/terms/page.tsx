@@ -3,10 +3,10 @@ export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       <h1 className="text-4xl font-bold text-white text-center mb-4">Terms of Service</h1>
-      <p className="text-zinc-400 text-center mb-2">Please read these terms carefully before using our token creation services.</p>
-      <p className="text-zinc-500 text-center text-sm mb-12">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      <p className="text-[#BDDBDB] text-center mb-2">Please read these terms carefully before using our token creation services.</p>
+      <p className="text-[#BDDBDB] text-center text-sm mb-12">Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-6 text-zinc-300 text-sm leading-relaxed">
+      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-6 text-[#BDDBDB] text-sm leading-relaxed">
         <section>
           <h2 className="text-xl font-bold text-white mb-3">1. Acceptance of Terms</h2>
           <p>By accessing and using ZRP ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
@@ -111,12 +111,12 @@ export default function TermsPage() {
 
         <section>
           <h2 className="text-xl font-bold text-white mb-3">14. Contact Information</h2>
-          <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:support@zrp.one" className="text-purple-400 hover:underline">support@zrp.one</a> or through our <a href="/contact" className="text-purple-400 hover:underline">contact page</a>.</p>
+          <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:support@zrp.one" className="text-[#FF2D2D] hover:text-[#B10000] transition">support@zrp.one</a> or through our <a href="/contact" className="text-[#FF2D2D] hover:text-[#B10000] transition">contact page</a>.</p>
         </section>
 
-        <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-4 mt-6">
-          <p className="text-red-400 font-semibold text-sm">⚠️ Important Notice</p>
-          <p className="text-zinc-400 text-sm mt-1">
+        <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 mt-6">
+          <p className="text-[#FF2D2D] font-semibold text-sm">⚠️ Important Notice</p>
+          <p className="text-[#BDDBDB] text-sm mt-1">
             Creating and trading cryptocurrency tokens involves significant risk. The value of tokens can be highly volatile and may result in total loss. This is not financial advice. Please do your own research and consider consulting with a financial advisor before making any investment decisions.
           </p>
         </div>

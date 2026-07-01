@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 export default function CtaSection() {
   return (
-    <section className="py-20 bg-gradient-to-r from-purple-900/20 via-black to-purple-900/20 border-t border-b border-purple-500/20">
+    <section className="py-20 bg-[#050505] border-t border-b border-[#FF2D2D]/20">
       <div className="max-w-4xl mx-auto px-4 text-center">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -14,30 +14,30 @@ export default function CtaSection() {
           viewport={{ once: true }}
         >
           <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
-            Ready to launch your <span className="text-purple-400">Solana token</span>?
+            Ready to launch your <span className="text-[#FF2D2D]">Solana token</span>?
           </h2>
-          <p className="text-zinc-400 text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-[#BDDBDB] text-lg mb-8 max-w-2xl mx-auto">
             Create, test, and launch your token with confidence. Free devnet testing, transparent mainnet pricing.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/airdrop"
-              className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 text-white font-semibold rounded-xl transition border border-zinc-700"
+              className="px-8 py-3 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-white font-semibold rounded-xl transition border border-[#1a1a1a]"
             >
               Get Airdrop
             </Link>
             <Link
               href="/create-mint"
-              className="px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition shadow-lg shadow-purple-500/25"
+              className="px-8 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition shadow-lg shadow-[#FF2D2D]/25"
             >
               Create Token
             </Link>
             <Link
               href="#"
-              className="px-8 py-3 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-400 hover:text-white font-semibold rounded-xl transition border border-zinc-700 cursor-not-allowed opacity-60"
+              className="px-8 py-3 bg-[#0D0D0D]/50 hover:bg-[#0D0D0D] text-[#BDDBDB] hover:text-white font-semibold rounded-xl transition border border-[#1a1a1a] cursor-not-allowed opacity-60"
             >
-              Liquidity Pool <span className="text-xs text-zinc-500">(soon)</span>
+              Liquidity Pool <span className="text-xs text-[#BDDBDB] opacity-50">(soon)</span>
             </Link>
           </div>
         </motion.div>

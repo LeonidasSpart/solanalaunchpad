@@ -6,14 +6,14 @@ export default function AboutPage() {
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
           Democratizing Solana <br className="hidden sm:block" />
-          <span className="text-purple-400">Token Creation</span>
+          <span className="text-[#FF2D2D]">Token Creation</span>
         </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
           We believe everyone should have access to the tools needed to create and launch tokens on the Solana blockchain.
         </p>
       </div>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-12 text-zinc-300 text-sm leading-relaxed">
+      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-12 text-[#BDDBDB] text-sm leading-relaxed">
         {/* Mission Section */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-3">Our Mission</h2>
@@ -29,21 +29,21 @@ export default function AboutPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Why Choose ZRP?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold mb-1">🚀 No Technical Knowledge Required</h3>
-              <p className="text-zinc-400 text-sm">Create tokens without coding or blockchain expertise.</p>
+              <p className="text-[#BDDBDB] text-sm">Create tokens without coding or blockchain expertise.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold mb-1">⚡ Test Before You Launch</h3>
-              <p className="text-zinc-400 text-sm">Free devnet testing before going live on mainnet.</p>
+              <p className="text-[#BDDBDB] text-sm">Free devnet testing before going live on mainnet.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold mb-1">🛡️ Professional Results</h3>
-              <p className="text-zinc-400 text-sm">Enterprise-grade tokens with proper metadata and standards.</p>
+              <p className="text-[#BDDBDB] text-sm">Enterprise-grade tokens with proper metadata and standards.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold mb-1">💰 Transparent Pricing</h3>
-              <p className="text-zinc-400 text-sm">No hidden fees, no subscriptions — just simple, clear pricing.</p>
+              <p className="text-[#BDDBDB] text-sm">No hidden fees, no subscriptions — just simple, clear pricing.</p>
             </div>
           </div>
         </section>
@@ -51,19 +51,19 @@ export default function AboutPage() {
         {/* Values Section */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Our Values</h2>
-          <p className="text-zinc-400 mb-4">The principles that guide everything we build.</p>
+          <p className="text-[#BDDBDB] mb-4">The principles that guide everything we build.</p>
           <div className="space-y-4">
             <div>
               <h3 className="text-white font-semibold">Accessibility</h3>
-              <p className="text-zinc-400">We believe blockchain technology should be accessible to everyone, regardless of technical background.</p>
+              <p className="text-[#BDDBDB]">We believe blockchain technology should be accessible to everyone, regardless of technical background.</p>
             </div>
             <div>
               <h3 className="text-white font-semibold">Security</h3>
-              <p className="text-zinc-400">Security is our top priority. We implement best practices to ensure your tokens are safe and reliable.</p>
+              <p className="text-[#BDDBDB]">Security is our top priority. We implement best practices to ensure your tokens are safe and reliable.</p>
             </div>
             <div>
               <h3 className="text-white font-semibold">Transparency</h3>
-              <p className="text-zinc-400">We maintain complete transparency in our pricing, processes, and token creation methods.</p>
+              <p className="text-[#BDDBDB]">We maintain complete transparency in our pricing, processes, and token creation methods.</p>
             </div>
           </div>
         </section>
@@ -74,17 +74,17 @@ export default function AboutPage() {
           <p className="mb-3">
             We chose Solana as our blockchain platform because of its superior performance, low costs, and growing ecosystem. Solana offers:
           </p>
-          <ul className="list-disc pl-5 space-y-1 text-zinc-400">
+          <ul className="list-disc pl-5 space-y-1 text-[#BDDBDB]">
             <li>Lightning-fast transaction speeds (65,000 TPS)</li>
             <li>Ultra-low transaction fees (fractions of a penny)</li>
             <li>Energy-efficient proof-of-stake consensus</li>
             <li>Growing ecosystem of DeFi and NFT projects</li>
           </ul>
           <div className="flex flex-wrap gap-2 mt-4">
-            <span className="text-xs bg-purple-900/30 text-purple-300 px-3 py-1 rounded-full border border-purple-500/20">SPL Token Standard Compliant</span>
-            <span className="text-xs bg-purple-900/30 text-purple-300 px-3 py-1 rounded-full border border-purple-500/20">Metaplex Metadata Integration</span>
-            <span className="text-xs bg-purple-900/30 text-purple-300 px-3 py-1 rounded-full border border-purple-500/20">Solana Wallet Support</span>
-            <span className="text-xs bg-purple-900/30 text-purple-300 px-3 py-1 rounded-full border border-purple-500/20">Solscan Explorer Compatible</span>
+            <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-3 py-1 rounded-full border border-[#FF2D2D]/20">SPL Token Standard Compliant</span>
+            <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-3 py-1 rounded-full border border-[#FF2D2D]/20">Metaplex Metadata Integration</span>
+            <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-3 py-1 rounded-full border border-[#FF2D2D]/20">Solana Wallet Support</span>
+            <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-3 py-1 rounded-full border border-[#FF2D2D]/20">Solscan Explorer Compatible</span>
           </div>
         </section>
 
@@ -92,21 +92,21 @@ export default function AboutPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Our Impact</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <div className="text-2xl font-bold text-purple-400">100+</div>
-              <div className="text-zinc-500 text-xs">Tokens Created</div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <div className="text-2xl font-bold text-[#FF2D2D]">100+</div>
+              <div className="text-[#BDDBDB] text-xs">Tokens Created</div>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <div className="text-2xl font-bold text-purple-400">99.9%</div>
-              <div className="text-zinc-500 text-xs">Success Rate</div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <div className="text-2xl font-bold text-[#FF2D2D]">99.9%</div>
+              <div className="text-[#BDDBDB] text-xs">Success Rate</div>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <div className="text-2xl font-bold text-purple-400">&lt;60s</div>
-              <div className="text-zinc-500 text-xs">Avg Creation Time</div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <div className="text-2xl font-bold text-[#FF2D2D]">&lt;60s</div>
+              <div className="text-[#BDDBDB] text-xs">Avg Creation Time</div>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
-              <div className="text-2xl font-bold text-purple-400">24/7</div>
-              <div className="text-zinc-500 text-xs">Platform Availability</div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <div className="text-2xl font-bold text-[#FF2D2D]">24/7</div>
+              <div className="text-[#BDDBDB] text-xs">Platform Availability</div>
             </div>
           </div>
         </section>
@@ -114,26 +114,26 @@ export default function AboutPage() {
         {/* Team Section */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-3">Our Team</h2>
-          <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+          <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
             <p className="font-semibold text-white">Built by LeonidasSpart</p>
-            <p className="text-zinc-400 text-sm mt-1">
+            <p className="text-[#BDDBDB] text-sm mt-1">
               ZRP was created to remove the technical barriers (Rust, CLI, RPC config) that prevented non-developers from launching SPL tokens.
             </p>
-            <p className="text-zinc-400 text-sm mt-3">
+            <p className="text-[#BDDBDB] text-sm mt-3">
               The platform is constantly improved based on user feedback, with new guides, features, and tooling added regularly.
             </p>
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="text-center border-t border-zinc-800 pt-8 mt-4">
+        <section className="text-center border-t border-[#1a1a1a] pt-8 mt-4">
           <h2 className="text-2xl font-bold text-white mb-3">Ready to Launch Your Token?</h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
+          <p className="text-[#BDDBDB] max-w-xl mx-auto">
             Be part of the growing community of creators who are building the future of blockchain.
           </p>
           <a
             href="/create-mint"
-            className="inline-block mt-6 px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition"
+            className="inline-block mt-6 px-8 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
           >
             Create Your Token
           </a>

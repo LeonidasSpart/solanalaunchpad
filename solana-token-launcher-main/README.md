@@ -312,7 +312,6 @@ For issues, questions, or feature requests:
 <p align="center">
   <a href="https://zrp.one">🚀 Try it now at zrp.one</a>
 </p>
-"""
 
 ----
 LICENSE

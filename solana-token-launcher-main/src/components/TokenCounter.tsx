@@ -19,8 +19,8 @@ export default function TokenCounter() {
 
   return (
     <div className="text-center py-8">
-      <div className="text-5xl font-bold text-purple-400">{count.toLocaleString()}+</div>
-      <p className="text-zinc-400">Tokens launched on ZRP</p>
+      <div className="text-5xl font-bold text-[#FF2D2D]">{count.toLocaleString()}+</div>
+      <p className="text-[#BDDBDB]">Tokens launched on ZRP</p>
     </div>
   );
 }

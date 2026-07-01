@@ -60,34 +60,34 @@ export default function WelcomePopup() {
             className="fixed inset-0 flex items-center justify-center z-[101] p-4"
           >
             <div 
-              className="relative w-full max-w-md bg-[#1a1a2e] rounded-3xl border border-[#9945ff]/20 shadow-2xl shadow-[#9945ff]/10 overflow-hidden"
+              className="relative w-full max-w-md bg-[#0D0D0D] rounded-3xl border border-[#FF2D2D]/20 shadow-2xl shadow-[#FF2D2D]/10 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#9945ff]/10 border border-[#9945ff]/20 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-[#9945ff]/20 transition-all z-10"
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 flex items-center justify-center text-[#BDDBDB] hover:text-white hover:bg-[#FF2D2D]/20 transition-all z-10"
               >
                 <X className="h-4 w-4" />
               </button>
 
               {/* Top glow effect */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#9945ff]/20 rounded-full blur-3xl" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-[#FF2D2D]/20 rounded-full blur-3xl" />
 
               {/* Content */}
               <div className="relative z-10 p-8 pt-10">
                 {/* Logo */}
                 <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#9945ff] to-[#14f195] flex items-center justify-center shadow-lg shadow-[#9945ff]/25">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF2D2D] to-[#B10000] flex items-center justify-center shadow-lg shadow-[#FF2D2D]/25">
                     <span className="text-white font-bold text-2xl">Z</span>
                   </div>
                 </div>
 
                 {/* Heading */}
                 <h2 className="text-2xl font-bold text-white text-center mb-2">
-                  Welcome to <span className="text-[#14f195]">ZRP</span>
+                  Welcome to <span className="text-[#FF2D2D]">ZRP</span>
                 </h2>
-                <p className="text-zinc-400 text-center text-sm mb-8">
+                <p className="text-[#BDDBDB] text-center text-sm mb-8">
                   Create your own Solana token in minutes — no coding required.
                 </p>
 
@@ -99,12 +99,12 @@ export default function WelcomePopup() {
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 + index * 0.1 }}
-                      className="flex items-center gap-3 bg-[#0f0f23] rounded-xl px-4 py-3 border border-[#9945ff]/10"
+                      className="flex items-center gap-3 bg-[#050505] rounded-xl px-4 py-3 border border-[#FF2D2D]/10"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#9945ff]/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-[#9945ff]">{feature.icon}</span>
+                      <div className="w-8 h-8 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[#FF2D2D]">{feature.icon}</span>
                       </div>
-                      <span className="text-zinc-300 text-sm font-medium">{feature.text}</span>
+                      <span className="text-white text-sm font-medium">{feature.text}</span>
                     </motion.div>
                   ))}
                 </div>
@@ -114,7 +114,7 @@ export default function WelcomePopup() {
                   <Link
                     href="/create-mint"
                     onClick={handleCreateToken}
-                    className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[#9945ff] to-[#b279ff] hover:from-[#b279ff] hover:to-[#9945ff] text-white font-semibold py-3.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#9945ff]/25"
+                    className="flex items-center justify-center gap-2 w-full bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold py-3.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25"
                   >
                     <Zap className="h-4 w-4" />
                     Create Your Token Now
@@ -123,7 +123,7 @@ export default function WelcomePopup() {
 
                   <button
                     onClick={handleClose}
-                    className="w-full bg-[#0f0f23] hover:bg-[#1a1a2e] text-zinc-400 hover:text-zinc-300 font-medium py-3 rounded-xl border border-zinc-800 hover:border-zinc-700 transition-all duration-300"
+                    className="w-full bg-[#050505] hover:bg-[#0D0D0D] text-[#BDDBDB] hover:text-white font-medium py-3 rounded-xl border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition-all duration-300"
                   >
                     Continue Browsing
                   </button>

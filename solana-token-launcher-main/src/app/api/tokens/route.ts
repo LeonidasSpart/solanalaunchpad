@@ -23,7 +23,7 @@ function isRateLimited(ip: string): boolean {
   const recentRequests = requests.filter(
     (timestamp) => now - timestamp < RATE_LIMIT_WINDOW_MS
   );
-  rateLimit.set(ip, [...recentRequests, now]);
+  rateLimitMap.set(ip, [...recentRequests, now]);
   return recentRequests.length >= RATE_LIMIT_MAX_REQUESTS;
 }
 

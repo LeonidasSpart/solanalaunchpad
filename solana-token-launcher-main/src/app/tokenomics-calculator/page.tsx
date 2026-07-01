@@ -59,17 +59,17 @@ export default function TokenomicsCalculatorPage() {
     <div className="max-w-4xl mx-auto px-4 py-20">
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Tokenomics Calculator</span>
+        <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Tokenomics Calculator</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
           Tokenomics Calculator: <br className="hidden sm:block" />
-          <span className="text-purple-400">Design Your Token Economics</span>
+          <span className="text-[#FF2D2D]">Design Your Token Economics</span>
         </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
           Design effective tokenomics for your Solana token. Calculate supply, distribution, market cap, and plan your token economics with this comprehensive calculator and guide.
         </p>
       </div>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-8">
+      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-8">
         {/* Calculator */}
         <div>
           <h2 className="text-2xl font-bold text-white mb-6">Tokenomics Calculator</h2>
@@ -82,7 +82,7 @@ export default function TokenomicsCalculatorPage() {
                 type="number"
                 value={totalSupply}
                 onChange={(e) => setTotalSupply(parseFloat(e.target.value) || 0)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF2D2D]"
               />
             </div>
             <div>
@@ -92,7 +92,7 @@ export default function TokenomicsCalculatorPage() {
                 step="0.0001"
                 value={targetPrice}
                 onChange={(e) => setTargetPrice(parseFloat(e.target.value) || 0)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF2D2D]"
               />
             </div>
           </div>
@@ -102,8 +102,8 @@ export default function TokenomicsCalculatorPage() {
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Public Launch</span>
-                <span className="text-purple-400 font-medium">{publicAllocation}%</span>
+                <span className="text-[#BDDBDB]">Public Launch</span>
+                <span className="text-[#FF2D2D] font-medium">{publicAllocation}%</span>
               </div>
               <input
                 type="range"
@@ -111,13 +111,13 @@ export default function TokenomicsCalculatorPage() {
                 max="100"
                 value={publicAllocation}
                 onChange={(e) => handleSliderChange(setPublicAllocation, e.target.value)}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                className="w-full h-2 bg-[#1a1a1a] rounded-lg appearance-none cursor-pointer accent-[#FF2D2D]"
               />
             </div>
             <div>
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Team & Advisors</span>
-                <span className="text-purple-400 font-medium">{teamAllocation}%</span>
+                <span className="text-[#BDDBDB]">Team & Advisors</span>
+                <span className="text-[#FF2D2D] font-medium">{teamAllocation}%</span>
               </div>
               <input
                 type="range"
@@ -125,13 +125,13 @@ export default function TokenomicsCalculatorPage() {
                 max="100"
                 value={teamAllocation}
                 onChange={(e) => handleSliderChange(setTeamAllocation, e.target.value)}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                className="w-full h-2 bg-[#1a1a1a] rounded-lg appearance-none cursor-pointer accent-[#FF2D2D]"
               />
             </div>
             <div>
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Development & Treasury</span>
-                <span className="text-purple-400 font-medium">{treasuryAllocation}%</span>
+                <span className="text-[#BDDBDB]">Development & Treasury</span>
+                <span className="text-[#FF2D2D] font-medium">{treasuryAllocation}%</span>
               </div>
               <input
                 type="range"
@@ -139,13 +139,13 @@ export default function TokenomicsCalculatorPage() {
                 max="100"
                 value={treasuryAllocation}
                 onChange={(e) => handleSliderChange(setTreasuryAllocation, e.target.value)}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                className="w-full h-2 bg-[#1a1a1a] rounded-lg appearance-none cursor-pointer accent-[#FF2D2D]"
               />
             </div>
             <div>
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Liquidity</span>
-                <span className="text-purple-400 font-medium">{liquidityAllocation}%</span>
+                <span className="text-[#BDDBDB]">Liquidity</span>
+                <span className="text-[#FF2D2D] font-medium">{liquidityAllocation}%</span>
               </div>
               <input
                 type="range"
@@ -153,13 +153,13 @@ export default function TokenomicsCalculatorPage() {
                 max="100"
                 value={liquidityAllocation}
                 onChange={(e) => handleSliderChange(setLiquidityAllocation, e.target.value)}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                className="w-full h-2 bg-[#1a1a1a] rounded-lg appearance-none cursor-pointer accent-[#FF2D2D]"
               />
             </div>
             <div>
               <div className="flex justify-between text-sm">
-                <span className="text-zinc-400">Community Rewards</span>
-                <span className="text-purple-400 font-medium">{communityAllocation}%</span>
+                <span className="text-[#BDDBDB]">Community Rewards</span>
+                <span className="text-[#FF2D2D] font-medium">{communityAllocation}%</span>
               </div>
               <input
                 type="range"
@@ -167,21 +167,21 @@ export default function TokenomicsCalculatorPage() {
                 max="100"
                 value={communityAllocation}
                 onChange={(e) => handleSliderChange(setCommunityAllocation, e.target.value)}
-                className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                className="w-full h-2 bg-[#1a1a1a] rounded-lg appearance-none cursor-pointer accent-[#FF2D2D]"
               />
             </div>
           </div>
 
           {/* Results */}
-          <div className="mt-8 bg-black/40 rounded-xl p-6 border border-zinc-800">
+          <div className="mt-8 bg-[#050505]/40 rounded-xl p-6 border border-[#1a1a1a]">
             <h3 className="text-lg font-semibold text-white mb-4">Calculated Results</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-zinc-900/50 rounded-lg p-4 text-center border border-zinc-800">
-                <p className="text-zinc-400 text-xs uppercase tracking-wider">Market Cap</p>
-                <p className="text-2xl font-bold text-purple-400">${formatNumber(marketCap)}</p>
+              <div className="bg-[#0D0D0D]/50 rounded-lg p-4 text-center border border-[#1a1a1a]">
+                <p className="text-[#BDDBDB] text-xs uppercase tracking-wider">Market Cap</p>
+                <p className="text-2xl font-bold text-[#FF2D2D]">${formatNumber(marketCap)}</p>
               </div>
-              <div className="bg-zinc-900/50 rounded-lg p-4 text-center border border-zinc-800">
-                <p className="text-zinc-400 text-xs uppercase tracking-wider">Circulating Supply</p>
+              <div className="bg-[#0D0D0D]/50 rounded-lg p-4 text-center border border-[#1a1a1a]">
+                <p className="text-[#BDDBDB] text-xs uppercase tracking-wider">Circulating Supply</p>
                 <p className="text-2xl font-bold text-white">{formatNumber(circulatingSupply)}</p>
               </div>
             </div>
@@ -189,10 +189,10 @@ export default function TokenomicsCalculatorPage() {
             <div className="mt-4 space-y-2">
               {allocations.map((alloc) => (
                 <div key={alloc.name} className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-400">{alloc.name}</span>
+                  <span className="text-[#BDDBDB]">{alloc.name}</span>
                   <div className="flex items-center gap-4">
                     <span className="text-white font-medium">{formatNumber(alloc.amount)}</span>
-                    <span className="text-purple-400 font-medium w-12 text-right">{alloc.percentage}%</span>
+                    <span className="text-[#FF2D2D] font-medium w-12 text-right">{alloc.percentage}%</span>
                   </div>
                 </div>
               ))}
@@ -201,14 +201,14 @@ export default function TokenomicsCalculatorPage() {
         </div>
 
         {/* Educational Content */}
-        <div className="border-t border-zinc-800 pt-8 mt-4">
+        <div className="border-t border-[#1a1a1a] pt-8 mt-4">
           <h2 className="text-2xl font-bold text-white mb-4">Understanding Tokenomics Basics</h2>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-[#BDDBDB] text-sm">
             Tokenomics refers to the economic design of your token. It includes total supply, distribution, utility, incentives, and economic flows. Good tokenomics create sustainable value and align incentives between creators, holders, and users.
           </p>
 
           <h3 className="text-white font-semibold mt-4 mb-2">Key Components</h3>
-          <ul className="list-disc pl-5 space-y-1 text-zinc-400 text-sm">
+          <ul className="list-disc pl-5 space-y-1 text-[#BDDBDB] text-sm">
             <li><span className="text-white">Total Supply:</span> The maximum number of tokens that will ever exist</li>
             <li><span className="text-white">Distribution:</span> How tokens are allocated across different stakeholders</li>
             <li><span className="text-white">Utility:</span> What the token is used for and why people need it</li>
@@ -216,72 +216,72 @@ export default function TokenomicsCalculatorPage() {
             <li><span className="text-white">Incentives:</span> Mechanisms that reward desired behaviors</li>
           </ul>
 
-          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mt-4">
-            <p className="text-yellow-400 text-sm font-semibold">⚠️ Why Design Matters</p>
-            <p className="text-zinc-400 text-sm mt-1">
+          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 mt-4">
+            <p className="text-[#FF2D2D] text-sm font-semibold">⚠️ Why Design Matters</p>
+            <p className="text-[#BDDBDB] text-sm mt-1">
               Poor tokenomics lead to failed projects. Common failures include: too much supply (inflation), unfair distribution (lack of trust), no utility (no value), and poor vesting (dumping). Well-designed tokenomics create sustainable ecosystems.
             </p>
           </div>
 
           <div className="mt-4">
-            <Link href="/tokenomics" className="text-purple-400 hover:text-purple-300 text-sm font-medium transition">
+            <Link href="/tokenomics" className="text-[#FF2D2D] hover:text-[#B10000] text-sm font-medium transition">
               Learn more in our comprehensive tokenomics guide →
             </Link>
           </div>
         </div>
 
         {/* Distribution Strategies */}
-        <div className="border-t border-zinc-800 pt-6">
+        <div className="border-t border-[#1a1a1a] pt-6">
           <h2 className="text-2xl font-bold text-white mb-4">Distribution Strategies</h2>
 
           <div className="space-y-3">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">⚖️ Fair Launch Model</h3>
-              <p className="text-zinc-400 text-sm mt-1">All tokens available from launch. No presale, no team allocation. Creates maximum fairness but requires strong initial marketing. Best for community-driven projects.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">All tokens available from launch. No presale, no team allocation. Creates maximum fairness but requires strong initial marketing. Best for community-driven projects.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">💰 Presale Model</h3>
-              <p className="text-zinc-400 text-sm mt-1">Sell portion of tokens before launch. Provides funding and builds community. Requires careful planning and legal compliance. See our <Link href="/distribution" className="text-purple-400 hover:underline">distribution guide</Link> for details.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Sell portion of tokens before launch. Provides funding and builds community. Requires careful planning and legal compliance. See our <Link href="/distribution" className="text-[#FF2D2D] hover:text-[#B10000] transition">distribution guide</Link> for details.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">💧 Liquidity Allocation</h3>
-              <p className="text-zinc-400 text-sm mt-1">Typically 20-40% of supply goes to liquidity pools. This ensures trading availability and price stability. Too little creates high slippage, too much can dilute value.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Typically 20-40% of supply goes to liquidity pools. This ensures trading availability and price stability. Too little creates high slippage, too much can dilute value.</p>
             </div>
           </div>
         </div>
 
         {/* FAQ */}
-        <div className="border-t border-zinc-800 pt-6">
+        <div className="border-t border-[#1a1a1a] pt-6">
           <h2 className="text-2xl font-bold text-white mb-4">Frequently Asked Questions</h2>
           <div className="space-y-4">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">What is a good token supply?</h3>
-              <p className="text-zinc-400 text-sm mt-1">Common ranges are 1 million to 1 billion tokens. Smaller supplies create scarcity, larger supplies allow micro-transactions. Most successful tokens use supplies between 1 million and 100 million.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Common ranges are 1 million to 1 billion tokens. Smaller supplies create scarcity, larger supplies allow micro-transactions. Most successful tokens use supplies between 1 million and 100 million.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">How should I distribute tokens?</h3>
-              <p className="text-zinc-400 text-sm mt-1">Common allocations: 20-40% for liquidity, 10-20% for team (vested), 20-30% for community/airdrop, 10-20% for treasury, 10-20% for marketing. Avoid keeping too much (over 50%).</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Common allocations: 20-40% for liquidity, 10-20% for team (vested), 20-30% for community/airdrop, 10-20% for treasury, 10-20% for marketing. Avoid keeping too much (over 50%).</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">What percentage should go to liquidity?</h3>
-              <p className="text-zinc-400 text-sm mt-1">Typically 20-40% of total supply. Start with 30% as a good baseline to ensure adequate trading liquidity and price stability.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Typically 20-40% of total supply. Start with 30% as a good baseline to ensure adequate trading liquidity and price stability.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">How long should vesting be?</h3>
-              <p className="text-zinc-400 text-sm mt-1">Team tokens typically vest over 12-48 months with a 6-12 month cliff. Treasury tokens may vest over 24-60 months. Longer vesting periods show commitment and reduce sell pressure.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Team tokens typically vest over 12-48 months with a 6-12 month cliff. Treasury tokens may vest over 24-60 months. Longer vesting periods show commitment and reduce sell pressure.</p>
             </div>
           </div>
         </div>
 
         {/* Ready to Launch */}
-        <section className="text-center border-t border-zinc-800 pt-8 mt-4">
+        <section className="text-center border-t border-[#1a1a1a] pt-8 mt-4">
           <h2 className="text-2xl font-bold text-white mb-3">Ready to Launch Your Token?</h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
+          <p className="text-[#BDDBDB] max-w-xl mx-auto">
             No coding required. Live on mainnet in under 60 seconds.
           </p>
           <Link
             href="/create-mint"
-            className="inline-block mt-6 px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition"
+            className="inline-block mt-6 px-8 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
           >
             Create Your Token
           </Link>

@@ -8,71 +8,71 @@ const features = [
     icon: Rocket,
     title: 'Easy Token Creation',
     description: 'Create your Solana token in minutes with our intuitive interface. No coding required. Just fill in the form, connect your wallet, and launch.',
-    color: 'from-purple-500/20 to-purple-600/5',
-    borderColor: 'group-hover:border-purple-500/50',
-    iconBg: 'bg-purple-500/10 group-hover:bg-purple-500/20',
-    iconColor: 'text-purple-400',
+    color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+    borderColor: 'group-hover:border-[#FF2D2D]/50',
+    iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+    iconColor: 'text-[#FF2D2D]',
     highlight: null
   },
   {
     icon: Shield,
     title: 'Secure Minting',
     description: 'Mint tokens securely with advanced blockchain integration. Every transaction is wallet-signed. We never see or store your private keys.',
-    color: 'from-emerald-500/20 to-emerald-600/5',
-    borderColor: 'group-hover:border-emerald-500/50',
-    iconBg: 'bg-emerald-500/10 group-hover:bg-emerald-500/20',
-    iconColor: 'text-emerald-400',
+    color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+    borderColor: 'group-hover:border-[#FF2D2D]/50',
+    iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+    iconColor: 'text-[#FF2D2D]',
     highlight: null
   },
   {
     icon: Zap,
     title: 'Fast Transactions',
     description: 'Experience lightning-fast token transactions on Solana. Under 60 seconds from wallet confirmation to your token being live on-chain.',
-    color: 'from-amber-500/20 to-amber-600/5',
-    borderColor: 'group-hover:border-amber-500/50',
-    iconBg: 'bg-amber-500/10 group-hover:bg-amber-500/20',
-    iconColor: 'text-amber-400',
+    color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+    borderColor: 'group-hover:border-[#FF2D2D]/50',
+    iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+    iconColor: 'text-[#FF2D2D]',
     highlight: null
   },
   {
     icon: Lock,
     title: 'Robust Security',
     description: 'Your tokens are protected by state-of-the-art security measures. Non-custodial by design. Optional authority revocation for maximum trust.',
-    color: 'from-rose-500/20 to-rose-600/5',
-    borderColor: 'group-hover:border-rose-500/50',
-    iconBg: 'bg-rose-500/10 group-hover:bg-rose-500/20',
-    iconColor: 'text-rose-400',
+    color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+    borderColor: 'group-hover:border-[#FF2D2D]/50',
+    iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+    iconColor: 'text-[#FF2D2D]',
     highlight: null
   },
   {
     icon: Coins,
     title: 'Free Devnet Testing',
     description: 'Test your token on devnet with zero cost before launching on mainnet. No risk, no fees, no commitment. Perfect your token before going live.',
-    color: 'from-cyan-500/20 to-cyan-600/5',
-    borderColor: 'group-hover:border-cyan-500/50',
-    iconBg: 'bg-cyan-500/10 group-hover:bg-cyan-500/20',
-    iconColor: 'text-cyan-400',
+    color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+    borderColor: 'group-hover:border-[#FF2D2D]/50',
+    iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+    iconColor: 'text-[#FF2D2D]',
     highlight: 'FREE'
   },
   {
     icon: BarChart3,
     title: 'Transparent Pricing',
     description: 'Start for free on devnet. Pay only when you are ready to launch on mainnet. No hidden fees, no subscriptions, no surprises ever.',
-    color: 'from-blue-500/20 to-blue-600/5',
-    borderColor: 'group-hover:border-blue-500/50',
-    iconBg: 'bg-blue-500/10 group-hover:bg-blue-500/20',
-    iconColor: 'text-blue-400',
+    color: 'from-[#FF2D2D]/20 to-[#FF2D2D]/5',
+    borderColor: 'group-hover:border-[#FF2D2D]/50',
+    iconBg: 'bg-[#FF2D2D]/10 group-hover:bg-[#FF2D2D]/20',
+    iconColor: 'text-[#FF2D2D]',
     highlight: null
   }
 ];
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-24 bg-black relative overflow-hidden">
+    <section id="features" className="py-24 bg-[#050505] relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-purple-600/[0.03] rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-600/[0.03] rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[#FF2D2D]/[0.03] rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-[#FF2D2D]/[0.03] rounded-full blur-3xl" />
       </div>
 
       {/* Grid pattern */}
@@ -87,19 +87,19 @@ export default function FeaturesSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 mb-6">
-            <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Features</span>
+          <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-6">
+            <Sparkles className="h-3.5 w-3.5 text-[#FF2D2D]" />
+            <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">Features</span>
           </div>
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
             Everything You Need to{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
+            <span className="text-[#FF2D2D]">
               Launch Your Token
             </span>
           </h2>
           
-          <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
+          <p className="text-lg text-[#BDDBDB] max-w-2xl mx-auto">
             Our platform provides all the tools and features you need to create, mint, and manage your Solana tokens efficiently.
           </p>
         </motion.div>
@@ -117,10 +117,10 @@ export default function FeaturesSection() {
                 viewport={{ once: true, margin: "-50px" }}
                 className="group relative"
               >
-                <div className={`relative bg-gradient-to-br ${feature.color} backdrop-blur-sm rounded-2xl p-8 border border-zinc-800/80 ${feature.borderColor} hover:shadow-2xl hover:shadow-purple-500/5 transition-all duration-500 hover:-translate-y-1 h-full`}>
+                <div className={`relative bg-gradient-to-br ${feature.color} backdrop-blur-sm rounded-2xl p-8 border border-[#1a1a1a] ${feature.borderColor} hover:shadow-2xl hover:shadow-[#FF2D2D]/5 transition-all duration-500 hover:-translate-y-1 h-full`}>
                   {/* Highlight badge */}
                   {feature.highlight && (
-                    <div className="absolute -top-3 right-4 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-lg shadow-cyan-500/25">
+                    <div className="absolute -top-3 right-4 bg-[#FF2D2D] text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-lg shadow-[#FF2D2D]/25">
                       {feature.highlight}
                     </div>
                   )}
@@ -131,10 +131,10 @@ export default function FeaturesSection() {
                   </div>
 
                   {/* Content */}
-                  <h3 className="text-xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-zinc-300 transition-all duration-300">
+                  <h3 className="text-xl font-bold text-white mb-3 group-hover:text-[#FF2D2D] transition-all duration-300">
                     {feature.title}
                   </h3>
-                  <p className="text-zinc-400 text-sm leading-relaxed group-hover:text-zinc-300 transition-colors duration-300">
+                  <p className="text-[#BDDBDB] text-sm leading-relaxed group-hover:text-white transition-colors duration-300">
                     {feature.description}
                   </p>
 
@@ -156,12 +156,12 @@ export default function FeaturesSection() {
         >
           <a 
             href="/create-mint"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 group"
+            className="inline-flex items-center gap-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25 hover:shadow-[#FF2D2D]/40 group"
           >
             Start Creating Now
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </a>
-          <p className="mt-4 text-sm text-zinc-500">
+          <p className="mt-4 text-sm text-[#BDDBDB]">
             Free devnet testing. No credit card required.
           </p>
         </motion.div>

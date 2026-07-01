@@ -36,23 +36,23 @@ export default function HeroSection() {
             <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">No-Code Solana Token Creator</span>
           </motion.div>
 
-          {/* FREE Devnet Badge */}
+          {/* FREE Devnet Badge - GREEN BACKGROUND */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="inline-flex items-center gap-3 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-5 py-2 mb-8 backdrop-blur-sm"
+            className="inline-flex items-center gap-3 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-5 py-2 mb-8 backdrop-blur-sm"
           >
             <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF2D2D] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF2D2D]" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
             </span>
-            <span className="text-[#FF2D2D] font-bold text-sm">FREE Devnet Testing</span>
-            <span className="text-[#1a1a1a]">|</span>
-            <span className="text-[#BDDBDB] text-sm">Zero cost, zero risk</span>
+            <span className="text-emerald-400 font-bold text-sm">FREE Devnet Testing</span>
+            <span className="text-emerald-500/30">|</span>
+            <span className="text-emerald-300/70 text-sm">Zero cost, zero risk</span>
           </motion.div>
 
-          {/* Main Heading */}
+          {/* Main Heading - Solana Token with Solana gradient */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -60,7 +60,7 @@ export default function HeroSection() {
             className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white leading-[1.1] mb-6 tracking-tight"
           >
             Create a{' '}
-            <span className="text-[#FF2D2D]">
+            <span className="bg-gradient-to-r from-[#9945FF] via-[#14F195] to-[#9945FF] bg-clip-text text-transparent bg-300% animate-gradient">
               Solana Token
             </span>
             <br className="hidden sm:block" />

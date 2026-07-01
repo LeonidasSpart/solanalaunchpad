@@ -7,13 +7,13 @@ export default function NetworkSwitcher() {
   const { network, setNetwork } = useContext(NetworkContext);
 
   return (
-    <div className="flex items-center gap-1 bg-zinc-900/50 rounded-xl p-1 border border-zinc-800/50">
+    <div className="flex items-center gap-1 bg-[#0D0D0D]/50 rounded-xl p-1 border border-[#1a1a1a]">
       <button
         onClick={() => setNetwork('devnet')}
         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
           network === 'devnet'
-            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
-            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+            ? 'bg-[#FF2D2D] text-white shadow-lg shadow-[#FF2D2D]/25'
+            : 'text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50'
         }`}
       >
         🧪 Devnet
@@ -22,8 +22,8 @@ export default function NetworkSwitcher() {
         onClick={() => setNetwork('mainnet')}
         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
           network === 'mainnet'
-            ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
-            : 'text-zinc-400 hover:text-white hover:bg-zinc-800/50'
+            ? 'bg-[#FF2D2D] text-white shadow-lg shadow-[#FF2D2D]/25'
+            : 'text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50'
         }`}
       >
         🔴 Mainnet

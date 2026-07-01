@@ -22,24 +22,24 @@ export default function ShareButtons() {
 
   return (
     <div className="flex items-center justify-center gap-3">
-      <span className="text-zinc-500 text-sm">Share:</span>
+      <span className="text-[#BDDBDB] text-sm">Share:</span>
       <button
         onClick={shareOnX}
-        className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition"
+        className="p-2 rounded-full bg-[#0D0D0D] hover:bg-[#FF2D2D] text-[#BDDBDB] hover:text-white transition"
         aria-label="Share on X"
       >
         <FaXTwitter className="h-4 w-4" />
       </button>
       <button
         onClick={shareOnTelegram}
-        className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition"
+        className="p-2 rounded-full bg-[#0D0D0D] hover:bg-[#FF2D2D] text-[#BDDBDB] hover:text-white transition"
         aria-label="Share on Telegram"
       >
         <Send className="h-4 w-4" />
       </button>
       <button
         onClick={copyLink}
-        className="p-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white transition"
+        className="p-2 rounded-full bg-[#0D0D0D] hover:bg-[#FF2D2D] text-[#BDDBDB] hover:text-white transition"
         aria-label="Copy link"
       >
         <Share2 className="h-4 w-4" />

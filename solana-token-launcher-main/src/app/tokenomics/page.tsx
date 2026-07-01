@@ -6,17 +6,17 @@ export default function TokenomicsPage() {
     <div className="max-w-4xl mx-auto px-4 py-20">
       {/* Hero Section */}
       <div className="text-center mb-12">
-        <span className="text-purple-400 text-sm font-semibold uppercase tracking-wider">Tokenomics Guide</span>
+        <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Tokenomics Guide</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
           Solana Tokenomics: <br className="hidden sm:block" />
-          <span className="text-purple-400">Complete Design Guide</span>
+          <span className="text-[#FF2D2D]">Complete Design Guide</span>
         </h1>
-        <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
+        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
           Learn how to design effective tokenomics for your Solana token. Understand supply, distribution, utility, and economic models for sustainable success.
         </p>
       </div>
 
-      <div className="bg-zinc-900 rounded-xl p-6 md:p-8 border border-zinc-800 space-y-12 text-zinc-300 text-sm leading-relaxed">
+      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-12 text-[#BDDBDB] text-sm leading-relaxed">
         {/* What is Tokenomics? */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-3">What is Tokenomics?</h2>
@@ -26,10 +26,10 @@ export default function TokenomicsPage() {
           <p className="mt-3">
             Poor tokenomics can doom even great projects. Too much supply, unfair distribution, or lack of utility can prevent your token from gaining traction. This guide explains how to design tokenomics that support long-term success.
           </p>
-          <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 mt-4">
-            <p className="text-yellow-400 text-sm font-semibold">⚠️ Plan Before You Create</p>
-            <p className="text-zinc-400 text-sm mt-1">
-              Decisions about supply and distribution are permanent. Plan your tokenomics <span className="text-white font-medium">before</span> you create your token. Combine this with our <Link href="/guide" className="text-purple-400 hover:underline">SPL Token Guide</Link> and <Link href="/pricing" className="text-purple-400 hover:underline">cost planning</Link> for complete token economics.
+          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 mt-4">
+            <p className="text-[#FF2D2D] text-sm font-semibold">⚠️ Plan Before You Create</p>
+            <p className="text-[#BDDBDB] text-sm mt-1">
+              Decisions about supply and distribution are permanent. Plan your tokenomics <span className="text-white font-medium">before</span> you create your token. Combine this with our <Link href="/guide" className="text-[#FF2D2D] hover:text-[#B10000] transition">SPL Token Guide</Link> and <Link href="/pricing" className="text-[#FF2D2D] hover:text-[#B10000] transition">cost planning</Link> for complete token economics.
             </p>
           </div>
 
@@ -52,28 +52,28 @@ export default function TokenomicsPage() {
 
           <h3 className="text-white font-semibold mt-4 mb-3">Allocation Categories</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">🚀 Public Launch</p>
-              <p className="text-zinc-400 text-sm mt-1">30–50% — Tokens available at launch for community</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">30–50% — Tokens available at launch for community</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">👥 Team & Advisors</p>
-              <p className="text-zinc-400 text-sm mt-1">10–20% — With vesting schedules to align incentives</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">10–20% — With vesting schedules to align incentives</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">🏦 Development & Treasury</p>
-              <p className="text-zinc-400 text-sm mt-1">20–30% — For future development and partnerships</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">20–30% — For future development and partnerships</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">🎁 Community Rewards</p>
-              <p className="text-zinc-400 text-sm mt-1">10–15% — For airdrops, contests, and incentives</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">10–15% — For airdrops, contests, and incentives</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800 md:col-span-2">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] md:col-span-2">
               <p className="text-white font-semibold">💧 Liquidity</p>
-              <p className="text-zinc-400 text-sm mt-1">5–10% — Reserved for DEX liquidity pools</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">5–10% — Reserved for DEX liquidity pools</p>
             </div>
           </div>
-          <p className="text-zinc-500 text-xs mt-3 text-center">These are general guidelines. Adjust based on your specific project needs.</p>
+          <p className="text-[#BDDBDB] text-xs mt-3 text-center">These are general guidelines. Adjust based on your specific project needs.</p>
         </section>
 
         {/* Economic Models and Incentives */}
@@ -109,22 +109,22 @@ export default function TokenomicsPage() {
 
           <h3 className="text-white font-semibold mt-4 mb-3">Common Vesting Models</h3>
           <div className="space-y-3">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">📈 Linear Vesting</p>
-              <p className="text-zinc-400 text-sm mt-1">Equal amounts released regularly (e.g., 10% monthly for 10 months)</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Equal amounts released regularly (e.g., 10% monthly for 10 months)</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">⛰️ Cliff Vesting</p>
-              <p className="text-zinc-400 text-sm mt-1">Nothing released until a date, then regular releases begin</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Nothing released until a date, then regular releases begin</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <p className="text-white font-semibold">⚡ Accelerated Vesting</p>
-              <p className="text-zinc-400 text-sm mt-1">Faster releases early, slower later</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Faster releases early, slower later</p>
             </div>
           </div>
-          <div className="bg-purple-900/20 border border-purple-500/20 rounded-xl p-4 mt-4">
-            <p className="text-purple-300 text-sm font-semibold">💡 Best Practice</p>
-            <p className="text-zinc-400 text-sm mt-1">
+          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-xl p-4 mt-4">
+            <p className="text-[#FF2D2D] text-sm font-semibold">💡 Best Practice</p>
+            <p className="text-[#BDDBDB] text-sm mt-1">
               Team tokens should always be vested. Common schedules are <span className="text-white font-medium">12–48 months</span> with monthly or quarterly releases. This shows commitment and prevents immediate dumps.
             </p>
           </div>
@@ -134,21 +134,21 @@ export default function TokenomicsPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Tokenomics Best Practices</h2>
           <div className="space-y-4">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">Be Transparent</h3>
-              <p className="text-zinc-400 text-sm mt-1">Publish your tokenomics publicly. Explain your reasoning. Transparency builds trust and helps holders understand your token's economics.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Publish your tokenomics publicly. Explain your reasoning. Transparency builds trust and helps holders understand your token's economics.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">Fair Distribution</h3>
-              <p className="text-zinc-400 text-sm mt-1">Avoid keeping too much for yourself. Fair distribution builds trust and decentralization.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Avoid keeping too much for yourself. Fair distribution builds trust and decentralization.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">Create Real Utility</h3>
-              <p className="text-zinc-400 text-sm mt-1">Don't rely solely on speculation. Design utility that creates ongoing demand. Utility sustains value long-term.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Don't rely solely on speculation. Design utility that creates ongoing demand. Utility sustains value long-term.</p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">Vest Team Tokens</h3>
-              <p className="text-zinc-400 text-sm mt-1">Always vest team allocations. This aligns incentives and prevents immediate dumps that hurt price and trust.</p>
+              <p className="text-[#BDDBDB] text-sm mt-1">Always vest team allocations. This aligns incentives and prevents immediate dumps that hurt price and trust.</p>
             </div>
           </div>
         </section>
@@ -157,15 +157,15 @@ export default function TokenomicsPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Related Concepts</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Link href="/guide" className="group bg-black/40 rounded-xl p-4 border border-zinc-800 hover:border-purple-500/50 transition">
-              <h3 className="text-white font-semibold group-hover:text-purple-400 transition">Token Parameters</h3>
-              <p className="text-zinc-400 text-sm mt-1">Learn about name, symbol, supply, and decimals — the fundamental parameters that affect your tokenomics.</p>
-              <span className="text-purple-400 text-sm mt-2 inline-block">Read Token Parameters Guide →</span>
+            <Link href="/guide" className="group bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] hover:border-[#FF2D2D]/50 transition">
+              <h3 className="text-white font-semibold group-hover:text-[#FF2D2D] transition">Token Parameters</h3>
+              <p className="text-[#BDDBDB] text-sm mt-1">Learn about name, symbol, supply, and decimals — the fundamental parameters that affect your tokenomics.</p>
+              <span className="text-[#FF2D2D] text-sm mt-2 inline-block">Read Token Parameters Guide →</span>
             </Link>
-            <Link href="/guide#distribution" className="group bg-black/40 rounded-xl p-4 border border-zinc-800 hover:border-purple-500/50 transition">
-              <h3 className="text-white font-semibold group-hover:text-purple-400 transition">Distribution Strategies</h3>
-              <p className="text-zinc-400 text-sm mt-1">Understand how to allocate tokens across team, community, liquidity, and reserves.</p>
-              <span className="text-purple-400 text-sm mt-2 inline-block">Read Distribution Guide →</span>
+            <Link href="/guide#distribution" className="group bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] hover:border-[#FF2D2D]/50 transition">
+              <h3 className="text-white font-semibold group-hover:text-[#FF2D2D] transition">Distribution Strategies</h3>
+              <p className="text-[#BDDBDB] text-sm mt-1">Understand how to allocate tokens across team, community, liquidity, and reserves.</p>
+              <span className="text-[#FF2D2D] text-sm mt-2 inline-block">Read Distribution Guide →</span>
             </Link>
           </div>
         </section>
@@ -174,27 +174,27 @@ export default function TokenomicsPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Frequently Asked Questions</h2>
           <div className="space-y-4">
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">What are tokenomics for Solana tokens?</h3>
-              <p className="text-zinc-400 text-sm mt-1">
+              <p className="text-[#BDDBDB] text-sm mt-1">
                 Tokenomics refers to the economic design of your token, including total supply, distribution, utility, incentives, and economic flows. Plan tokenomics before creating your token as many decisions are permanent.
               </p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">How do I design good tokenomics?</h3>
-              <p className="text-zinc-400 text-sm mt-1">
+              <p className="text-[#BDDBDB] text-sm mt-1">
                 Define clear utility and use cases, set appropriate total supply, allocate tokens fairly, implement vesting schedules, create incentives for long-term holding, ensure adequate liquidity, and maintain transparency.
               </p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">What is a good token supply for a Solana token?</h3>
-              <p className="text-zinc-400 text-sm mt-1">
+              <p className="text-[#BDDBDB] text-sm mt-1">
                 Common ranges are 1 million to 1 billion tokens. Smaller supplies create scarcity, larger supplies allow micro-transactions. Consider your utility, target market cap, and decimal precision when deciding.
               </p>
             </div>
-            <div className="bg-black/40 rounded-xl p-4 border border-zinc-800">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">Should I have token inflation or deflation?</h3>
-              <p className="text-zinc-400 text-sm mt-1">
+              <p className="text-[#BDDBDB] text-sm mt-1">
                 Most SPL tokens have a fixed supply. You can implement token burning (deflation) through fees or buybacks, or create new tokens through rewards (if you keep mint authority). Fixed supply is most common.
               </p>
             </div>
@@ -202,14 +202,14 @@ export default function TokenomicsPage() {
         </section>
 
         {/* Ready to Launch */}
-        <section className="text-center border-t border-zinc-800 pt-8 mt-4">
+        <section className="text-center border-t border-[#1a1a1a] pt-8 mt-4">
           <h2 className="text-2xl font-bold text-white mb-3">Ready to Launch Your Token?</h2>
-          <p className="text-zinc-400 max-w-xl mx-auto">
+          <p className="text-[#BDDBDB] max-w-xl mx-auto">
             No coding required. Live on mainnet in under 60 seconds.
           </p>
           <a
             href="/create-mint"
-            className="inline-block mt-6 px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-xl transition"
+            className="inline-block mt-6 px-8 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
           >
             Create Your Token
           </a>

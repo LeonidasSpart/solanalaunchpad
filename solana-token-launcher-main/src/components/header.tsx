@@ -145,8 +145,8 @@ const Header = () => {
               <NetworkSwitcher />
             </div>
 
-            {/* Wallet Button */}
-            <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-4 !py-2.5 !font-semibold !text-white !text-sm transition-all !shadow-lg !shadow-[#FF2D2D]/20" />
+            {/* Wallet Button - Red, Black, Silver Gradient */}
+            <WalletMultiButton className="!bg-gradient-to-r !from-[#FF2D2D] !via-[#1a1a1a] !to-[#BDDBDB] hover:!from-[#B10000] hover:!via-[#0D0D0D] hover:!to-[#9a9a9a] !rounded-xl !px-4 !py-2.5 !font-semibold !text-white !text-sm transition-all !shadow-lg !shadow-[#FF2D2D]/20" />
 
             {/* Mobile Menu Button */}
             <button

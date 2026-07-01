@@ -70,16 +70,16 @@ export default function TokenCounter() {
   const hasData = stats.count > 0;
 
   const badges = [
-    { icon: <Zap className="h-4 w-4" />, label: 'Live', sublabel: 'on Mainnet', color: 'text-emerald-400' },
-    { icon: <FlaskConical className="h-4 w-4" />, label: 'Test', sublabel: 'on Devnet', color: 'text-amber-400' },
-    { icon: <Code2 className="h-4 w-4" />, label: '100%', sublabel: 'No-Code', color: 'text-purple-400' },
+    { icon: <Zap className="h-4 w-4" />, label: 'Live', sublabel: 'on Mainnet', color: 'text-[#FF2D2D]' },
+    { icon: <FlaskConical className="h-4 w-4" />, label: 'Test', sublabel: 'on Devnet', color: 'text-[#FF2D2D]' },
+    { icon: <Code2 className="h-4 w-4" />, label: '100%', sublabel: 'No-Code', color: 'text-[#FF2D2D]' },
   ];
 
   return (
-    <section id="token-counter" className="py-24 bg-gradient-to-b from-black via-zinc-950/50 to-black relative overflow-hidden">
+    <section id="token-counter" className="py-24 bg-[#050505] relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-900/[0.03] rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF2D2D]/[0.03] rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6">
@@ -90,30 +90,30 @@ export default function TokenCounter() {
           className="text-center"
         >
           {/* Section Badge */}
-          <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-4 py-1.5 mb-8">
-            <Users className="h-3.5 w-3.5 text-purple-400" />
-            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Community</span>
+          <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-8">
+            <Users className="h-3.5 w-3.5 text-[#FF2D2D]" />
+            <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">Community</span>
           </div>
 
           {/* Main Counter or Fallback */}
           {hasData ? (
             <div className="mb-8">
-              <div className="text-6xl sm:text-7xl lg:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-purple-300 to-blue-400 mb-4 tracking-tight">
+              <div className="text-6xl sm:text-7xl lg:text-8xl font-bold text-[#FF2D2D] mb-4 tracking-tight">
                 {displayCount.toLocaleString()}+
               </div>
-              <p className="text-xl sm:text-2xl text-zinc-400 font-medium">
+              <p className="text-xl sm:text-2xl text-[#BDDBDB] font-medium">
                 Tokens launched on <span className="text-white font-bold">ZRP</span>
               </p>
             </div>
           ) : (
             <div className="mb-8">
               <div className="inline-flex items-center gap-3 mb-4">
-                <Rocket className="h-8 w-8 text-purple-400" />
+                <Rocket className="h-8 w-8 text-[#FF2D2D]" />
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
-                  New & <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Growing</span>
+                  New & <span className="text-[#FF2D2D]">Growing</span>
                 </h2>
               </div>
-              <p className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto">
+              <p className="text-lg sm:text-xl text-[#BDDBDB] max-w-2xl mx-auto">
                 Join the early adopters creating on ZRP. Be among the first to launch your token.
               </p>
             </div>
@@ -129,20 +129,20 @@ export default function TokenCounter() {
             >
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <TrendingUp className="h-5 w-5 text-emerald-400" />
+                  <TrendingUp className="h-5 w-5 text-[#FF2D2D]" />
                   <span className="text-2xl sm:text-3xl font-bold text-white">{stats.successRate}</span>
                 </div>
-                <div className="text-xs text-zinc-500 uppercase tracking-wider">Success Rate</div>
+                <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Success Rate</div>
               </div>
-              <div className="w-px h-10 bg-zinc-800 hidden sm:block" />
+              <div className="w-px h-10 bg-[#1a1a1a] hidden sm:block" />
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-white">{stats.avgTime}</div>
-                <div className="text-xs text-zinc-500 uppercase tracking-wider">Avg Creation Time</div>
+                <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Avg Creation Time</div>
               </div>
-              <div className="w-px h-10 bg-zinc-800 hidden sm:block" />
+              <div className="w-px h-10 bg-[#1a1a1a] hidden sm:block" />
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-white">24/7</div>
-                <div className="text-xs text-zinc-500 uppercase tracking-wider">Platform Available</div>
+                <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Platform Available</div>
               </div>
             </motion.div>
           )}
@@ -157,12 +157,12 @@ export default function TokenCounter() {
             {badges.map((badge, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2.5 bg-zinc-900/50 border border-zinc-800/80 rounded-xl px-5 py-3 backdrop-blur-sm hover:border-zinc-700 transition-colors"
+                className="flex items-center gap-2.5 bg-[#0D0D0D]/50 border border-[#1a1a1a] rounded-xl px-5 py-3 backdrop-blur-sm hover:border-[#FF2D2D]/30 transition-colors"
               >
                 <span className={badge.color}>{badge.icon}</span>
                 <div className="text-left">
                   <span className={`text-sm font-bold ${badge.color}`}>{badge.label}</span>
-                  <span className="text-zinc-500 text-sm ml-1">{badge.sublabel}</span>
+                  <span className="text-[#BDDBDB] text-sm ml-1">{badge.sublabel}</span>
                 </div>
               </div>
             ))}

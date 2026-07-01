@@ -9,10 +9,8 @@ export default function WelcomePopup() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    // Check if user has already seen the popup
     const hasSeenPopup = localStorage.getItem('zrp-welcome-seen');
     if (!hasSeenPopup) {
-      // Show popup after a short delay
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 1500);
@@ -58,15 +56,20 @@ export default function WelcomePopup() {
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ duration: 0.4, ease: 'easeOut' }}
             className="fixed inset-0 flex items-center justify-center z-[101] p-4"
+            onClick={(e) => e.stopPropagation()}
           >
             <div 
               className="relative w-full max-w-md bg-[#0D0D0D] rounded-3xl border border-[#FF2D2D]/20 shadow-2xl shadow-[#FF2D2D]/10 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button */}
+              {/* Close button - FIXED */}
               <button
-                onClick={handleClose}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClose();
+                }}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 flex items-center justify-center text-[#BDDBDB] hover:text-white hover:bg-[#FF2D2D]/20 transition-all z-10"
+                aria-label="Close popup"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -114,7 +117,7 @@ export default function WelcomePopup() {
                   <Link
                     href="/create-mint"
                     onClick={handleCreateToken}
-                    className="flex items-center justify-center gap-2 w-full bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold py-3.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25"
+                    className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-[#FF2D2D] via-[#1a1a1a] to-[#BDDBDB] hover:from-[#B10000] hover:via-[#0D0D0D] hover:to-[#9a9a9a] text-white font-semibold py-3.5 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25"
                   >
                     <Zap className="h-4 w-4" />
                     Create Your Token Now

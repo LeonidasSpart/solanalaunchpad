@@ -34,10 +34,10 @@ export default function CtaSection() {
               Create Token
             </Link>
             <Link
-              href="#"
-              className="px-8 py-3 bg-[#0D0D0D]/50 hover:bg-[#0D0D0D] text-[#BDDBDB] hover:text-white font-semibold rounded-xl transition border border-[#1a1a1a] cursor-not-allowed opacity-60"
+              href="/add-liquidity"
+              className="px-8 py-3 bg-[#0D0D0D]/50 hover:bg-[#0D0D0D] text-[#BDDBDB] hover:text-white font-semibold rounded-xl transition border border-[#1a1a1a] hover:border-[#FF2D2D]/30"
             >
-              Liquidity Pool <span className="text-xs text-[#BDDBDB] opacity-50">(soon)</span>
+              Liquidity Pool
             </Link>
           </div>
         </motion.div>

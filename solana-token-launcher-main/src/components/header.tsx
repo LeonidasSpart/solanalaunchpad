@@ -53,22 +53,18 @@ const Header = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group flex-shrink-0">
+          {/* Logo - Bigger Image Only */}
+          <Link href="/" className="flex items-center group flex-shrink-0">
             <div className="relative">
               <Image
                 src="/logo.png"
                 alt="ZRP Logo"
-                width={38}
-                height={38}
+                width={48}
+                height={48}
                 className="rounded-xl"
                 priority
               />
               <div className="absolute inset-0 rounded-xl bg-[#FF2D2D]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-white group-hover:text-[#FF2D2D] transition"></span>
-              <span className="text-[10px] text-[#BDDBDB] -mt-1 tracking-wider uppercase">Token Launcher</span>
             </div>
           </Link>
 
@@ -145,7 +141,7 @@ const Header = () => {
               <NetworkSwitcher />
             </div>
 
-            {/* Wallet Button - Red, Black, Silver Gradient - Using wrapper div for better control */}
+            {/* Wallet Button - Red, Black, Silver Gradient */}
             <div className="[&>button]:!bg-gradient-to-r [&>button]:!from-[#FF2D2D] [&>button]:!via-[#1a1a1a] [&>button]:!to-[#BDDBDB] [&>button]:hover:!from-[#B10000] [&>button]:hover:!via-[#0D0D0D] [&>button]:hover:!to-[#9a9a9a] [&>button]:!rounded-xl [&>button]:!px-4 [&>button]:!py-2.5 [&>button]:!font-semibold [&>button]:!text-white [&>button]:!text-sm [&>button]:!transition-all [&>button]:!shadow-lg [&>button]:!shadow-[#FF2D2D]/20">
               <WalletMultiButton />
             </div>

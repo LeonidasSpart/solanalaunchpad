@@ -201,7 +201,7 @@ const CreateToken = () => {
     try {
       const { createToken: createTokenLib } = await import('@/lib/create-token');
 
-            const result = await createTokenLib({
+      const result = await createTokenLib({
         wallet: publicKey,
         name: formData.name.trim(),
         symbol: formData.symbol.trim().toUpperCase(),
@@ -220,15 +220,13 @@ const CreateToken = () => {
         discord: formData.discord.trim() || undefined,
       });
 
-      setTxId(result);
-      setStatus('');
-
-      // Support both string (txId only) and object ({txId, mintAddress})
+      // FIXED: Handle both string and object responses
       if (typeof result === 'string') {
         setTxId(result);
-      } else {
-        setTxId(result.txId);
-        setMintAddress(result.mintAddress || '');
+      } else if (result && typeof result === 'object') {
+        const res = result as { txId?: string; mintAddress?: string };
+        setTxId(res.txId || '');
+        setMintAddress(res.mintAddress || '');
       }
       setStatus('');
 

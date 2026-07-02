@@ -30,8 +30,8 @@ const Footer = () => {
               <Image
                 src="/logo.png"
                 alt="ZRP Logo"
-                width={48}
-                height={48}
+                width={128}
+                height={128}
                 className="rounded-xl"
                 priority
               />

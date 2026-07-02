@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, ChangeEvent, useContext, useEffect, Suspense } from 'react';
+import React, { useState, ChangeEvent, useContext, Suspense } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +19,6 @@ const CreateToken = () => {
   const { publicKey, signTransaction } = useWallet();
   const { network } = useContext(NetworkContext);
 
-  // ===== TEMPLATE STATE =====
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
   const templates = {
@@ -64,7 +63,6 @@ const CreateToken = () => {
       badge: "🚀 Quick Start",
     },
   };
-  // ===== END TEMPLATE STATE =====
 
   const [formData, setFormData] = useState({
     name: '',
@@ -87,8 +85,8 @@ const CreateToken = () => {
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState('');
   const [txId, setTxId] = useState('');
+  const [mintAddress, setMintAddress] = useState('');
 
-  // ===== TEMPLATE LOADER CALLBACK =====
   const handleTemplateLoad = (templateKey: string) => {
     if (templates[templateKey as keyof typeof templates]) {
       const t = templates[templateKey as keyof typeof templates];
@@ -103,7 +101,6 @@ const CreateToken = () => {
       setRevokeUpdate(t.revokeUpdate);
     }
   };
-  // ===== END TEMPLATE LOADER CALLBACK =====
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -120,14 +117,12 @@ const CreateToken = () => {
         setImagePreview(null);
         return;
       }
-
       if (!ALLOWED_IMAGE_TYPES.includes(selectedFile.type)) {
         setStatus(`❌ Only PNG, JPEG, GIF, or WebP images allowed`);
         setFile(null);
         setImagePreview(null);
         return;
       }
-
       setStatus('');
     }
 
@@ -143,9 +138,9 @@ const CreateToken = () => {
 
   const getFee = () => {
     if (network === 'devnet') {
-      return { 
-        amount: 'FREE', 
-        label: 'Free testing on Devnet • No SOL required', 
+      return {
+        amount: 'FREE',
+        label: 'Free testing on Devnet • No SOL required',
         badge: '🧪 Free Devnet Testing',
         details: '0 SOL',
         numericAmount: 0,
@@ -155,28 +150,16 @@ const CreateToken = () => {
     let baseFee = 0.15;
     const details: string[] = [];
 
-    if (revokeMint) {
-      baseFee += 0.15;
-      details.push('Revoke Mint: +0.15 SOL');
-    }
-    if (revokeFreeze) {
-      baseFee += 0.15;
-      details.push('Revoke Freeze: +0.15 SOL');
-    }
-    if (revokeUpdate) {
-      baseFee += 0.15;
-      details.push('Revoke Update: +0.15 SOL');
-    }
-
-    const totalFee = baseFee;
-    const detailText = details.length > 0 ? details.join(' • ') : 'No authority revocations';
+    if (revokeMint) { baseFee += 0.15; details.push('Revoke Mint: +0.15 SOL'); }
+    if (revokeFreeze) { baseFee += 0.15; details.push('Revoke Freeze: +0.15 SOL'); }
+    if (revokeUpdate) { baseFee += 0.15; details.push('Revoke Update: +0.15 SOL'); }
 
     return {
-      amount: `${totalFee.toFixed(2)} SOL`,
+      amount: `${baseFee.toFixed(2)} SOL`,
       label: `Launch on Mainnet • Network rent included`,
       badge: `🔴 Live on Mainnet`,
-      details: detailText,
-      numericAmount: totalFee,
+      details: details.length > 0 ? details.join(' • ') : 'No authority revocations',
+      numericAmount: baseFee,
     };
   };
 
@@ -212,12 +195,13 @@ const CreateToken = () => {
 
     setUploading(true);
     setTxId('');
+    setMintAddress('');
     setStatus('⏳ Uploading image to IPFS...');
 
     try {
       const { createToken: createTokenLib } = await import('@/lib/create-token');
 
-      const signature = await createTokenLib({
+      const result = await createTokenLib({
         wallet: publicKey,
         name: formData.name.trim(),
         symbol: formData.symbol.trim().toUpperCase(),
@@ -236,21 +220,46 @@ const CreateToken = () => {
         discord: formData.discord.trim() || undefined,
       });
 
-      setTxId(signature);
+      // Support both string (txId only) and object ({txId, mintAddress})
+      if (typeof result === 'string') {
+        setTxId(result);
+      } else {
+        setTxId(result.txId);
+        setMintAddress(result.mintAddress || '');
+      }
       setStatus('');
+
     } catch (error: any) {
       console.error('Creation failed:', error);
+      const msg = error.message || '';
+
+      // Block height exceeded means tx was sent but confirmation timed out
+      // The token likely DID get created — show warning instead of error
+      if (
+        msg.includes('block height exceeded') ||
+        msg.includes('Signature') && msg.includes('expired')
+      ) {
+        const sigMatch = msg.match(/([1-9A-HJ-NP-Za-km-z]{87,88})/);
+        if (sigMatch) {
+          setTxId(sigMatch[1]);
+          setStatus('');
+        } else {
+          setStatus('⚠️ Transaction may have succeeded but confirmation timed out. Check your wallet for the new token.');
+        }
+        return;
+      }
+
       let errorMessage = 'Unknown error occurred';
 
-      if (error.message?.includes('insufficient')) {
+      if (msg.includes('insufficient')) {
         const requiredSol = fee.numericAmount > 0 ? fee.numericAmount + 0.05 : 0;
         errorMessage = `Insufficient SOL balance. You need at least ${requiredSol.toFixed(2)} SOL.`;
-      } else if (error.message?.includes('rejected') || error.message?.includes('User rejected')) {
+      } else if (msg.includes('rejected') || msg.includes('User rejected')) {
         errorMessage = 'Transaction was rejected in wallet.';
-      } else if (error.message?.includes('NFT.Storage')) {
+      } else if (msg.includes('NFT.Storage')) {
         errorMessage = 'Image upload failed. Check your API key.';
       } else {
-        errorMessage = error.message?.slice(0, 150) || 'Transaction failed';
+        errorMessage = msg.slice(0, 150) || 'Transaction failed';
       }
 
       setStatus(`❌ ${errorMessage}`);
@@ -258,6 +267,11 @@ const CreateToken = () => {
       setUploading(false);
     }
   };
+
+  const solscanBase = network === 'devnet'
+    ? 'https://solscan.io/tx/'
+    : 'https://solscan.io/tx/';
+  const solscanCluster = network === 'devnet' ? '?cluster=devnet' : '';
 
   return (
     <>
@@ -268,12 +282,12 @@ const CreateToken = () => {
       <Card className="max-w-3xl mx-auto bg-zinc-900 border-zinc-800">
         <CardHeader>
           <CardTitle className="text-3xl flex items-center gap-3 text-white">
-            <Rocket className="h-8 w-8 text-purple-500" /> 
+            <Rocket className="h-8 w-8 text-purple-500" />
             {selectedTemplate ? 'Create Your Solana Token' : 'Choose Your Token Type'}
           </CardTitle>
           <p className="text-zinc-400">
-            {selectedTemplate 
-              ? 'Launch your token or memecoin on Solana with ZRP' 
+            {selectedTemplate
+              ? 'Launch your token or memecoin on Solana with ZRP'
               : 'Select a template to get started. You can customize everything.'}
           </p>
           {network === 'mainnet' && (
@@ -288,7 +302,6 @@ const CreateToken = () => {
         </CardHeader>
 
         <CardContent className="space-y-8 p-8">
-          {/* ===== TEMPLATE SELECTOR ===== */}
           {!selectedTemplate ? (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -325,7 +338,6 @@ const CreateToken = () => {
                   </button>
                 ))}
               </div>
-
               <button
                 onClick={() => setSelectedTemplate('custom')}
                 className="w-full p-4 rounded-xl border border-dashed border-zinc-600 hover:border-zinc-400 text-zinc-400 hover:text-white transition-all"
@@ -335,7 +347,6 @@ const CreateToken = () => {
             </div>
           ) : (
             <>
-              {/* Back button */}
               <div className="flex items-center gap-2 mb-2">
                 <button
                   onClick={() => setSelectedTemplate(null)}
@@ -349,8 +360,6 @@ const CreateToken = () => {
                 </span>
               </div>
 
-              {/* ===== YOUR EXISTING FORM ===== */}
-              {/* Basic Info */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <Label className="text-white">Token Name *</Label>
@@ -387,7 +396,6 @@ const CreateToken = () => {
                 />
               </div>
 
-              {/* Supply */}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <Label className="text-white">Total Supply</Label>
@@ -414,54 +422,28 @@ const CreateToken = () => {
                 </div>
               </div>
 
-              {/* Socials */}
               <div className="space-y-4 pt-4 border-t border-zinc-800">
                 <Label className="text-lg text-white">Socials & Links (Recommended)</Label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-white">Website</Label>
-                    <Input
-                      name="website"
-                      value={formData.website}
-                      onChange={handleInputChange}
-                      placeholder="https://yourtoken.com"
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                    />
+                    <Input name="website" value={formData.website} onChange={handleInputChange} placeholder="https://yourtoken.com" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                   <div>
                     <Label className="text-white">X / Twitter</Label>
-                    <Input
-                      name="twitter"
-                      value={formData.twitter}
-                      onChange={handleInputChange}
-                      placeholder="https://x.com/yourtoken"
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                    />
+                    <Input name="twitter" value={formData.twitter} onChange={handleInputChange} placeholder="https://x.com/yourtoken" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                   <div>
                     <Label className="text-white">Telegram</Label>
-                    <Input
-                      name="telegram"
-                      value={formData.telegram}
-                      onChange={handleInputChange}
-                      placeholder="https://t.me/yourtoken"
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                    />
+                    <Input name="telegram" value={formData.telegram} onChange={handleInputChange} placeholder="https://t.me/yourtoken" className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                   <div>
                     <Label className="text-white">Discord</Label>
-                    <Input
-                      name="discord"
-                      value={formData.discord}
-                      onChange={handleInputChange}
-                      placeholder="https://discord.gg/..."
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                    />
+                    <Input name="discord" value={formData.discord} onChange={handleInputChange} placeholder="https://discord.gg/..." className="bg-zinc-800 border-zinc-700 text-white" />
                   </div>
                 </div>
               </div>
 
-              {/* Image */}
               <div>
                 <Label className="text-white">Token Image *</Label>
                 <Input
@@ -472,15 +454,10 @@ const CreateToken = () => {
                 />
                 <p className="text-xs text-zinc-500 mt-1">Max {MAX_IMAGE_SIZE_MB}MB • PNG, JPEG, GIF, or WebP</p>
                 {imagePreview && (
-                  <img
-                    src={imagePreview}
-                    className="mt-4 max-h-48 rounded-xl border border-zinc-800"
-                    alt="Preview"
-                  />
+                  <img src={imagePreview} className="mt-4 max-h-48 rounded-xl border border-zinc-800" alt="Preview" />
                 )}
               </div>
 
-              {/* Security Settings */}
               <div className="space-y-6 pt-6 border-t border-zinc-800">
                 <Label className="text-lg text-white">Security Settings</Label>
                 <div className="flex justify-between items-center">
@@ -506,11 +483,8 @@ const CreateToken = () => {
                 </div>
               </div>
 
-              {/* Dynamic Fee Display */}
               <div className="bg-zinc-900 p-6 rounded-xl text-center border border-purple-500/20">
-                <div className="text-3xl font-bold text-purple-400">
-                  {fee.amount}
-                </div>
+                <div className="text-3xl font-bold text-purple-400">{fee.amount}</div>
                 <p className="text-sm text-zinc-400">{fee.label}</p>
                 {fee.badge && (
                   <div className="mt-2 inline-block bg-purple-900/30 text-purple-400 text-xs font-medium px-3 py-1 rounded-full border border-purple-500/30">
@@ -534,32 +508,52 @@ const CreateToken = () => {
               </Button>
 
               {status && (
-                <div
-                  className={`text-center text-sm ${
-                    status.startsWith('✅')
-                      ? 'text-green-400'
-                      : status.startsWith('❌')
-                      ? 'text-red-400'
-                      : 'text-zinc-400'
-                  }`}
-                >
+                <div className={`text-center text-sm ${
+                  status.startsWith('✅') ? 'text-green-400' :
+                  status.startsWith('❌') ? 'text-red-400' :
+                  status.startsWith('⚠️') ? 'text-yellow-400' :
+                  'text-zinc-400'
+                }`}>
                   <p>{status}</p>
                 </div>
               )}
 
               {txId && (
-                <div className="text-center">
-                  <div className="bg-green-900/30 border border-green-500/30 rounded-xl p-4">
-                    <CheckCircle className="h-8 w-8 text-green-400 mx-auto mb-2" />
-                    <p className="text-green-400 font-semibold mb-2">Token Created Successfully!</p>
+                <div className="bg-green-900/30 border border-green-500/30 rounded-xl p-6 text-center space-y-3">
+                  <CheckCircle className="h-12 w-12 text-green-400 mx-auto" />
+                  <p className="text-green-400 font-bold text-xl">🎉 Token Created Successfully!</p>
+                  <p className="text-zinc-400 text-sm">
+                    Your token <span className="text-white font-semibold">{formData.symbol}</span> has been launched on Solana {network === 'devnet' ? 'Devnet' : 'Mainnet'}.
+                  </p>
+                  {mintAddress && (
+                    <div className="bg-zinc-800 rounded-lg p-3">
+                      <p className="text-xs text-zinc-500 mb-1">Mint Address</p>
+                      <p className="text-xs text-purple-400 font-mono break-all">{mintAddress}</p>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-2 pt-2">
                     <a
-                      href={`https://solscan.io/tx/${txId}`}
+                      href={`${solscanBase}${txId}${solscanCluster}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-purple-400 hover:text-purple-300 inline-flex items-center gap-1"
+                      className="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
                     >
-                      View on Solscan <ExternalLink className="h-3 w-3" />
+                      View Transaction on Solscan <ExternalLink className="h-3 w-3" />
                     </a>
+                    <button
+                      onClick={() => {
+                        setTxId('');
+                        setMintAddress('');
+                        setStatus('');
+                        setFile(null);
+                        setImagePreview(null);
+                        setFormData({ name: '', symbol: '', description: '', website: '', twitter: '', telegram: '', discord: '', supply: '1000000000', decimals: '9' });
+                        setSelectedTemplate(null);
+                      }}
+                      className="text-sm text-zinc-400 hover:text-white transition-colors"
+                    >
+                      Create Another Token
+                    </button>
                   </div>
                 </div>
               )}

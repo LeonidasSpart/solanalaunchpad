@@ -74,7 +74,6 @@ export async function createToken({
   telegram,
   discord,
 }: CreateTokenParams): Promise<string> {
-  // Use proper connection helper with env-configured RPC URLs
   const connection = getConnection(network === 'mainnet' ? 'mainnet' : 'devnet', 'confirmed');
 
   // 1. Pre-flight checks
@@ -82,13 +81,16 @@ export async function createToken({
   const feeLamports = CREATION_FEE_SOL * LAMPORTS_PER_SOL;
   const estimatedMintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
   const estimatedMetadataRent = await connection.getMinimumBalanceForRentExemption(679);
+  const estimatedAtaRent = await connection.getMinimumBalanceForRentExemption(165);
 
   const totalRequired = network === 'mainnet'
-    ? feeLamports + estimatedMintRent + estimatedMetadataRent + 5000000
-    : estimatedMintRent + estimatedMetadataRent + 5000000;
+    ? feeLamports + estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + 10000000
+    : estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + 10000000;
 
   if (balance < totalRequired) {
-    throw new Error(`Insufficient balance. You need at least ${(totalRequired / LAMPORTS_PER_SOL).toFixed(2)} SOL to create a token.`);
+    throw new Error(
+      `Insufficient balance. You need at least ${(totalRequired / LAMPORTS_PER_SOL).toFixed(3)} SOL to create a token.`
+    );
   }
 
   // 2. Upload image to IPFS
@@ -115,14 +117,14 @@ export async function createToken({
   const transaction = new Transaction();
   transaction.feePayer = wallet;
 
-  // Add compute budget for large transaction
+  // Compute budget for large transaction
   transaction.add(
     ComputeBudgetProgram.setComputeUnitLimit({
       units: 400000,
     })
   );
 
-  // Step 3a: Pay fee on mainnet
+  // Step 3a: Pay fee on mainnet only
   if (network === 'mainnet') {
     transaction.add(
       SystemProgram.transfer({
@@ -133,7 +135,7 @@ export async function createToken({
     );
   }
 
-  // Step 3b: Create mint
+  // Step 3b: Create mint account
   const mintKeypair = Keypair.generate();
   const mint = mintKeypair.publicKey;
 
@@ -154,8 +156,14 @@ export async function createToken({
     )
   );
 
-  // Step 3c: Create ATA
-  const userAta = getAssociatedTokenAddressSync(mint, wallet, false, SPL_TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
+  // Step 3c: Create associated token account
+  const userAta = getAssociatedTokenAddressSync(
+    mint,
+    wallet,
+    false,
+    SPL_TOKEN_PROGRAM_ID,
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  );
   transaction.add(
     createAssociatedTokenAccountInstruction(
       wallet,
@@ -167,13 +175,20 @@ export async function createToken({
     )
   );
 
-  // Step 3d: Mint supply
+  // Step 3d: Mint supply to ATA
   const supplyInBaseUnits = BigInt(Math.round(supply * Math.pow(10, decimals)));
   transaction.add(
-    createMintToInstruction(mint, userAta, wallet, supplyInBaseUnits, [], SPL_TOKEN_PROGRAM_ID)
+    createMintToInstruction(
+      mint,
+      userAta,
+      wallet,
+      supplyInBaseUnits,
+      [],
+      SPL_TOKEN_PROGRAM_ID
+    )
   );
 
-  // Step 3e: Create metadata
+  // Step 3e: Create on-chain metadata
   const [metadataPDA] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("metadata"),
@@ -210,7 +225,7 @@ export async function createToken({
     )
   );
 
-  // Step 3f: Revoke mint authority
+  // Step 3f: Revoke mint authority (optional)
   if (revokeMint) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -224,7 +239,7 @@ export async function createToken({
     );
   }
 
-  // Step 3g: Revoke freeze authority
+  // Step 3g: Revoke freeze authority (optional)
   if (revokeFreeze) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -238,7 +253,7 @@ export async function createToken({
     );
   }
 
-  // Step 3h: Revoke update authority (make metadata immutable)
+  // Step 3h: Revoke update authority / make metadata immutable (optional)
   if (revokeUpdate) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(
@@ -258,26 +273,24 @@ export async function createToken({
     );
   }
 
-  // 4. Get blockhash
+  // 4. Get latest blockhash
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
 
-  // CRITICAL FIX: Use partialSign instead of sign or addSignature
-  // partialSign adds the mint signature but leaves transaction "incomplete"
-  // so the wallet knows it still needs to sign
+  // 5. Partial sign with mint keypair first
   transaction.partialSign(mintKeypair);
 
-  // 5. Send to wallet for signing - wallet will add its signature
+  // 6. Send to wallet for user signature
   const signedTransaction = await signTransaction(transaction);
 
-  // 6. Send with preflight enabled
+  // 7. Submit — skip preflight since wallet already simulated
   const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
-    skipPreflight: false,
+    skipPreflight: true,
     maxRetries: 3,
     preflightCommitment: 'confirmed',
   });
 
-  // 7. Confirm
+  // 8. Confirm transaction
   const confirmation = await connection.confirmTransaction({
     signature: txId,
     blockhash,

@@ -3,6 +3,14 @@ import { NFTStorage } from 'nft.storage';
 
 const NFT_STORAGE_API_KEY = process.env.NFT_STORAGE_API_KEY || '';
 
+function getImageType(imageUrl: string): string {
+  const lower = imageUrl.toLowerCase();
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  return 'image/png';
+}
+
 export async function POST(request: NextRequest) {
   if (!NFT_STORAGE_API_KEY) {
     return NextResponse.json({ error: 'NFT.Storage API key not configured' }, { status: 500 });
@@ -10,7 +18,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, symbol, description, imageUrl, attributes, externalUrl, socialLinks } = body;
+    const { name, symbol, description, imageUrl, externalUrl, socialLinks } = body;
 
     const metadata: any = {
       name,
@@ -18,7 +26,7 @@ export async function POST(request: NextRequest) {
       description,
       image: imageUrl,
       external_url: externalUrl || '',
-      attributes: attributes || [],
+      attributes: [],
       properties: {
         files: [{ uri: imageUrl, type: getImageType(imageUrl) }],
         category: 'image',
@@ -41,12 +49,4 @@ export async function POST(request: NextRequest) {
     console.error('Metadata upload error:', error);
     return NextResponse.json({ error: 'Metadata upload failed' }, { status: 500 });
   }
-}
-
-function getImageType(imageUrl: string): string {
-  const lower = imageUrl.toLowerCase();
-  if (lower.endsWith('.gif')) return 'image/gif';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-  return 'image/png';
 }

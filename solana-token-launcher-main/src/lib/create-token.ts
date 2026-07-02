@@ -160,7 +160,7 @@ export async function createToken({
   );
 
   // Step 3d: Mint the initial supply to the user's ATA
-  // FIXED: Use string-based conversion to avoid Number precision loss
+  // FIXED #3: Use string-based conversion to avoid Number precision loss
   const supplyInBaseUnits = BigInt(
     (supply * Math.pow(10, decimals)).toLocaleString('en-US', {
       useGrouping: false,
@@ -201,7 +201,7 @@ export async function createToken({
             collection: null,
             uses: null,
           },
-          // FIXED: Always create as mutable so we can revoke update authority later
+          // Always create as mutable so we can revoke update authority later
           isMutable: true,
           collectionDetails: null,
         },
@@ -224,7 +224,7 @@ export async function createToken({
   }
 
   // Step 3g: Revoke freeze authority if requested
-  // FIXED: This block was missing — freeze authority was never revoked!
+  // FIXED #2: This block was missing — freeze authority was never revoked!
   if (revokeFreeze) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -258,16 +258,28 @@ export async function createToken({
     );
   }
 
-  // 4. Sign and send the transaction
+  // 4. Get blockhash and set it
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.sign(mintKeypair);
 
+  // FIXED #4: SIMULATE the transaction first (prevents losing fee on failed tx)
+  const simulation = await connection.simulateTransaction(transaction);
+  if (simulation.value.err) {
+    console.error("Transaction simulation failed:", simulation.value.err);
+    throw new Error(
+      `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}. ` +
+      `This means the transaction would fail on-chain and your fee would be lost. ` +
+      `Please check your wallet balance and token parameters.`
+    );
+  }
+
+  // 5. Sign and send
   const signedTransaction = await signTransaction(transaction);
 
   const txId = await connection.sendRawTransaction(signedTransaction.serialize());
 
-  // 5. Confirm the transaction
+  // 6. Confirm the transaction
   const confirmation = await connection.confirmTransaction({
     signature: txId,
     blockhash,

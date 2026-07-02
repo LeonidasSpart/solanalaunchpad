@@ -38,11 +38,12 @@ export async function POST(request: NextRequest) {
       type: "application/json",
     });
 
-    const upload = await pinata.upload.public.file(metadataFile);
+    // pinata-web3 syntax: NO .public
+    const upload = await pinata.upload.file(metadataFile);
 
     return NextResponse.json({
-      url: `https://${process.env.PINATA_GATEWAY}/ipfs/${upload.cid}`,
-      cid: upload.cid,
+      url: `https://${process.env.PINATA_GATEWAY}/ipfs/${upload.IpfsHash}`,
+      cid: upload.IpfsHash,
     });
   } catch (error) {
     console.error("Pinata metadata upload error:", error);

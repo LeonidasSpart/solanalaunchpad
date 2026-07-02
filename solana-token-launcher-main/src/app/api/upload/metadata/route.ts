@@ -19,13 +19,17 @@ export async function POST(request: NextRequest) {
       symbol,
       description,
       image: imageUrl,
-      external_url: externalUrl || "",
       attributes: [],
       properties: {
         files: [{ uri: imageUrl, type: getImageType(imageUrl) }],
         category: "image",
       },
     };
+
+    // Only add external_url if it's a non-empty string
+    if (externalUrl && externalUrl.trim() !== "") {
+      metadata.external_url = externalUrl.trim();
+    }
 
     if (socialLinks && Object.keys(socialLinks).length > 0) {
       metadata.properties.socials = socialLinks;
@@ -38,7 +42,6 @@ export async function POST(request: NextRequest) {
       type: "application/json",
     });
 
-    // pinata-web3 syntax: NO .public
     const upload = await pinata.upload.file(metadataFile);
 
     return NextResponse.json({

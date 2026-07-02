@@ -52,15 +52,15 @@ const Header = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo - Bigger Image Only */}
+        <div className="flex items-center justify-between h-20">
+          {/* Logo - 88x88 Image Only */}
           <Link href="/" className="flex items-center group flex-shrink-0">
             <div className="relative">
               <Image
                 src="/logo.png"
                 alt="ZRP Logo"
-                width={48}
-                height={48}
+                width={88}
+                height={88}
                 className="rounded-xl"
                 priority
               />

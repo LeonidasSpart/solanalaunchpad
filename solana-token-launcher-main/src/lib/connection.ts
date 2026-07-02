@@ -1,27 +1,23 @@
 import { Connection, Commitment } from "@solana/web3.js";
 
-/**
- * Create a fresh Solana connection.
- *
- * IMPORTANT: Do NOT cache connections. RPC endpoints can become stale,
- * rate-limited, or go down. Always create fresh connections.
- */
+function getRpcEndpoint(network: "devnet" | "mainnet"): string {
+  // Server-side: use Helius directly
+  if (typeof window === "undefined") {
+    return network === "mainnet"
+      ? process.env.RPC_URL_MAINNET!
+      : process.env.RPC_URL_DEVNET!;
+  }
+  // Client-side: proxy through our API
+  return `${window.location.origin}/api/rpc?network=${network}`;
+}
+
 export function getConnection(
   network: "devnet" | "mainnet" = "devnet",
   commitment: Commitment = "confirmed"
 ): Connection {
-  const endpoint =
-    network === "mainnet"
-      ? "/api/rpc?network=mainnet"
-      : "/api/rpc?network=devnet";
-
-  return new Connection(endpoint, commitment);
+  return new Connection(getRpcEndpoint(network), commitment);
 }
 
-/**
- * Get connection with specific commitment level.
- * Use "finalized" for operations requiring maximum security.
- */
 export function getConnectionWithCommitment(
   network: "devnet" | "mainnet",
   commitment: Commitment

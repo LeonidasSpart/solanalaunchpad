@@ -30,12 +30,10 @@ import {
 } from "./constants";
 
 // ─── Burn Address for Revoking Authorities ────────────────────────
-// CORRECT: Solana incinerator address (NOT the System Program ID)
 const BURN_ADDRESS = new PublicKey(
   "1nc1nerator11111111111111111111111111111111"
 );
 
-// Fee amount (hardcoded)
 const CREATION_FEE_SOL = 0.15;
 
 interface CreateTokenParams {
@@ -75,7 +73,6 @@ export async function createToken({
   telegram,
   discord,
 }: CreateTokenParams): Promise<string> {
-  // Use network-specific RPC
   const rpcUrl = network === 'mainnet'
     ? 'https://api.mainnet-beta.solana.com'
     : 'https://api.devnet.solana.com';
@@ -85,17 +82,22 @@ export async function createToken({
   // 1. Pre-flight checks
   const balance = await connection.getBalance(wallet);
   const feeLamports = CREATION_FEE_SOL * LAMPORTS_PER_SOL;
-  const estimatedRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
+  const estimatedMintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
+  // Metadata account is larger than mint
+  const estimatedMetadataRent = await connection.getMinimumBalanceForRentExemption(679);
 
-  if (balance < feeLamports + estimatedRent + 5000000) {
-    throw new Error(`Insufficient balance. You need at least ${CREATION_FEE_SOL + 0.05} SOL to create a token.`);
+  const totalRequired = network === 'mainnet' 
+    ? feeLamports + estimatedMintRent + estimatedMetadataRent + 5000000
+    : estimatedMintRent + estimatedMetadataRent + 5000000;
+
+  if (balance < totalRequired) {
+    throw new Error(`Insufficient balance. You need at least ${(totalRequired / LAMPORTS_PER_SOL).toFixed(2)} SOL to create a token.`);
   }
 
   // 2. Upload image to IPFS
   const { uploadTokenImage, uploadMetadata } = await import("./upload");
   const imageUrl = await uploadTokenImage(imageFile);
 
-  // Build social links for metadata
   const socialLinks: Record<string, string> = {};
   if (website) socialLinks.website = website;
   if (twitter) socialLinks.twitter = twitter;
@@ -116,7 +118,7 @@ export async function createToken({
   const transaction = new Transaction();
   transaction.feePayer = wallet;
 
-  // Step 3a: Pay the creation fee to your treasury (SKIP on devnet)
+  // Step 3a: Pay fee on mainnet
   if (network === 'mainnet') {
     transaction.add(
       SystemProgram.transfer({
@@ -127,7 +129,7 @@ export async function createToken({
     );
   }
 
-  // Step 3b: Create the token mint
+  // Step 3b: Create mint
   const mintKeypair = Keypair.generate();
   const mint = mintKeypair.publicKey;
 
@@ -136,31 +138,25 @@ export async function createToken({
       fromPubkey: wallet,
       newAccountPubkey: mint,
       space: MINT_SIZE,
-      lamports: await connection.getMinimumBalanceForRentExemption(MINT_SIZE),
+      lamports: estimatedMintRent,
       programId: SPL_TOKEN_PROGRAM_ID,
     }),
     createInitializeMintInstruction(
       mint,
       decimals,
-      wallet, // mint authority (temporarily)
-      revokeFreeze ? null : wallet, // freeze authority
+      wallet,
+      revokeFreeze ? null : wallet,
       SPL_TOKEN_PROGRAM_ID
     )
   );
 
-  // Step 3c: Create the user's associated token account
+  // Step 3c: Create ATA
   const userAta = getAssociatedTokenAddressSync(mint, wallet);
   transaction.add(
-    createAssociatedTokenAccountInstruction(
-      wallet,
-      userAta,
-      wallet,
-      mint
-    )
+    createAssociatedTokenAccountInstruction(wallet, userAta, wallet, mint)
   );
 
-  // Step 3d: Mint the initial supply to the user's ATA
-  // FIXED #3: Use string-based conversion to avoid Number precision loss
+  // Step 3d: Mint supply
   const supplyInBaseUnits = BigInt(
     (supply * Math.pow(10, decimals)).toLocaleString('en-US', {
       useGrouping: false,
@@ -171,7 +167,7 @@ export async function createToken({
     createMintToInstruction(mint, userAta, wallet, supplyInBaseUnits, [], SPL_TOKEN_PROGRAM_ID)
   );
 
-  // Step 3e: Add token metadata (ALWAYS mutable initially)
+  // Step 3e: Create metadata
   const [metadataPDA] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("metadata"),
@@ -181,35 +177,40 @@ export async function createToken({
     METADATA_PROGRAM_ID
   );
 
-  transaction.add(
-    createCreateMetadataAccountV3Instruction(
-      {
-        metadata: metadataPDA,
-        mint: mint,
-        mintAuthority: wallet,
-        payer: wallet,
-        updateAuthority: wallet,
-      },
-      {
-        createMetadataAccountArgsV3: {
-          data: {
-            name,
-            symbol,
-            uri: metadataUri,
-            sellerFeeBasisPoints: 0,
-            creators: null,
-            collection: null,
-            uses: null,
-          },
-          // Always create as mutable so we can revoke update authority later
-          isMutable: true,
-          collectionDetails: null,
+  // Check if metadata account already exists (from previous failed tx)
+  const metadataAccount = await connection.getAccountInfo(metadataPDA);
+  if (metadataAccount) {
+    console.warn("Metadata account already exists, skipping metadata creation");
+  } else {
+    transaction.add(
+      createCreateMetadataAccountV3Instruction(
+        {
+          metadata: metadataPDA,
+          mint: mint,
+          mintAuthority: wallet,
+          payer: wallet,
+          updateAuthority: wallet,
         },
-      }
-    )
-  );
+        {
+          createMetadataAccountArgsV3: {
+            data: {
+              name,
+              symbol,
+              uri: metadataUri,
+              sellerFeeBasisPoints: 0,
+              creators: null,
+              collection: null,
+              uses: null,
+            },
+            isMutable: true,
+            collectionDetails: null,
+          },
+        }
+      )
+    );
+  }
 
-  // Step 3f: Revoke mint authority if requested
+  // Step 3f: Revoke mint authority
   if (revokeMint) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -223,8 +224,7 @@ export async function createToken({
     );
   }
 
-  // Step 3g: Revoke freeze authority if requested
-  // FIXED #2: This block was missing — freeze authority was never revoked!
+  // Step 3g: Revoke freeze authority
   if (revokeFreeze) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -238,8 +238,8 @@ export async function createToken({
     );
   }
 
-  // Step 3h: Revoke update authority if requested (make metadata immutable)
-  if (revokeUpdate) {
+  // Step 3h: Revoke update authority
+  if (revokeUpdate && !metadataAccount) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(
         {
@@ -258,29 +258,19 @@ export async function createToken({
     );
   }
 
-  // 4. Get blockhash and set it
+  // 4. Get blockhash and sign
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.sign(mintKeypair);
 
-  // TEMPORARILY DISABLED: Simulation was giving misleading Custom:16 error
-  // Will re-enable after diagnosing the real on-chain error
-  // const simulation = await connection.simulateTransaction(transaction);
-  // if (simulation.value.err) {
-  //   console.error("Transaction simulation failed:", simulation.value.err);
-  //   throw new Error(
-  //     `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}. ` +
-  //     `This means the transaction would fail on-chain and your fee would be lost. ` +
-  //     `Please check your wallet balance and token parameters.`
-  //   );
-  // }
-
-  // 5. Sign and send
+  // 5. Sign and send (no simulation)
   const signedTransaction = await signTransaction(transaction);
+  const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
+    skipPreflight: true,
+    maxRetries: 3,
+  });
 
-  const txId = await connection.sendRawTransaction(signedTransaction.serialize());
-
-  // 6. Confirm the transaction
+  // 6. Confirm
   const confirmation = await connection.confirmTransaction({
     signature: txId,
     blockhash,

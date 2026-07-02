@@ -1,35 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { NFTStorage } from 'nft.storage';
-
-const NFT_STORAGE_API_KEY = process.env.NFT_STORAGE_API_KEY || '';
+import { NextRequest, NextResponse } from "next/server";
+import { pinata } from "@/lib/pinata";
 
 function getImageType(imageUrl: string): string {
   const lower = imageUrl.toLowerCase();
-  if (lower.endsWith('.gif')) return 'image/gif';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-  return 'image/png';
+  if (lower.endsWith(".gif")) return "image/gif";
+  if (lower.endsWith(".webp")) return "image/webp";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  return "image/png";
 }
 
 export async function POST(request: NextRequest) {
-  if (!NFT_STORAGE_API_KEY) {
-    return NextResponse.json({ error: 'NFT.Storage API key not configured' }, { status: 500 });
-  }
-
   try {
     const body = await request.json();
     const { name, symbol, description, imageUrl, externalUrl, socialLinks } = body;
 
-    const metadata: any = {
+    const metadata: Record<string, any> = {
       name,
       symbol,
       description,
       image: imageUrl,
-      external_url: externalUrl || '',
+      external_url: externalUrl || "",
       attributes: [],
       properties: {
         files: [{ uri: imageUrl, type: getImageType(imageUrl) }],
-        category: 'image',
+        category: "image",
       },
     };
 
@@ -37,16 +31,24 @@ export async function POST(request: NextRequest) {
       metadata.properties.socials = socialLinks;
     }
 
-    const blob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' });
-    const client = new NFTStorage({ token: NFT_STORAGE_API_KEY });
-    const cid = await client.storeBlob(blob);
+    const metadataBlob = new Blob([JSON.stringify(metadata, null, 2)], {
+      type: "application/json",
+    });
+    const metadataFile = new File([metadataBlob], "metadata.json", {
+      type: "application/json",
+    });
 
-    return NextResponse.json({ 
-      url: `https://nftstorage.link/ipfs/${cid}`,
-      cid 
+    const upload = await pinata.upload.public.file(metadataFile);
+
+    return NextResponse.json({
+      url: `https://${process.env.PINATA_GATEWAY}/ipfs/${upload.cid}`,
+      cid: upload.cid,
     });
   } catch (error) {
-    console.error('Metadata upload error:', error);
-    return NextResponse.json({ error: 'Metadata upload failed' }, { status: 500 });
+    console.error("Pinata metadata upload error:", error);
+    return NextResponse.json(
+      { error: "Metadata upload failed" },
+      { status: 500 }
+    );
   }
 }

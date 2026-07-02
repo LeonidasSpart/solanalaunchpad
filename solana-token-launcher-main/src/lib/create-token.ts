@@ -24,7 +24,6 @@ import {
 import { getConnection } from "./connection";
 import {
   FEE_RECIPIENT,
-  CREATION_FEE_SOL,
   TOKEN_PROGRAM_ID,
   NETWORKS,
   RPC_URLS,
@@ -35,6 +34,9 @@ import {
 const BURN_ADDRESS = new PublicKey(
   "1nc1nerator11111111111111111111111111111111"
 );
+
+// Fee amount (hardcoded)
+const CREATION_FEE_SOL = 0.15;
 
 interface CreateTokenParams {
   wallet: PublicKey;
@@ -49,6 +51,10 @@ interface CreateTokenParams {
   revokeUpdate: boolean;
   signTransaction: (transaction: Transaction) => Promise<Transaction>;
   network?: string;
+  website?: string;
+  twitter?: string;
+  telegram?: string;
+  discord?: string;
 }
 
 export async function createToken({
@@ -64,6 +70,10 @@ export async function createToken({
   revokeUpdate,
   signTransaction,
   network = 'devnet',
+  website,
+  twitter,
+  telegram,
+  discord,
 }: CreateTokenParams): Promise<string> {
   // Use network-specific RPC
   const rpcUrl = network === 'mainnet'
@@ -84,7 +94,23 @@ export async function createToken({
   // 2. Upload image to IPFS
   const { uploadTokenImage, uploadMetadata } = await import("./upload");
   const imageUrl = await uploadTokenImage(imageFile);
-  const metadataUri = await uploadMetadata(name, symbol, description, imageUrl);
+
+  // Build social links for metadata
+  const socialLinks: Record<string, string> = {};
+  if (website) socialLinks.website = website;
+  if (twitter) socialLinks.twitter = twitter;
+  if (telegram) socialLinks.telegram = telegram;
+  if (discord) socialLinks.discord = discord;
+
+  const metadataUri = await uploadMetadata(
+    name,
+    symbol,
+    description,
+    imageUrl,
+    undefined,
+    website || undefined,
+    Object.keys(socialLinks).length > 0 ? socialLinks : undefined
+  );
 
   // 3. Build the transaction
   const transaction = new Transaction();

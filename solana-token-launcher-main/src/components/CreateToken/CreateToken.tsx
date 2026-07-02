@@ -201,7 +201,7 @@ const CreateToken = () => {
     try {
       const { createToken: createTokenLib } = await import('@/lib/create-token');
 
-      const result = await createTokenLib({
+            const result = await createTokenLib({
         wallet: publicKey,
         name: formData.name.trim(),
         symbol: formData.symbol.trim().toUpperCase(),
@@ -219,6 +219,9 @@ const CreateToken = () => {
         telegram: formData.telegram.trim() || undefined,
         discord: formData.discord.trim() || undefined,
       });
+
+      setTxId(result);
+      setStatus('');
 
       // Support both string (txId only) and object ({txId, mintAddress})
       if (typeof result === 'string') {

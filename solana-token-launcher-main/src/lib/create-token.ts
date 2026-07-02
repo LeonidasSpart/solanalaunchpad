@@ -160,7 +160,13 @@ export async function createToken({
   );
 
   // Step 3d: Mint the initial supply to the user's ATA
-  const supplyInBaseUnits = BigInt(Math.floor(supply * Math.pow(10, decimals)));
+  // FIXED: Use string-based conversion to avoid Number precision loss
+  const supplyInBaseUnits = BigInt(
+    (supply * Math.pow(10, decimals)).toLocaleString('en-US', {
+      useGrouping: false,
+      maximumFractionDigits: 0,
+    })
+  );
   transaction.add(
     createMintToInstruction(mint, userAta, wallet, supplyInBaseUnits, [], SPL_TOKEN_PROGRAM_ID)
   );
@@ -217,7 +223,22 @@ export async function createToken({
     );
   }
 
-  // Step 3g: Revoke update authority if requested (make metadata immutable)
+  // Step 3g: Revoke freeze authority if requested
+  // FIXED: This block was missing — freeze authority was never revoked!
+  if (revokeFreeze) {
+    transaction.add(
+      createSetAuthorityInstruction(
+        mint,
+        wallet,
+        AuthorityType.FreezeAccount,
+        null,
+        [],
+        SPL_TOKEN_PROGRAM_ID
+      )
+    );
+  }
+
+  // Step 3h: Revoke update authority if requested (make metadata immutable)
   if (revokeUpdate) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(

@@ -12,8 +12,8 @@ export function getConnection(
 ): Connection {
   const endpoint =
     network === "mainnet"
-      ? 'https://api.mainnet-beta.solana.com'
-      : 'https://api.devnet.solana.com';
+      ? "/api/rpc?network=mainnet"
+      : "/api/rpc?network=devnet";
 
   return new Connection(endpoint, commitment);
 }

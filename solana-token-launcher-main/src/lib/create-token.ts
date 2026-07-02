@@ -23,7 +23,7 @@ import {
 } from "@metaplex-foundation/mpl-token-metadata";
 import { getConnection } from "./connection";
 import {
-  FEE_RECIPIENT,
+  getFeeRecipient,
   TOKEN_PROGRAM_ID,
   NETWORKS,
   RPC_URLS,
@@ -119,9 +119,9 @@ export async function createToken({
   // Step 3a: Pay the creation fee to your treasury (SKIP on devnet)
   if (network === 'mainnet') {
     transaction.add(
-      SystemProgram.transfer({
+            SystemProgram.transfer({
         fromPubkey: wallet,
-        toPubkey: FEE_RECIPIENT,
+        toPubkey: getFeeRecipient(),
         lamports: feeLamports,
       })
     );

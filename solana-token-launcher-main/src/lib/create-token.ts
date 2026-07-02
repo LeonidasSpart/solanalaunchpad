@@ -76,9 +76,10 @@ export async function createToken({
   discord,
 }: CreateTokenParams): Promise<string> {
   // Use network-specific RPC
-  const rpcUrl = network === 'mainnet'
-    ? RPC_URLS[NETWORKS.MAINNET]
-    : RPC_URLS[NETWORKS.DEVNET];
+    const rpcUrl = network === 'mainnet'
+    ? 'https://api.mainnet-beta.solana.com'
+    : 'https://api.devnet.solana.com';
+
 
   const connection = new Connection(rpcUrl, 'confirmed');
 

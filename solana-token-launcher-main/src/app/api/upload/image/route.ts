@@ -31,11 +31,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const upload = await pinata.upload.public.file(file);
+    // pinata-web3 syntax: NO .public
+    const upload = await pinata.upload.file(file);
 
     return NextResponse.json({
-      url: `https://${process.env.PINATA_GATEWAY}/ipfs/${upload.cid}`,
-      cid: upload.cid,
+      url: `https://${process.env.PINATA_GATEWAY}/ipfs/${upload.IpfsHash}`,
+      cid: upload.IpfsHash,
     });
   } catch (error) {
     console.error("Pinata upload error:", error);

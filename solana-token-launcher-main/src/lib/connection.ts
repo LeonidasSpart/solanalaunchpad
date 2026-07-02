@@ -1,9 +1,8 @@
 import { Connection, Commitment } from "@solana/web3.js";
-import { RPC_URLS, NETWORKS } from "./constants";
 
 /**
  * Create a fresh Solana connection.
- * 
+ *
  * IMPORTANT: Do NOT cache connections. RPC endpoints can become stale,
  * rate-limited, or go down. Always create fresh connections.
  */
@@ -13,8 +12,8 @@ export function getConnection(
 ): Connection {
   const endpoint =
     network === "mainnet"
-      ? RPC_URLS[NETWORKS.MAINNET]
-      : RPC_URLS[NETWORKS.DEVNET];
+      ? 'https://api.mainnet-beta.solana.com'
+      : 'https://api.devnet.solana.com';
 
   return new Connection(endpoint, commitment);
 }

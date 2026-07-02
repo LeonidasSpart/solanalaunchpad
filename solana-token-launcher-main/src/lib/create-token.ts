@@ -5,6 +5,7 @@ import {
   SystemProgram,
   Transaction,
   LAMPORTS_PER_SOL,
+  ComputeBudgetProgram,
 } from "@solana/web3.js";
 import {
   getAssociatedTokenAddressSync,
@@ -29,7 +30,6 @@ import {
   RPC_URLS,
 } from "./constants";
 
-// ─── Burn Address for Revoking Authorities ────────────────────────
 const BURN_ADDRESS = new PublicKey(
   "1nc1nerator11111111111111111111111111111111"
 );
@@ -83,7 +83,6 @@ export async function createToken({
   const balance = await connection.getBalance(wallet);
   const feeLamports = CREATION_FEE_SOL * LAMPORTS_PER_SOL;
   const estimatedMintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
-  // Metadata account is larger than mint
   const estimatedMetadataRent = await connection.getMinimumBalanceForRentExemption(679);
 
   const totalRequired = network === 'mainnet' 
@@ -117,6 +116,13 @@ export async function createToken({
   // 3. Build the transaction
   const transaction = new Transaction();
   transaction.feePayer = wallet;
+
+  // Add compute budget for large transaction
+  transaction.add(
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: 400000,
+    })
+  );
 
   // Step 3a: Pay fee on mainnet
   if (network === 'mainnet') {
@@ -177,11 +183,9 @@ export async function createToken({
     METADATA_PROGRAM_ID
   );
 
-  // Check if metadata account already exists (from previous failed tx)
+  // Check if metadata account already exists
   const metadataAccount = await connection.getAccountInfo(metadataPDA);
-  if (metadataAccount) {
-    console.warn("Metadata account already exists, skipping metadata creation");
-  } else {
+  if (!metadataAccount) {
     transaction.add(
       createCreateMetadataAccountV3Instruction(
         {
@@ -263,7 +267,7 @@ export async function createToken({
   transaction.recentBlockhash = blockhash;
   transaction.sign(mintKeypair);
 
-  // 5. Sign and send (no simulation)
+  // 5. Sign and send (skip preflight to bypass wallet simulation)
   const signedTransaction = await signTransaction(transaction);
   const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
     skipPreflight: true,

@@ -74,7 +74,7 @@ export async function createToken({
   telegram,
   discord,
 }: CreateTokenParams): Promise<string> {
-  // FIX #1: Use proper connection helper with env-configured RPC URLs
+  // Use proper connection helper with env-configured RPC URLs
   const connection = getConnection(network === 'mainnet' ? 'mainnet' : 'devnet', 'confirmed');
 
   // 1. Pre-flight checks
@@ -168,7 +168,6 @@ export async function createToken({
   );
 
   // Step 3d: Mint supply
-  // FIX #2: Safer BigInt conversion - avoid toLocaleString which can produce scientific notation
   const supplyInBaseUnits = BigInt(Math.round(supply * Math.pow(10, decimals)));
   transaction.add(
     createMintToInstruction(mint, userAta, wallet, supplyInBaseUnits, [], SPL_TOKEN_PROGRAM_ID)
@@ -184,8 +183,6 @@ export async function createToken({
     METADATA_PROGRAM_ID
   );
 
-  // FIX #3: Remove unnecessary metadataAccount check - for a new mint, metadata will never exist
-  // The check was causing issues and is logically unnecessary for token creation
   transaction.add(
     createCreateMetadataAccountV3Instruction(
       {
@@ -242,7 +239,6 @@ export async function createToken({
   }
 
   // Step 3h: Revoke update authority (make metadata immutable)
-  // FIX #4: Always add this instruction since we always create metadata above
   if (revokeUpdate) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(
@@ -266,29 +262,22 @@ export async function createToken({
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
 
-  // FIX #5: CRITICAL - Do NOT sign with mintKeypair before wallet signs!
-  // The wallet adapter must sign a fresh transaction.
-  // REMOVED: transaction.sign(mintKeypair);
+  // CRITICAL FIX: Use partialSign instead of sign or addSignature
+  // partialSign adds the mint signature but leaves transaction "incomplete"
+  // so the wallet knows it still needs to sign
+  transaction.partialSign(mintKeypair);
 
-  // 5. Add mint as signer to the transaction so wallet knows it needs signing
-  transaction.setSigners(wallet, mint);
+  // 5. Send to wallet for signing - wallet will add its signature
+  const signedTransaction = await signTransaction(transaction);
 
-  // Let wallet sign first
-  const signedByWallet = await signTransaction(transaction);
-
-  // Add mint keypair signature after wallet has signed
-  // Convert Uint8Array to Buffer for addSignature compatibility
-  signedByWallet.addSignature(mint, Buffer.from(mintKeypair.secretKey));
-
-  // FIX #6: Enable preflight to catch errors early during development
-  // Set skipPreflight to false to get proper error messages
-  const txId = await connection.sendRawTransaction(signedByWallet.serialize(), {
+  // 6. Send with preflight enabled
+  const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
     skipPreflight: false,
     maxRetries: 3,
     preflightCommitment: 'confirmed',
   });
 
-  // 6. Confirm
+  // 7. Confirm
   const confirmation = await connection.confirmTransaction({
     signature: txId,
     blockhash,

@@ -67,7 +67,7 @@ const Header = () => {
               <div className="absolute inset-0 rounded-xl bg-[#FF2D2D]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-white group-hover:text-[#FF2D2D] transition">ZRP</span>
+              <span className="text-lg font-bold tracking-tight text-white group-hover:text-[#FF2D2D] transition"></span>
               <span className="text-[10px] text-[#BDDBDB] -mt-1 tracking-wider uppercase">Token Launcher</span>
             </div>
           </Link>

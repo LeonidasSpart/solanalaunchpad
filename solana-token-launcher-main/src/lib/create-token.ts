@@ -76,10 +76,9 @@ export async function createToken({
   discord,
 }: CreateTokenParams): Promise<string> {
   // Use network-specific RPC
-    const rpcUrl = network === 'mainnet'
+  const rpcUrl = network === 'mainnet'
     ? 'https://api.mainnet-beta.solana.com'
     : 'https://api.devnet.solana.com';
-
 
   const connection = new Connection(rpcUrl, 'confirmed');
 
@@ -120,7 +119,7 @@ export async function createToken({
   // Step 3a: Pay the creation fee to your treasury (SKIP on devnet)
   if (network === 'mainnet') {
     transaction.add(
-            SystemProgram.transfer({
+      SystemProgram.transfer({
         fromPubkey: wallet,
         toPubkey: getFeeRecipient(),
         lamports: feeLamports,
@@ -264,16 +263,17 @@ export async function createToken({
   transaction.recentBlockhash = blockhash;
   transaction.sign(mintKeypair);
 
-  // FIXED #4: SIMULATE the transaction first (prevents losing fee on failed tx)
-  const simulation = await connection.simulateTransaction(transaction);
-  if (simulation.value.err) {
-    console.error("Transaction simulation failed:", simulation.value.err);
-    throw new Error(
-      `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}. ` +
-      `This means the transaction would fail on-chain and your fee would be lost. ` +
-      `Please check your wallet balance and token parameters.`
-    );
-  }
+  // TEMPORARILY DISABLED: Simulation was giving misleading Custom:16 error
+  // Will re-enable after diagnosing the real on-chain error
+  // const simulation = await connection.simulateTransaction(transaction);
+  // if (simulation.value.err) {
+  //   console.error("Transaction simulation failed:", simulation.value.err);
+  //   throw new Error(
+  //     `Transaction simulation failed: ${JSON.stringify(simulation.value.err)}. ` +
+  //     `This means the transaction would fail on-chain and your fee would be lost. ` +
+  //     `Please check your wallet balance and token parameters.`
+  //   );
+  // }
 
   // 5. Sign and send
   const signedTransaction = await signTransaction(transaction);

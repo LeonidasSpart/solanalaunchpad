@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Zap, Shield, Code, Wallet, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function WelcomePopup() {
   const [isOpen, setIsOpen] = useState(false);
@@ -62,7 +63,7 @@ export default function WelcomePopup() {
               className="relative w-full max-w-md bg-[#0D0D0D] rounded-3xl border border-[#FF2D2D]/20 shadow-2xl shadow-[#FF2D2D]/10 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close button - FIXED */}
+              {/* Close button */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -79,10 +80,17 @@ export default function WelcomePopup() {
 
               {/* Content */}
               <div className="relative z-10 p-8 pt-10">
-                {/* Logo */}
+                {/* Logo - Using logo1.png */}
                 <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#FF2D2D] to-[#B10000] flex items-center justify-center shadow-lg shadow-[#FF2D2D]/25">
-                    <span className="text-white font-bold text-2xl">Z</span>
+                  <div className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-lg shadow-[#FF2D2D]/25">
+                    <Image
+                      src="/logo1.png"
+                      alt="ZRP Logo"
+                      width={80}
+                      height={80}
+                      className="object-cover"
+                      priority
+                    />
                   </div>
                 </div>
 

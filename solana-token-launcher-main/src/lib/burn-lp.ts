@@ -15,18 +15,18 @@ import {
 // ─── Helius Config ───────────────────────────────────────────────
 
 const HELIUS_KEY = (() => {
-  const devnetUrl = process.env.NEXT_PUBLIC_RPC_URL || '';
-  const mainnetUrl = process.env.NEXT_PUBLIC_RPC_URL_MAINNET || '';
-  
+  const devnetUrl = process.env.RPC_URL_DEVNET || '';
+  const mainnetUrl = process.env.RPC_URL_MAINNET || '';
+
   const extractKey = (url: string): string | null => {
     const match = url.match(/api-key=([a-f0-9-]+)/i);
     return match ? match[1] : null;
   };
 
   const key = extractKey(devnetUrl) || extractKey(mainnetUrl);
-  
+
   if (!key) {
-    throw new Error('Helius API key not found in RPC URLs. Check NEXT_PUBLIC_RPC_URL or NEXT_PUBLIC_RPC_URL_MAINNET.');
+    throw new Error('Helius API key not found in RPC URLs. Check RPC_URL_DEVNET or RPC_URL_MAINNET.');
   }
 
   return key;

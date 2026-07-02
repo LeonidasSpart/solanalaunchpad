@@ -35,7 +35,7 @@ const Footer = () => {
                 className="rounded-xl"
                 priority
               />
-              <span className="text-2xl font-bold text-white">ZRP</span>
+              <span className="text-2xl font-bold text-white"></span>
             </div>
             <p className="text-[#BDDBDB] text-sm max-w-md">
               Zero-code Solana token creation. Fast, simple, and secure.

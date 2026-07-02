@@ -26,10 +26,11 @@ export function Providers({ children }: ProvidersProps) {
   const [network, setNetwork] = useState('devnet');
 
   const endpoint = useMemo(() => {
+    // Use public Solana endpoints — no env vars needed for frontend
     if (network === 'mainnet') {
-      return process.env.NEXT_PUBLIC_RPC_URL_MAINNET || 'https://api.mainnet-beta.solana.com';
+      return 'https://api.mainnet-beta.solana.com';
     }
-    return process.env.NEXT_PUBLIC_RPC_URL_DEVNET || 'https://api.devnet.solana.com';
+    return 'https://api.devnet.solana.com';
   }, [network]);
 
   const wallets = useMemo(

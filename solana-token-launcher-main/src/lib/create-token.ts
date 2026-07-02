@@ -16,6 +16,7 @@ import {
   AuthorityType,
   MINT_SIZE,
   TOKEN_PROGRAM_ID as SPL_TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
   createCreateMetadataAccountV3Instruction,
@@ -73,11 +74,8 @@ export async function createToken({
   telegram,
   discord,
 }: CreateTokenParams): Promise<string> {
-  const rpcUrl = network === 'mainnet'
-    ? 'https://api.mainnet-beta.solana.com'
-    : 'https://api.devnet.solana.com';
-
-  const connection = new Connection(rpcUrl, 'confirmed');
+  // FIX #1: Use proper connection helper with env-configured RPC URLs
+  const connection = getConnection(network === 'mainnet' ? 'mainnet' : 'devnet', 'confirmed');
 
   // 1. Pre-flight checks
   const balance = await connection.getBalance(wallet);
@@ -85,7 +83,7 @@ export async function createToken({
   const estimatedMintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
   const estimatedMetadataRent = await connection.getMinimumBalanceForRentExemption(679);
 
-  const totalRequired = network === 'mainnet' 
+  const totalRequired = network === 'mainnet'
     ? feeLamports + estimatedMintRent + estimatedMetadataRent + 5000000
     : estimatedMintRent + estimatedMetadataRent + 5000000;
 
@@ -157,18 +155,21 @@ export async function createToken({
   );
 
   // Step 3c: Create ATA
-  const userAta = getAssociatedTokenAddressSync(mint, wallet);
+  const userAta = getAssociatedTokenAddressSync(mint, wallet, false, SPL_TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID);
   transaction.add(
-    createAssociatedTokenAccountInstruction(wallet, userAta, wallet, mint)
+    createAssociatedTokenAccountInstruction(
+      wallet,
+      userAta,
+      wallet,
+      mint,
+      SPL_TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    )
   );
 
   // Step 3d: Mint supply
-  const supplyInBaseUnits = BigInt(
-    (supply * Math.pow(10, decimals)).toLocaleString('en-US', {
-      useGrouping: false,
-      maximumFractionDigits: 0,
-    })
-  );
+  // FIX #2: Safer BigInt conversion - avoid toLocaleString which can produce scientific notation
+  const supplyInBaseUnits = BigInt(Math.round(supply * Math.pow(10, decimals)));
   transaction.add(
     createMintToInstruction(mint, userAta, wallet, supplyInBaseUnits, [], SPL_TOKEN_PROGRAM_ID)
   );
@@ -183,36 +184,34 @@ export async function createToken({
     METADATA_PROGRAM_ID
   );
 
-  // Check if metadata account already exists
-  const metadataAccount = await connection.getAccountInfo(metadataPDA);
-  if (!metadataAccount) {
-    transaction.add(
-      createCreateMetadataAccountV3Instruction(
-        {
-          metadata: metadataPDA,
-          mint: mint,
-          mintAuthority: wallet,
-          payer: wallet,
-          updateAuthority: wallet,
-        },
-        {
-          createMetadataAccountArgsV3: {
-            data: {
-              name,
-              symbol,
-              uri: metadataUri,
-              sellerFeeBasisPoints: 0,
-              creators: null,
-              collection: null,
-              uses: null,
-            },
-            isMutable: true,
-            collectionDetails: null,
+  // FIX #3: Remove unnecessary metadataAccount check - for a new mint, metadata will never exist
+  // The check was causing issues and is logically unnecessary for token creation
+  transaction.add(
+    createCreateMetadataAccountV3Instruction(
+      {
+        metadata: metadataPDA,
+        mint: mint,
+        mintAuthority: wallet,
+        payer: wallet,
+        updateAuthority: wallet,
+      },
+      {
+        createMetadataAccountArgsV3: {
+          data: {
+            name,
+            symbol,
+            uri: metadataUri,
+            sellerFeeBasisPoints: 0,
+            creators: null,
+            collection: null,
+            uses: null,
           },
-        }
-      )
-    );
-  }
+          isMutable: true,
+          collectionDetails: null,
+        },
+      }
+    )
+  );
 
   // Step 3f: Revoke mint authority
   if (revokeMint) {
@@ -242,8 +241,9 @@ export async function createToken({
     );
   }
 
-  // Step 3h: Revoke update authority
-  if (revokeUpdate && !metadataAccount) {
+  // Step 3h: Revoke update authority (make metadata immutable)
+  // FIX #4: Always add this instruction since we always create metadata above
+  if (revokeUpdate) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(
         {
@@ -262,16 +262,26 @@ export async function createToken({
     );
   }
 
-  // 4. Get blockhash and sign
+  // 4. Get blockhash
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
-  transaction.sign(mintKeypair);
 
-  // 5. Sign and send (skip preflight to bypass wallet simulation)
-  const signedTransaction = await signTransaction(transaction);
-  const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
-    skipPreflight: true,
+  // FIX #5: CRITICAL - Do NOT sign with mintKeypair before wallet signs!
+  // The wallet adapter must sign a fresh transaction. We add the mint signature AFTER wallet signs.
+  // REMOVED: transaction.sign(mintKeypair);
+
+  // 5. Let wallet sign first, then add mint signature
+  const signedByWallet = await signTransaction(transaction);
+
+  // Add mint keypair signature after wallet has signed
+  signedByWallet.addSignature(mint, mintKeypair.secretKey);
+
+  // FIX #6: Enable preflight to catch errors early during development
+  // Set skipPreflight to false to get proper error messages
+  const txId = await connection.sendRawTransaction(signedByWallet.serialize(), {
+    skipPreflight: false,
     maxRetries: 3,
+    preflightCommitment: 'confirmed',
   });
 
   // 6. Confirm
@@ -282,7 +292,7 @@ export async function createToken({
   }, "confirmed");
 
   if (confirmation.value.err) {
-    throw new Error(`Transaction failed: ${confirmation.value.err.toString()}`);
+    throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
   }
 
   return txId;

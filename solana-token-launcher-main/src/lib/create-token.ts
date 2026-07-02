@@ -267,14 +267,18 @@ export async function createToken({
   transaction.recentBlockhash = blockhash;
 
   // FIX #5: CRITICAL - Do NOT sign with mintKeypair before wallet signs!
-  // The wallet adapter must sign a fresh transaction. We add the mint signature AFTER wallet signs.
+  // The wallet adapter must sign a fresh transaction.
   // REMOVED: transaction.sign(mintKeypair);
 
-  // 5. Let wallet sign first, then add mint signature
+  // 5. Add mint as signer to the transaction so wallet knows it needs signing
+  transaction.setSigners(wallet, mint);
+
+  // Let wallet sign first
   const signedByWallet = await signTransaction(transaction);
 
   // Add mint keypair signature after wallet has signed
-  signedByWallet.addSignature(mint, mintKeypair.secretKey);
+  // Convert Uint8Array to Buffer for addSignature compatibility
+  signedByWallet.addSignature(mint, Buffer.from(mintKeypair.secretKey));
 
   // FIX #6: Enable preflight to catch errors early during development
   // Set skipPreflight to false to get proper error messages

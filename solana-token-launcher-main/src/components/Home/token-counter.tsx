@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Rocket, FlaskConical, Code2, Zap, TrendingUp, Users } from 'lucide-react';
+import { Rocket, FlaskConical, Code2, Zap, TrendingUp, Users, Loader2 } from 'lucide-react';
 
 interface StatsData {
   count: number;
-  successRate: string;
-  avgTime: string;
+  successRate: string | null;
+  avgTime: string | null;
 }
 
 export default function TokenCounter() {
-  const [stats, setStats] = useState<StatsData>({ count: 0, successRate: '99.9%', avgTime: '<60s' });
+  const [stats, setStats] = useState<StatsData>({ count: 0, successRate: null, avgTime: null });
+  const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
   const [displayCount, setDisplayCount] = useState(0);
 
@@ -19,10 +20,18 @@ export default function TokenCounter() {
     async function fetchTokenCount() {
       try {
         const response = await fetch('/api/token-count');
+        if (!response.ok) throw new Error('API error');
         const data = await response.json();
-        setStats(prev => ({ ...prev, count: data.count }));
+        setStats({
+          count: data.count || 0,
+          successRate: data.successRate || null,
+          avgTime: data.avgTime || null,
+        });
       } catch (error) {
         console.error('Failed to fetch token count:', error);
+        setStats({ count: 0, successRate: null, avgTime: null });
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -45,7 +54,6 @@ export default function TokenCounter() {
     return () => observer.disconnect();
   }, []);
 
-  // Animate counter when visible
   useEffect(() => {
     if (!isVisible || stats.count === 0) return;
 
@@ -77,7 +85,6 @@ export default function TokenCounter() {
 
   return (
     <section id="token-counter" className="py-24 bg-[#050505] relative overflow-hidden">
-      {/* Background effects */}
       <div className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#FF2D2D]/[0.03] rounded-full blur-3xl" />
       </div>
@@ -89,14 +96,17 @@ export default function TokenCounter() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          {/* Section Badge */}
           <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-8">
             <Users className="h-3.5 w-3.5 text-[#FF2D2D]" />
             <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">Community</span>
           </div>
 
-          {/* Main Counter or Fallback */}
-          {hasData ? (
+          {loading ? (
+            <div className="mb-8 flex items-center justify-center gap-3">
+              <Loader2 className="h-6 w-6 text-[#FF2D2D] animate-spin" />
+              <span className="text-[#BDDBDB]">Loading stats...</span>
+            </div>
+          ) : hasData ? (
             <div className="mb-8">
               <div className="text-6xl sm:text-7xl lg:text-8xl font-bold text-[#FF2D2D] mb-4 tracking-tight">
                 {displayCount.toLocaleString()}+
@@ -119,27 +129,34 @@ export default function TokenCounter() {
             </div>
           )}
 
-          {/* Stats Row (shown when data available) */}
-          {hasData && (
+          {hasData && !loading && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={isVisible ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.3, duration: 0.5 }}
               className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mb-10"
             >
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <TrendingUp className="h-5 w-5 text-[#FF2D2D]" />
-                  <span className="text-2xl sm:text-3xl font-bold text-white">{stats.successRate}</span>
+              {stats.successRate && (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <TrendingUp className="h-5 w-5 text-[#FF2D2D]" />
+                    <span className="text-2xl sm:text-3xl font-bold text-white">{stats.successRate}</span>
+                  </div>
+                  <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Success Rate</div>
                 </div>
-                <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Success Rate</div>
-              </div>
-              <div className="w-px h-10 bg-[#1a1a1a] hidden sm:block" />
-              <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-white">{stats.avgTime}</div>
-                <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Avg Creation Time</div>
-              </div>
-              <div className="w-px h-10 bg-[#1a1a1a] hidden sm:block" />
+              )}
+              {stats.successRate && stats.avgTime && (
+                <div className="w-px h-10 bg-[#1a1a1a] hidden sm:block" />
+              )}
+              {stats.avgTime && (
+                <div className="text-center">
+                  <div className="text-2xl sm:text-3xl font-bold text-white">{stats.avgTime}</div>
+                  <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Avg Creation Time</div>
+                </div>
+              )}
+              {(stats.successRate || stats.avgTime) && (
+                <div className="w-px h-10 bg-[#1a1a1a] hidden sm:block" />
+              )}
               <div className="text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-white">24/7</div>
                 <div className="text-xs text-[#BDDBDB] uppercase tracking-wider">Platform Available</div>
@@ -147,7 +164,6 @@ export default function TokenCounter() {
             </motion.div>
           )}
 
-          {/* Badges */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={isVisible ? { opacity: 1, y: 0 } : {}}

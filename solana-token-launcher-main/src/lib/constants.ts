@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 
 // ─── Fee Recipient ──────────────────────────────────────────────
-// Lazy initialization — only validates when actually used (server-side)
+// Lazy initialization — only validates when actually used
 let _feeRecipient: PublicKey | null = null;
 
 export function getFeeRecipient(): PublicKey {
@@ -18,16 +18,13 @@ export function getFeeRecipient(): PublicKey {
   return _feeRecipient;
 }
 
-// Safe fallback for any code that imports FEE_RECIPIENT directly
-// This prevents build-time crashes
-export const FEE_RECIPIENT = (() => {
-  try {
-    return getFeeRecipient();
-  } catch {
-    // Return a dummy address that will be replaced at runtime
-    return new PublicKey('11111111111111111111111111111111');
-  }
-})();
+// Direct export — throws at import time if env is bad
+// This is intentional: fail fast, don't let bad config reach production
+export const FEE_RECIPIENT = getFeeRecipient();
+
+// ─── Creation Fee ─────────────────────────────────────────────────
+// Must match frontend pricing exactly
+export const CREATION_FEE_SOL = 0.15;
 
 // ─── Token Program ────────────────────────────────────────────────
 export const TOKEN_PROGRAM_ID = new PublicKey(
@@ -40,7 +37,6 @@ export const NETWORKS = {
   MAINNET: 'mainnet-beta',
 } as const;
 
-// Server-side RPC URLs (no NEXT_PUBLIC needed)
 export const RPC_URLS = {
   [NETWORKS.DEVNET]:
     process.env.RPC_URL_DEVNET ||
@@ -52,6 +48,5 @@ export const RPC_URLS = {
     'https://api.mainnet-beta.solana.com',
 };
 
-// ─── Default Network ────────────────────────────────────────────
 export const DEFAULT_NETWORK =
   process.env.NEXT_PUBLIC_DEFAULT_NETWORK || 'devnet';

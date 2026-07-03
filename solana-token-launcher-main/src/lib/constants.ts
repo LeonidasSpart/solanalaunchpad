@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
 
 // ─── Fee Recipient ──────────────────────────────────────────────
-// Lazy initialization — only validates when actually used
+// Lazy initialization — only validates when actually used (mainnet)
 let _feeRecipient: PublicKey | null = null;
 
 export function getFeeRecipient(): PublicKey {
@@ -17,10 +17,6 @@ export function getFeeRecipient(): PublicKey {
   _feeRecipient = new PublicKey(feeRecipientStr);
   return _feeRecipient;
 }
-
-// Direct export — throws at import time if env is bad
-// This is intentional: fail fast, don't let bad config reach production
-export const FEE_RECIPIENT = getFeeRecipient();
 
 // ─── Creation Fee ─────────────────────────────────────────────────
 // Must match frontend pricing exactly

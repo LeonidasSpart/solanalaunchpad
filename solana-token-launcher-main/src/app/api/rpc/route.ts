@@ -42,6 +42,16 @@ const rateLimit = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 100 // per minute per IP
 const WINDOW_MS = 60 * 1000
 
+// Clean up expired entries every 5 minutes to prevent memory leak
+setInterval(() => {
+  const now = Date.now()
+  for (const [ip, record] of rateLimit.entries()) {
+    if (now > record.resetAt) {
+      rateLimit.delete(ip)
+    }
+  }
+}, 5 * 60 * 1000)
+
 function isRateLimited(ip: string): boolean {
   const now = Date.now()
   const record = rateLimit.get(ip)

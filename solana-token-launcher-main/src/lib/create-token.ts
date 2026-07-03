@@ -80,7 +80,7 @@ export async function createToken({
   twitter,
   telegram,
   discord,
-}: CreateTokenParams): Promise<string> {
+}: CreateTokenParams): Promise<{ txId: string; mintAddress: string }> {
   const net = network === 'mainnet' ? 'mainnet' : 'devnet';
   const connection = getDirectConnection(net);
 
@@ -308,5 +308,9 @@ export async function createToken({
     throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
   }
 
-  return txId;
+  // 🔥 FIX: Return both txId AND mintAddress
+  return {
+    txId: txId,
+    mintAddress: mint.toString(),
+  };
 }

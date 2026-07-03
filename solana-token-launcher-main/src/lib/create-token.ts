@@ -136,6 +136,9 @@ export async function createToken({
   }
 
   // Step 3b: Create mint account
+  // IMPORTANT: Always initialize with wallet as freeze authority.
+  // If revokeFreeze is true, we revoke it in step 3g AFTER mint is created.
+  // Never pass null here — you can't revoke an authority that was never set.
   const mintKeypair = Keypair.generate();
   const mint = mintKeypair.publicKey;
 
@@ -151,7 +154,7 @@ export async function createToken({
       mint,
       decimals,
       wallet,
-      revokeFreeze ? null : wallet,
+      wallet, // always set freeze authority to wallet first
       SPL_TOKEN_PROGRAM_ID
     )
   );
@@ -240,6 +243,7 @@ export async function createToken({
   }
 
   // Step 3g: Revoke freeze authority (optional)
+  // This works now because we always initialize freeze authority to wallet above
   if (revokeFreeze) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -274,7 +278,7 @@ export async function createToken({
   }
 
   // 4. Get latest blockhash
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
   transaction.recentBlockhash = blockhash;
 
   // 5. Partial sign with mint keypair first

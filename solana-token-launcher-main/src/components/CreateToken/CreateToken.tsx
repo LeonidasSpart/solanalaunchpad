@@ -265,7 +265,7 @@ const CreateToken = () => {
     setStatus('⏳ Uploading image to IPFS...');
 
     try {
-      // 🔥 Upload image to Pinata
+      // 🔥 Upload image to Pinata ONLY
       const uploadedImage = await uploadToPinata(file);
       const imageUriResult = uploadedImage.uri;
       setImageUri(imageUriResult);
@@ -322,7 +322,7 @@ const CreateToken = () => {
           symbol: formData.symbol.trim().toUpperCase(),
           description: formData.description.trim(),
           image_url: imageUriResult,
-          metadata_uri: '', // Will be updated when createTokenLib returns it
+          metadata_uri: '',
           network: network,
           creator_wallet: publicKey.toBase58(),
           supply: supplyNum,

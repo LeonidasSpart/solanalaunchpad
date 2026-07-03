@@ -4,7 +4,7 @@ import { Rocket, Shield, Zap, TrendingUp, Flame, ArrowRight } from 'lucide-react
 
 export const metadata: Metadata = {
   title: 'Create Meme Coin on Solana | ZRP Token Launcher',
-  description: 'Launch viral meme coins on Solana in 60 seconds. No code, 1B supply, auto-revoke authorities. Free devnet testing. The #1 meme coin creator.',
+  description: 'Launch viral meme coins on Solana in 60 seconds. No code, 1B supply, 6 decimals, auto-revoke authorities. Free devnet testing. The #1 meme coin creator.',
   keywords: 'meme coin creator, solana meme token, create meme coin, pump.fun alternative, viral token',
   openGraph: {
     title: 'Create Meme Coin on Solana | ZRP',
@@ -31,7 +31,7 @@ export default function MemeCoinPage() {
             </span>
           </h1>
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-8">
-            Create a Solana meme coin in 60 seconds. 1 billion supply, zero decimals, 
+            Create a Solana meme coin in 60 seconds. 1 billion supply, 6 decimals,
             all authorities revoked. The ultimate trust signal for your community.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -65,8 +65,8 @@ export default function MemeCoinPage() {
             </div>
             <div className="p-6 rounded-xl bg-zinc-800/50 border border-zinc-700">
               <Zap className="w-8 h-8 text-yellow-400 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">0 Decimals</h3>
-              <p className="text-zinc-400 text-sm">Whole numbers only. No confusing fractions for your community.</p>
+              <h3 className="text-xl font-semibold mb-2">6 Decimals</h3>
+              <p className="text-zinc-400 text-sm">Standard precision ensuring your token is recognized as fungible, not an NFT.</p>
             </div>
             <div className="p-6 rounded-xl bg-zinc-800/50 border border-zinc-700">
               <Shield className="w-8 h-8 text-green-400 mb-4" />
@@ -88,7 +88,7 @@ export default function MemeCoinPage() {
               <span className="px-4 py-2 rounded-full bg-green-500/10 text-green-400 text-sm border border-green-500/20">✅ Immutable Metadata</span>
             </div>
             <p className="text-zinc-400 max-w-xl mx-auto">
-              When you burn LP tokens and revoke all authorities, you send the strongest possible 
+              When you burn LP tokens and revoke all authorities, you send the strongest possible
               message: <span className="text-white font-semibold">this token cannot be rugged.</span>
             </p>
           </div>

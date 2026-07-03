@@ -6,7 +6,7 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  BackpackWalletAdapter,
+  TrustWalletAdapter,
   LedgerWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -25,7 +25,6 @@ export const NetworkContext = React.createContext<{
   endpoint: 'https://api.devnet.solana.com',
 });
 
-// Fallback RPC endpoints
 const RPC_ENDPOINTS = {
   devnet: [
     process.env.NEXT_PUBLIC_RPC_URL_DEVNET,
@@ -44,12 +43,11 @@ export function Providers({ children }: ProvidersProps) {
     return RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS][0];
   }, [network]);
 
-  // Only non-custodial wallets
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new BackpackWalletAdapter(),
+      new TrustWalletAdapter(),
       new LedgerWalletAdapter(),
     ],
     []

@@ -328,8 +328,6 @@ const CreateToken = () => {
         twitter: formData.twitter.trim() || undefined,
         telegram: formData.telegram.trim() || undefined,
         discord: formData.discord.trim() || undefined,
-        imageUri: imageUriResult,
-        metadataUri: metadataUriResult,
       });
 
       // Handle both string and object responses

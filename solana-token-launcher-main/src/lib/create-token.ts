@@ -23,11 +23,9 @@ import {
   createUpdateMetadataAccountV2Instruction,
   PROGRAM_ID as METADATA_PROGRAM_ID,
 } from "@metaplex-foundation/mpl-token-metadata";
-import { getConnection } from "./connection";
 import {
   getFeeRecipient,
-  CREATION_FEE_SOL,           // ← import from constants
-  TOKEN_PROGRAM_ID,
+  CREATION_FEE_SOL,
   NETWORKS,
   RPC_URLS,
 } from "./constants";
@@ -35,6 +33,16 @@ import {
 const BURN_ADDRESS = new PublicKey(
   "1nc1nerator11111111111111111111111111111111"
 );
+
+// Direct connection for sends — bypasses proxy
+function getDirectConnection(network: 'devnet' | 'mainnet'): Connection {
+  return new Connection(
+    network === 'mainnet' 
+      ? RPC_URLS[NETWORKS.MAINNET] 
+      : RPC_URLS[NETWORKS.DEVNET],
+    'confirmed'
+  );
+}
 
 interface CreateTokenParams {
   wallet: PublicKey;
@@ -73,9 +81,10 @@ export async function createToken({
   telegram,
   discord,
 }: CreateTokenParams): Promise<string> {
-  const connection = getConnection(network === 'mainnet' ? 'mainnet' : 'devnet', 'confirmed');
+  const net = network === 'mainnet' ? 'mainnet' : 'devnet';
+  const connection = getDirectConnection(net);
 
-  // ─── 1. Pre-flight checks with clear fee breakdown ─────────────────
+  // ─── 1. Pre-flight checks ─────────────────
   const balance = await connection.getBalance(wallet);
   const feeLamports = CREATION_FEE_SOL * LAMPORTS_PER_SOL;
   const estimatedMintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
@@ -83,12 +92,12 @@ export async function createToken({
   const estimatedAtaRent = await connection.getMinimumBalanceForRentExemption(165);
   const networkFeeBuffer = 0.01 * LAMPORTS_PER_SOL;
 
-  const totalRequired = network === 'mainnet'
+  const totalRequired = net === 'mainnet'
     ? feeLamports + estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + networkFeeBuffer
     : estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + networkFeeBuffer;
 
   if (balance < totalRequired) {
-    const breakdown = network === 'mainnet'
+    const breakdown = net === 'mainnet'
       ? `  - Platform fee: ${CREATION_FEE_SOL} SOL\n  - Mint rent: ${(estimatedMintRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Metadata rent: ${(estimatedMetadataRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - ATA rent: ${(estimatedAtaRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Network fees: ~0.01 SOL`
       : `  - Mint rent: ${(estimatedMintRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Metadata rent: ${(estimatedMetadataRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - ATA rent: ${(estimatedAtaRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Network fees: ~0.01 SOL`;
     
@@ -97,9 +106,9 @@ export async function createToken({
     );
   }
 
-  // ─── 2. Validate fee recipient on mainnet ────────────────────────
+  // ─── 2. Validate fee recipient on mainnet ─────────────────
   let feeRecipient: PublicKey;
-  if (network === 'mainnet') {
+  if (net === 'mainnet') {
     try {
       feeRecipient = getFeeRecipient();
     } catch (e: any) {
@@ -107,7 +116,7 @@ export async function createToken({
     }
   }
 
-  // ─── 3. Upload to IPFS ───────────────────────────────────────────
+  // ─── 3. Upload to IPFS ─────────────────
   const { uploadTokenImage, uploadMetadata } = await import("./upload");
   const imageUrl = await uploadTokenImage(imageFile);
 
@@ -127,7 +136,7 @@ export async function createToken({
     Object.keys(socialLinks).length > 0 ? socialLinks : undefined
   );
 
-  // ─── 4. Build transaction ────────────────────────────────────────
+  // ─── 4. Build transaction ─────────────────
   const transaction = new Transaction();
   transaction.feePayer = wallet;
 
@@ -135,8 +144,7 @@ export async function createToken({
     ComputeBudgetProgram.setComputeUnitLimit({ units: 400000 })
   );
 
-  // Step 4a: Pay fee on mainnet only
-  if (network === 'mainnet') {
+  if (net === 'mainnet') {
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: wallet,
@@ -146,7 +154,6 @@ export async function createToken({
     );
   }
 
-  // Step 4b: Create mint account
   const mintKeypair = Keypair.generate();
   const mint = mintKeypair.publicKey;
 
@@ -162,12 +169,11 @@ export async function createToken({
       mint,
       decimals,
       wallet,
-      wallet, // freeze authority set to wallet for later revocation
+      wallet,
       SPL_TOKEN_PROGRAM_ID
     )
   );
 
-  // Step 4c: Create ATA
   const userAta = getAssociatedTokenAddressSync(
     mint,
     wallet,
@@ -186,7 +192,6 @@ export async function createToken({
     )
   );
 
-  // Step 4d: Mint supply
   const supplyInBaseUnits = BigInt(Math.round(supply * Math.pow(10, decimals)));
   transaction.add(
     createMintToInstruction(
@@ -199,7 +204,6 @@ export async function createToken({
     )
   );
 
-  // Step 4e: Create metadata — respect revokeUpdate from start
   const [metadataPDA] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("metadata"),
@@ -229,14 +233,13 @@ export async function createToken({
             collection: null,
             uses: null,
           },
-          isMutable: !revokeUpdate,  // ← respect user choice from start
+          isMutable: !revokeUpdate,
           collectionDetails: null,
         },
       }
     )
   );
 
-  // Step 4f: Revoke mint authority
   if (revokeMint) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -250,7 +253,6 @@ export async function createToken({
     );
   }
 
-  // Step 4g: Revoke freeze authority
   if (revokeFreeze) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -264,7 +266,6 @@ export async function createToken({
     );
   }
 
-  // Step 4h: Revoke update authority / make metadata immutable
   if (revokeUpdate) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(
@@ -284,7 +285,7 @@ export async function createToken({
     );
   }
 
-  // ─── 5. Sign and send ────────────────────────────────────────────
+  // ─── 5. Sign and send via DIRECT connection (not proxy) ─────────────────
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
   transaction.recentBlockhash = blockhash;
   transaction.partialSign(mintKeypair);
@@ -292,7 +293,7 @@ export async function createToken({
   const signedTransaction = await signTransaction(transaction);
 
   const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
-    skipPreflight: false,        // ← keep preflight for safety
+    skipPreflight: false,
     maxRetries: 3,
     preflightCommitment: 'confirmed',
   });

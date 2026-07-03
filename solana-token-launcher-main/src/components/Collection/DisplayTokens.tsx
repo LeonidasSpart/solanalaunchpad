@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { getTokenMetadata, TOKEN_2022_PROGRAM_ID } from '@solana/spl-token';
+import { getTokenMetadata, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Loader2, 
@@ -50,9 +50,13 @@ const DisplayTokens = () => {
   const [error, setError] = useState<string | null>(null);
   const [copiedMint, setCopiedMint] = useState<string | null>(null);
 
-  const connection = new Connection(
-    network === 'mainnet' ? RPC_URLS[NETWORKS.MAINNET] : RPC_URLS[NETWORKS.DEVNET],
-    'confirmed'
+  // Stable connection — only changes when network changes
+  const connection = React.useMemo(
+    () => new Connection(
+      network === 'mainnet' ? RPC_URLS[NETWORKS.MAINNET] : RPC_URLS[NETWORKS.DEVNET],
+      'confirmed'
+    ),
+    [network]
   );
 
   const fetchMetadataFromUri = async (uri: string): Promise<any> => {
@@ -77,7 +81,7 @@ const DisplayTokens = () => {
     try {
       const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
         wallet.publicKey,
-        { programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA') }
+        { programId: TOKEN_PROGRAM_ID }  // ← use imported constant
       );
 
       const tokenDataPromises = tokenAccounts.value.map(async (account) => {
@@ -94,7 +98,7 @@ const DisplayTokens = () => {
             connection,
             new PublicKey(mintAddress),
             'confirmed',
-            TOKEN_2022_PROGRAM_ID
+            TOKEN_PROGRAM_ID  // ← legacy program, matches create-token.ts
           );
 
           let name = 'Unknown Token';
@@ -198,10 +202,6 @@ const DisplayTokens = () => {
     setTimeout(() => setCopiedMint(null), 2000);
   };
 
-  const handleViewToken = (mint: string) => {
-    router.push(`/tokens/${mint}`);
-  };
-
   const solscanBaseUrl = network === 'mainnet' 
     ? 'https://solscan.io/token/' 
     : 'https://solscan.io/token/?cluster=devnet';
@@ -231,7 +231,6 @@ const DisplayTokens = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -249,7 +248,6 @@ const DisplayTokens = () => {
             </div>
             
             <div className="flex flex-wrap items-center gap-3">
-              {/* View Mode Toggle */}
               <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5">
                 <button
                   onClick={() => setViewMode('my')}
@@ -275,7 +273,6 @@ const DisplayTokens = () => {
                 </button>
               </div>
 
-              {/* Network Toggle */}
               <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-xl p-1.5">
                 <button
                   onClick={() => setNetwork('devnet')}
@@ -433,13 +430,15 @@ const DisplayTokens = () => {
                       </div>
 
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => handleViewToken(token.mint)}
+                        <a
+                          href={`${solscanBaseUrl}${token.mint}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
-                          <Coins className="h-4 w-4" />
-                          View Details
-                        </button>
+                          <ExternalLink className="h-4 w-4" />
+                          View on Explorer
+                        </a>
                       </div>
                     </div>
                   </div>

@@ -206,7 +206,7 @@ const CreateToken = () => {
     revoke_freeze: boolean;
     revoke_update: boolean;
   }) => {
-    console.log('🔍 Attempting to save token:', tokenData);
+    console.log('🔍 Attempting to save token:', JSON.stringify(tokenData, null, 2));
     
     try {
       const response = await fetch('/api/tokens', {
@@ -269,11 +269,21 @@ const CreateToken = () => {
       const uploadedImage = await uploadToPinata(file);
       const imageUriResult = uploadedImage.uri;
       setImageUri(imageUriResult);
+      console.log('✅ Image uploaded to Pinata:', imageUriResult);
 
       // 🔥 Create token on Solana - metadata is handled internally
       setStatus('⏳ Minting token on Solana...');
       
       const { createToken: createTokenLib } = await import('@/lib/create-token');
+
+      console.log('📤 Calling createTokenLib with:', {
+        wallet: publicKey.toBase58(),
+        name: formData.name.trim(),
+        symbol: formData.symbol.trim().toUpperCase(),
+        decimals: decimalsNum,
+        supply: supplyNum,
+        network: network,
+      });
 
       const result = await createTokenLib({
         wallet: publicKey,
@@ -294,20 +304,27 @@ const CreateToken = () => {
         discord: formData.discord.trim() || undefined,
       });
 
+      console.log('📥 Raw result from createTokenLib:', result);
+      console.log('📥 Result type:', typeof result);
+
       // Handle both string and object responses
       let txIdResult = '';
       let mintAddressResult = '';
 
       if (typeof result === 'string') {
+        console.log('🔍 Result is a string, using as txId');
         txIdResult = result;
       } else if (result && typeof result === 'object') {
+        console.log('🔍 Result is an object, extracting fields');
         const res = result as { txId?: string; mintAddress?: string };
         txIdResult = res.txId || '';
         mintAddressResult = res.mintAddress || '';
+        console.log('🔍 Extracted txId:', txIdResult);
+        console.log('🔍 Extracted mintAddress:', mintAddressResult);
       }
 
-      console.log('🔍 Mint Address from result:', mintAddressResult);
-      console.log('🔍 Tx ID from result:', txIdResult);
+      console.log('🔍 Final txIdResult:', txIdResult);
+      console.log('🔍 Final mintAddressResult:', mintAddressResult);
 
       setTxId(txIdResult);
       setMintAddress(mintAddressResult);
@@ -333,12 +350,13 @@ const CreateToken = () => {
         });
       } else {
         console.log('❌ No mint address found, skipping database save');
+        console.log('🔍 This is why the token is not saving - mintAddressResult is empty');
       }
 
       setStatus('✅ Token created successfully!');
 
     } catch (error: any) {
-      console.error('Creation failed:', error);
+      console.error('❌ Creation failed:', error);
       const msg = error.message || '';
 
       // Block height exceeded means tx was sent but confirmation timed out

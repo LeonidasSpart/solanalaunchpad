@@ -20,15 +20,36 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
+    // Log file info for debugging
+    console.log('📁 File received:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json({ error: 'File too large (max 5MB)' }, { status: 400 });
     }
 
-    // Validate file type
+    // Validate file type - check BOTH MIME type AND file extension
     const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
+    const fileType = file.type.toLowerCase();
+    
+    // Check file extension as fallback
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const allowedExts = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+    
+    const isValidType = allowedTypes.includes(fileType) || allowedExts.includes(ext);
+    
+    if (!isValidType) {
+      console.log('❌ Invalid file type:', fileType, 'extension:', ext);
+      return NextResponse.json(
+        { 
+          error: `Invalid file type. Supported: PNG, JPEG, GIF, WebP. Got: ${fileType || ext || 'unknown'}`,
+        },
+        { status: 400 }
+      );
     }
 
     // Upload to Pinata

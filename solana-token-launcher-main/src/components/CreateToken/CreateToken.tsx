@@ -270,43 +270,7 @@ const CreateToken = () => {
       const imageUriResult = uploadedImage.uri;
       setImageUri(imageUriResult);
 
-      // 🔥 Upload metadata to Pinata
-      setStatus('⏳ Uploading metadata to IPFS...');
-      const metadata = {
-        name: formData.name.trim(),
-        symbol: formData.symbol.trim().toUpperCase(),
-        description: formData.description.trim(),
-        image: imageUriResult,
-        external_url: formData.website.trim() || '',
-        attributes: [
-          { trait_type: 'Decimals', value: decimalsNum },
-          { trait_type: 'Supply', value: supplyNum },
-          { trait_type: 'Network', value: network },
-        ],
-        properties: {
-          creators: [
-            {
-              address: publicKey.toBase58(),
-              share: 100,
-            },
-          ],
-          files: [
-            {
-              uri: imageUriResult,
-              type: file.type,
-            },
-          ],
-        },
-      };
-
-      const metadataFile = new File([JSON.stringify(metadata)], 'metadata.json', {
-        type: 'application/json',
-      });
-      const uploadedMetadata = await uploadToPinata(metadataFile);
-      const metadataUriResult = uploadedMetadata.uri;
-      setMetadataUri(metadataUriResult);
-
-      // 🔥 Create token on Solana
+      // 🔥 Create token on Solana - metadata is handled internally
       setStatus('⏳ Minting token on Solana...');
       
       const { createToken: createTokenLib } = await import('@/lib/create-token');
@@ -358,7 +322,7 @@ const CreateToken = () => {
           symbol: formData.symbol.trim().toUpperCase(),
           description: formData.description.trim(),
           image_url: imageUriResult,
-          metadata_uri: metadataUriResult,
+          metadata_uri: '', // Will be updated when createTokenLib returns it
           network: network,
           creator_wallet: publicKey.toBase58(),
           supply: supplyNum,

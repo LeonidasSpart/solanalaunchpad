@@ -27,7 +27,7 @@ const CreateToken = () => {
       name: "Meme Coin",
       description: "Viral community token with maximum trust",
       supply: '1000000000',
-      decimals: '0',
+      decimals: '6',
       revokeMint: true,
       revokeFreeze: true,
       revokeUpdate: true,
@@ -168,7 +168,6 @@ const CreateToken = () => {
 
   const fee = getFee();
 
-  // 🔥 Upload to Pinata
   const uploadToPinata = async (fileToUpload: File): Promise<{ uri: string; IpfsHash: string }> => {
     const formData = new FormData();
     formData.append('file', fileToUpload);
@@ -190,7 +189,6 @@ const CreateToken = () => {
     };
   };
 
-  // 🔥 AUTO-SAVE TO DATABASE
   const saveTokenToDatabase = async (tokenData: {
     mint_address: string;
     name: string;
@@ -206,8 +204,6 @@ const CreateToken = () => {
     revoke_freeze: boolean;
     revoke_update: boolean;
   }) => {
-    console.log('🔍 Attempting to save token:', JSON.stringify(tokenData, null, 2));
-    
     try {
       const response = await fetch('/api/tokens', {
         method: 'POST',
@@ -215,9 +211,7 @@ const CreateToken = () => {
         body: JSON.stringify(tokenData),
       });
 
-      console.log('📡 Response status:', response.status);
       const result = await response.json();
-      console.log('📦 Response data:', result);
 
       if (!response.ok) {
         console.error('❌ Failed to save token:', result);
@@ -265,25 +259,13 @@ const CreateToken = () => {
     setStatus('⏳ Uploading image to IPFS...');
 
     try {
-      // 🔥 Upload image to Pinata ONLY
       const uploadedImage = await uploadToPinata(file);
       const imageUriResult = uploadedImage.uri;
       setImageUri(imageUriResult);
-      console.log('✅ Image uploaded to Pinata:', imageUriResult);
 
-      // 🔥 Create token on Solana - metadata is handled internally
       setStatus('⏳ Minting token on Solana...');
-      
-      const { createToken: createTokenLib } = await import('@/lib/create-token');
 
-      console.log('📤 Calling createTokenLib with:', {
-        wallet: publicKey.toBase58(),
-        name: formData.name.trim(),
-        symbol: formData.symbol.trim().toUpperCase(),
-        decimals: decimalsNum,
-        supply: supplyNum,
-        network: network,
-      });
+      const { createToken: createTokenLib } = await import('@/lib/create-token');
 
       const result = await createTokenLib({
         wallet: publicKey,
@@ -304,35 +286,22 @@ const CreateToken = () => {
         discord: formData.discord.trim() || undefined,
       });
 
-      console.log('📥 Raw result from createTokenLib:', result);
-      console.log('📥 Result type:', typeof result);
-
-      // Handle both string and object responses
       let txIdResult = '';
       let mintAddressResult = '';
 
       if (typeof result === 'string') {
-        console.log('🔍 Result is a string, using as txId');
         txIdResult = result;
       } else if (result && typeof result === 'object') {
-        console.log('🔍 Result is an object, extracting fields');
         const res = result as { txId?: string; mintAddress?: string };
         txIdResult = res.txId || '';
         mintAddressResult = res.mintAddress || '';
-        console.log('🔍 Extracted txId:', txIdResult);
-        console.log('🔍 Extracted mintAddress:', mintAddressResult);
       }
-
-      console.log('🔍 Final txIdResult:', txIdResult);
-      console.log('🔍 Final mintAddressResult:', mintAddressResult);
 
       setTxId(txIdResult);
       setMintAddress(mintAddressResult);
       setStatus('');
 
-      // 🔥🔥🔥 AUTO-SAVE TO DATABASE 🔥🔥🔥
       if (mintAddressResult) {
-        console.log('✅ Mint address found, saving to database...');
         await saveTokenToDatabase({
           mint_address: mintAddressResult,
           name: formData.name.trim(),
@@ -348,9 +317,6 @@ const CreateToken = () => {
           revoke_freeze: revokeFreeze,
           revoke_update: revokeUpdate,
         });
-      } else {
-        console.log('❌ No mint address found, skipping database save');
-        console.log('🔍 This is why the token is not saving - mintAddressResult is empty');
       }
 
       setStatus('✅ Token created successfully!');
@@ -359,7 +325,6 @@ const CreateToken = () => {
       console.error('❌ Creation failed:', error);
       const msg = error.message || '';
 
-      // Block height exceeded means tx was sent but confirmation timed out
       if (
         msg.includes('block height exceeded') ||
         (msg.includes('Signature') && msg.includes('expired'))
@@ -393,9 +358,7 @@ const CreateToken = () => {
     }
   };
 
-  const solscanBase = network === 'devnet'
-    ? 'https://solscan.io/tx/'
-    : 'https://solscan.io/tx/';
+  const solscanBase = 'https://solscan.io/tx/';
   const solscanCluster = network === 'devnet' ? '?cluster=devnet' : '';
 
   return (
@@ -488,62 +451,27 @@ const CreateToken = () => {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <Label className="text-white">Token Name *</Label>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Pepe Coin"
-                    maxLength={32}
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
+                  <Input name="name" value={formData.name} onChange={handleInputChange} placeholder="e.g. Pepe Coin" maxLength={32} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
                 <div>
                   <Label className="text-white">Symbol *</Label>
-                  <Input
-                    name="symbol"
-                    value={formData.symbol}
-                    onChange={handleInputChange}
-                    placeholder="PEPE"
-                    maxLength={10}
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
+                  <Input name="symbol" value={formData.symbol} onChange={handleInputChange} placeholder="PEPE" maxLength={10} className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
               </div>
 
               <div>
                 <Label className="text-white">Description</Label>
-                <Textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={4}
-                  className="bg-zinc-800 border-zinc-700 text-white"
-                />
+                <Textarea name="description" value={formData.description} onChange={handleInputChange} rows={4} className="bg-zinc-800 border-zinc-700 text-white" />
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <Label className="text-white">Total Supply</Label>
-                  <Input
-                    name="supply"
-                    type="number"
-                    value={formData.supply}
-                    onChange={handleInputChange}
-                    min="1"
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
+                  <Input name="supply" type="number" value={formData.supply} onChange={handleInputChange} min="1" className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
                 <div>
                   <Label className="text-white">Decimals (0-9)</Label>
-                  <Input
-                    name="decimals"
-                    type="number"
-                    value={formData.decimals}
-                    onChange={handleInputChange}
-                    min="0"
-                    max="9"
-                    className="bg-zinc-800 border-zinc-700 text-white"
-                  />
+                  <Input name="decimals" type="number" value={formData.decimals} onChange={handleInputChange} min="0" max="9" className="bg-zinc-800 border-zinc-700 text-white" />
                 </div>
               </div>
 
@@ -571,12 +499,7 @@ const CreateToken = () => {
 
               <div>
                 <Label className="text-white">Token Image *</Label>
-                <Input
-                  type="file"
-                  onChange={handleFileChange}
-                  accept="image/png,image/jpeg,image/gif,image/webp"
-                  className="bg-zinc-800 border-zinc-700 text-white"
-                />
+                <Input type="file" onChange={handleFileChange} accept="image/png,image/jpeg,image/gif,image/webp" className="bg-zinc-800 border-zinc-700 text-white" />
                 <p className="text-xs text-zinc-500 mt-1">Max {MAX_IMAGE_SIZE_MB}MB • PNG, JPEG, GIF, or WebP</p>
                 {imagePreview && (
                   <img src={imagePreview} className="mt-4 max-h-48 rounded-xl border border-zinc-800" alt="Preview" />

@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { NFTStorage } from 'nft.storage';
 
-const NFT_STORAGE_API_KEY = process.env.NFT_STORAGE_API_KEY || '';
+const PINATA_JWT = process.env.PINATA_JWT || '';
+const PINATA_GATEWAY = process.env.PINATA_GATEWAY || 'https://gateway.pinata.cloud';
 
 export async function POST(request: NextRequest) {
-  if (!NFT_STORAGE_API_KEY) {
-    return NextResponse.json({ error: 'NFT.Storage API key not configured' }, { status: 500 });
+  if (!PINATA_JWT) {
+    console.error('❌ PINATA_JWT is not configured');
+    return NextResponse.json(
+      { error: 'Pinata JWT not configured' },
+      { status: 500 }
+    );
   }
 
   try {
@@ -27,15 +31,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid file type' }, { status: 400 });
     }
 
-    const client = new NFTStorage({ token: NFT_STORAGE_API_KEY });
-    const cid = await client.storeBlob(file);
+    // Upload to Pinata
+    const pinataFormData = new FormData();
+    pinataFormData.append('file', file);
 
-    return NextResponse.json({ 
-      url: `https://nftstorage.link/ipfs/${cid}`,
-      cid 
+    // Add metadata for better organization
+    const metadata = JSON.stringify({
+      name: file.name,
+      keyvalues: {
+        type: 'token-image',
+        uploadedAt: new Date().toISOString(),
+      }
     });
-  } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    pinataFormData.append('pinataMetadata', metadata);
+
+    // Add options for better gateway support
+    const options = JSON.stringify({
+      cidVersion: 1,
+      wrapWithDirectory: false,
+    });
+    pinataFormData.append('pinataOptions', options);
+
+    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${PINATA_JWT}`,
+      },
+      body: pinataFormData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Pinata upload failed:', errorText);
+      return NextResponse.json(
+        { error: 'Pinata upload failed' },
+        { status: response.status }
+      );
+    }
+
+    const data = await response.json();
+    const cid = data.IpfsHash;
+
+    console.log('✅ File uploaded to Pinata:', cid);
+
+    return NextResponse.json({
+      url: `${PINATA_GATEWAY}/ipfs/${cid}`,
+      IpfsHash: cid,
+      success: true,
+    });
+
+  } catch (error: any) {
+    console.error('❌ Upload error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Upload failed' },
+      { status: 500 }
+    );
   }
 }

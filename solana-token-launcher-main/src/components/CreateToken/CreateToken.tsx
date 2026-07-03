@@ -309,8 +309,8 @@ const CreateToken = () => {
       // 🔥 Create token on Solana using the connection helper
       setStatus('⏳ Minting token on Solana...');
       
-      // Use the connection helper
-      const connection = getConnection(network);
+      // Use the connection helper with type assertion
+      const connection = getConnection(network as 'devnet' | 'mainnet');
       
       const { createToken: createTokenLib } = await import('@/lib/create-token');
 

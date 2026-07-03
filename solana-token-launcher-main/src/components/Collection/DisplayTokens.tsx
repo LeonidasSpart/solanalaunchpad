@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey } from '@solana/web3.js';
@@ -17,7 +17,6 @@ import {
   User,
   Globe2
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import EmptyCollection from '@/components/Collection/EmptyCollection';
 import { RPC_URLS, NETWORKS } from '@/lib/constants';
 
@@ -42,7 +41,6 @@ type ViewMode = 'my' | 'all';
 
 const DisplayTokens = () => {
   const wallet = useWallet();
-  const router = useRouter();
   const [network, setNetwork] = useState<NetworkType>('devnet');
   const [viewMode, setViewMode] = useState<ViewMode>('my');
   const [tokens, setTokens] = useState<TokenData[]>([]);
@@ -50,8 +48,7 @@ const DisplayTokens = () => {
   const [error, setError] = useState<string | null>(null);
   const [copiedMint, setCopiedMint] = useState<string | null>(null);
 
-  // Stable connection — only changes when network changes
-  const connection = React.useMemo(
+  const connection = useMemo(
     () => new Connection(
       network === 'mainnet' ? RPC_URLS[NETWORKS.MAINNET] : RPC_URLS[NETWORKS.DEVNET],
       'confirmed'
@@ -81,7 +78,7 @@ const DisplayTokens = () => {
     try {
       const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
         wallet.publicKey,
-        { programId: TOKEN_PROGRAM_ID }  // ← use imported constant
+        { programId: TOKEN_PROGRAM_ID }
       );
 
       const tokenDataPromises = tokenAccounts.value.map(async (account) => {
@@ -98,7 +95,7 @@ const DisplayTokens = () => {
             connection,
             new PublicKey(mintAddress),
             'confirmed',
-            TOKEN_PROGRAM_ID  // ← legacy program, matches create-token.ts
+            TOKEN_PROGRAM_ID
           );
 
           let name = 'Unknown Token';

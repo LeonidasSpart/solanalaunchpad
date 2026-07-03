@@ -58,7 +58,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <NetworkContext.Provider value={{ network, setNetwork, endpoint }}>
       <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect>
+        <WalletProvider wallets={wallets} autoConnect={false}>
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>

@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Loader2, Rocket, CheckCircle, ExternalLink } from 'lucide-react';
 import { NetworkContext } from '@/providers/providers';
 import TemplateLoader from './TemplateLoader';
+import { getConnection } from '@/lib/connection';
 
 const MAX_IMAGE_SIZE_MB = 5;
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -86,6 +87,8 @@ const CreateToken = () => {
   const [status, setStatus] = useState('');
   const [txId, setTxId] = useState('');
   const [mintAddress, setMintAddress] = useState('');
+  const [imageUri, setImageUri] = useState('');
+  const [metadataUri, setMetadataUri] = useState('');
 
   const handleTemplateLoad = (templateKey: string) => {
     if (templates[templateKey as keyof typeof templates]) {
@@ -165,6 +168,67 @@ const CreateToken = () => {
 
   const fee = getFee();
 
+  // 🔥 Upload to Pinata
+  const uploadToPinata = async (fileToUpload: File): Promise<{ uri: string; IpfsHash: string }> => {
+    const formData = new FormData();
+    formData.append('file', fileToUpload);
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to upload to Pinata');
+    }
+
+    const data = await response.json();
+    return {
+      uri: data.url || `https://gateway.pinata.cloud/ipfs/${data.IpfsHash}`,
+      IpfsHash: data.IpfsHash,
+    };
+  };
+
+  // 🔥 AUTO-SAVE TO DATABASE
+  const saveTokenToDatabase = async (tokenData: {
+    mint_address: string;
+    name: string;
+    symbol: string;
+    description: string;
+    image_url: string;
+    metadata_uri: string;
+    network: string;
+    creator_wallet: string;
+    supply: number;
+    decimals: number;
+    revoke_mint: boolean;
+    revoke_freeze: boolean;
+    revoke_update: boolean;
+  }) => {
+    console.log('🔍 Attempting to save token:', tokenData);
+    
+    try {
+      const response = await fetch('/api/tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tokenData),
+      });
+
+      console.log('📡 Response status:', response.status);
+      const result = await response.json();
+      console.log('📦 Response data:', result);
+
+      if (!response.ok) {
+        console.error('❌ Failed to save token:', result);
+      } else {
+        console.log('✅ Token saved to database:', result);
+      }
+    } catch (error) {
+      console.error('❌ Error saving token:', error);
+    }
+  };
+
   const createToken = async () => {
     if (!publicKey || !signTransaction || !file || !formData.name || !formData.symbol) {
       setStatus('❌ Please connect wallet and fill all required fields');
@@ -196,12 +260,62 @@ const CreateToken = () => {
     setUploading(true);
     setTxId('');
     setMintAddress('');
+    setImageUri('');
+    setMetadataUri('');
     setStatus('⏳ Uploading image to IPFS...');
 
     try {
+      // 🔥 Upload image to Pinata
+      const uploadedImage = await uploadToPinata(file);
+      const imageUriResult = uploadedImage.uri;
+      setImageUri(imageUriResult);
+
+      // 🔥 Upload metadata to Pinata
+      setStatus('⏳ Uploading metadata to IPFS...');
+      const metadata = {
+        name: formData.name.trim(),
+        symbol: formData.symbol.trim().toUpperCase(),
+        description: formData.description.trim(),
+        image: imageUriResult,
+        external_url: formData.website.trim() || '',
+        attributes: [
+          { trait_type: 'Decimals', value: decimalsNum },
+          { trait_type: 'Supply', value: supplyNum },
+          { trait_type: 'Network', value: network },
+        ],
+        properties: {
+          creators: [
+            {
+              address: publicKey.toBase58(),
+              share: 100,
+            },
+          ],
+          files: [
+            {
+              uri: imageUriResult,
+              type: file.type,
+            },
+          ],
+        },
+      };
+
+      const metadataFile = new File([JSON.stringify(metadata)], 'metadata.json', {
+        type: 'application/json',
+      });
+      const uploadedMetadata = await uploadToPinata(metadataFile);
+      const metadataUriResult = uploadedMetadata.uri;
+      setMetadataUri(metadataUriResult);
+
+      // 🔥 Create token on Solana using the connection helper
+      setStatus('⏳ Minting token on Solana...');
+      
+      // Use the connection helper
+      const connection = getConnection(network);
+      
       const { createToken: createTokenLib } = await import('@/lib/create-token');
 
       const result = await createTokenLib({
+        connection, // Pass the connection
         wallet: publicKey,
         name: formData.name.trim(),
         symbol: formData.symbol.trim().toUpperCase(),
@@ -218,32 +332,66 @@ const CreateToken = () => {
         twitter: formData.twitter.trim() || undefined,
         telegram: formData.telegram.trim() || undefined,
         discord: formData.discord.trim() || undefined,
+        imageUri: imageUriResult,
+        metadataUri: metadataUriResult,
       });
 
-      // FIXED: Handle both string and object responses
+      // Handle both string and object responses
+      let txIdResult = '';
+      let mintAddressResult = '';
+
       if (typeof result === 'string') {
-        setTxId(result);
+        txIdResult = result;
       } else if (result && typeof result === 'object') {
         const res = result as { txId?: string; mintAddress?: string };
-        setTxId(res.txId || '');
-        setMintAddress(res.mintAddress || '');
+        txIdResult = res.txId || '';
+        mintAddressResult = res.mintAddress || '';
       }
+
+      console.log('🔍 Mint Address from result:', mintAddressResult);
+      console.log('🔍 Tx ID from result:', txIdResult);
+
+      setTxId(txIdResult);
+      setMintAddress(mintAddressResult);
       setStatus('');
+
+      // 🔥🔥🔥 AUTO-SAVE TO DATABASE 🔥🔥🔥
+      if (mintAddressResult) {
+        console.log('✅ Mint address found, saving to database...');
+        await saveTokenToDatabase({
+          mint_address: mintAddressResult,
+          name: formData.name.trim(),
+          symbol: formData.symbol.trim().toUpperCase(),
+          description: formData.description.trim(),
+          image_url: imageUriResult,
+          metadata_uri: metadataUriResult,
+          network: network,
+          creator_wallet: publicKey.toBase58(),
+          supply: supplyNum,
+          decimals: decimalsNum,
+          revoke_mint: revokeMint,
+          revoke_freeze: revokeFreeze,
+          revoke_update: revokeUpdate,
+        });
+      } else {
+        console.log('❌ No mint address found, skipping database save');
+      }
+
+      setStatus('✅ Token created successfully!');
 
     } catch (error: any) {
       console.error('Creation failed:', error);
       const msg = error.message || '';
 
       // Block height exceeded means tx was sent but confirmation timed out
-      // The token likely DID get created — show warning instead of error
       if (
         msg.includes('block height exceeded') ||
-        msg.includes('Signature') && msg.includes('expired')
+        (msg.includes('Signature') && msg.includes('expired'))
       ) {
         const sigMatch = msg.match(/([1-9A-HJ-NP-Za-km-z]{87,88})/);
         if (sigMatch) {
           setTxId(sigMatch[1]);
-          setStatus('');
+          setStatus('⚠️ Transaction may have succeeded but confirmation timed out. Check your wallet.');
         } else {
           setStatus('⚠️ Transaction may have succeeded but confirmation timed out. Check your wallet for the new token.');
         }
@@ -257,8 +405,8 @@ const CreateToken = () => {
         errorMessage = `Insufficient SOL balance. You need at least ${requiredSol.toFixed(2)} SOL.`;
       } else if (msg.includes('rejected') || msg.includes('User rejected')) {
         errorMessage = 'Transaction was rejected in wallet.';
-      } else if (msg.includes('NFT.Storage')) {
-        errorMessage = 'Image upload failed. Check your API key.';
+      } else if (msg.includes('Pinata') || msg.includes('upload')) {
+        errorMessage = 'Image upload failed. Check your Pinata configuration.';
       } else {
         errorMessage = msg.slice(0, 150) || 'Transaction failed';
       }
@@ -548,6 +696,8 @@ const CreateToken = () => {
                         setStatus('');
                         setFile(null);
                         setImagePreview(null);
+                        setImageUri('');
+                        setMetadataUri('');
                         setFormData({ name: '', symbol: '', description: '', website: '', twitter: '', telegram: '', discord: '', supply: '1000000000', decimals: '9' });
                         setSelectedTemplate(null);
                       }}

@@ -306,16 +306,12 @@ const CreateToken = () => {
       const metadataUriResult = uploadedMetadata.uri;
       setMetadataUri(metadataUriResult);
 
-      // 🔥 Create token on Solana using the connection helper
+      // 🔥 Create token on Solana
       setStatus('⏳ Minting token on Solana...');
-      
-      // Use the connection helper with type assertion
-      const connection = getConnection(network as 'devnet' | 'mainnet');
       
       const { createToken: createTokenLib } = await import('@/lib/create-token');
 
       const result = await createTokenLib({
-        connection, // Pass the connection
         wallet: publicKey,
         name: formData.name.trim(),
         symbol: formData.symbol.trim().toUpperCase(),

@@ -26,6 +26,7 @@ import {
 import { getConnection } from "./connection";
 import {
   getFeeRecipient,
+  CREATION_FEE_SOL,           // ← import from constants
   TOKEN_PROGRAM_ID,
   NETWORKS,
   RPC_URLS,
@@ -34,8 +35,6 @@ import {
 const BURN_ADDRESS = new PublicKey(
   "1nc1nerator11111111111111111111111111111111"
 );
-
-const CREATION_FEE_SOL = 0.15;
 
 interface CreateTokenParams {
   wallet: PublicKey;
@@ -76,24 +75,39 @@ export async function createToken({
 }: CreateTokenParams): Promise<string> {
   const connection = getConnection(network === 'mainnet' ? 'mainnet' : 'devnet', 'confirmed');
 
-  // 1. Pre-flight checks
+  // ─── 1. Pre-flight checks with clear fee breakdown ─────────────────
   const balance = await connection.getBalance(wallet);
   const feeLamports = CREATION_FEE_SOL * LAMPORTS_PER_SOL;
   const estimatedMintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
   const estimatedMetadataRent = await connection.getMinimumBalanceForRentExemption(679);
   const estimatedAtaRent = await connection.getMinimumBalanceForRentExemption(165);
+  const networkFeeBuffer = 0.01 * LAMPORTS_PER_SOL;
 
   const totalRequired = network === 'mainnet'
-    ? feeLamports + estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + 10000000
-    : estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + 10000000;
+    ? feeLamports + estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + networkFeeBuffer
+    : estimatedMintRent + estimatedMetadataRent + estimatedAtaRent + networkFeeBuffer;
 
   if (balance < totalRequired) {
+    const breakdown = network === 'mainnet'
+      ? `  - Platform fee: ${CREATION_FEE_SOL} SOL\n  - Mint rent: ${(estimatedMintRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Metadata rent: ${(estimatedMetadataRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - ATA rent: ${(estimatedAtaRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Network fees: ~0.01 SOL`
+      : `  - Mint rent: ${(estimatedMintRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Metadata rent: ${(estimatedMetadataRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - ATA rent: ${(estimatedAtaRent / LAMPORTS_PER_SOL).toFixed(4)} SOL\n  - Network fees: ~0.01 SOL`;
+    
     throw new Error(
-      `Insufficient balance. You need at least ${(totalRequired / LAMPORTS_PER_SOL).toFixed(3)} SOL to create a token.`
+      `Insufficient balance. Need at least ${(totalRequired / LAMPORTS_PER_SOL).toFixed(4)} SOL total:\n${breakdown}`
     );
   }
 
-  // 2. Upload image to IPFS
+  // ─── 2. Validate fee recipient on mainnet ────────────────────────
+  let feeRecipient: PublicKey;
+  if (network === 'mainnet') {
+    try {
+      feeRecipient = getFeeRecipient();
+    } catch (e: any) {
+      throw new Error(`Fee recipient not configured: ${e.message}`);
+    }
+  }
+
+  // ─── 3. Upload to IPFS ───────────────────────────────────────────
   const { uploadTokenImage, uploadMetadata } = await import("./upload");
   const imageUrl = await uploadTokenImage(imageFile);
 
@@ -113,32 +127,26 @@ export async function createToken({
     Object.keys(socialLinks).length > 0 ? socialLinks : undefined
   );
 
-  // 3. Build the transaction
+  // ─── 4. Build transaction ────────────────────────────────────────
   const transaction = new Transaction();
   transaction.feePayer = wallet;
 
-  // Compute budget for large transaction
   transaction.add(
-    ComputeBudgetProgram.setComputeUnitLimit({
-      units: 400000,
-    })
+    ComputeBudgetProgram.setComputeUnitLimit({ units: 400000 })
   );
 
-  // Step 3a: Pay fee on mainnet only
+  // Step 4a: Pay fee on mainnet only
   if (network === 'mainnet') {
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: wallet,
-        toPubkey: getFeeRecipient(),
+        toPubkey: feeRecipient!,
         lamports: feeLamports,
       })
     );
   }
 
-  // Step 3b: Create mint account
-  // IMPORTANT: Always initialize with wallet as freeze authority.
-  // If revokeFreeze is true, we revoke it in step 3g AFTER mint is created.
-  // Never pass null here — you can't revoke an authority that was never set.
+  // Step 4b: Create mint account
   const mintKeypair = Keypair.generate();
   const mint = mintKeypair.publicKey;
 
@@ -154,12 +162,12 @@ export async function createToken({
       mint,
       decimals,
       wallet,
-      wallet, // always set freeze authority to wallet first
+      wallet, // freeze authority set to wallet for later revocation
       SPL_TOKEN_PROGRAM_ID
     )
   );
 
-  // Step 3c: Create associated token account
+  // Step 4c: Create ATA
   const userAta = getAssociatedTokenAddressSync(
     mint,
     wallet,
@@ -178,7 +186,7 @@ export async function createToken({
     )
   );
 
-  // Step 3d: Mint supply to ATA
+  // Step 4d: Mint supply
   const supplyInBaseUnits = BigInt(Math.round(supply * Math.pow(10, decimals)));
   transaction.add(
     createMintToInstruction(
@@ -191,7 +199,7 @@ export async function createToken({
     )
   );
 
-  // Step 3e: Create on-chain metadata
+  // Step 4e: Create metadata — respect revokeUpdate from start
   const [metadataPDA] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("metadata"),
@@ -221,14 +229,14 @@ export async function createToken({
             collection: null,
             uses: null,
           },
-          isMutable: true,
+          isMutable: !revokeUpdate,  // ← respect user choice from start
           collectionDetails: null,
         },
       }
     )
   );
 
-  // Step 3f: Revoke mint authority (optional)
+  // Step 4f: Revoke mint authority
   if (revokeMint) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -242,8 +250,7 @@ export async function createToken({
     );
   }
 
-  // Step 3g: Revoke freeze authority (optional)
-  // This works now because we always initialize freeze authority to wallet above
+  // Step 4g: Revoke freeze authority
   if (revokeFreeze) {
     transaction.add(
       createSetAuthorityInstruction(
@@ -257,7 +264,7 @@ export async function createToken({
     );
   }
 
-  // Step 3h: Revoke update authority / make metadata immutable (optional)
+  // Step 4h: Revoke update authority / make metadata immutable
   if (revokeUpdate) {
     transaction.add(
       createUpdateMetadataAccountV2Instruction(
@@ -277,24 +284,19 @@ export async function createToken({
     );
   }
 
-  // 4. Get latest blockhash
+  // ─── 5. Sign and send ────────────────────────────────────────────
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
   transaction.recentBlockhash = blockhash;
-
-  // 5. Partial sign with mint keypair first
   transaction.partialSign(mintKeypair);
 
-  // 6. Send to wallet for user signature
   const signedTransaction = await signTransaction(transaction);
 
-  // 7. Submit — skip preflight since wallet already simulated
   const txId = await connection.sendRawTransaction(signedTransaction.serialize(), {
-    skipPreflight: true,
+    skipPreflight: false,        // ← keep preflight for safety
     maxRetries: 3,
     preflightCommitment: 'confirmed',
   });
 
-  // 8. Confirm transaction
   const confirmation = await connection.confirmTransaction({
     signature: txId,
     blockhash,

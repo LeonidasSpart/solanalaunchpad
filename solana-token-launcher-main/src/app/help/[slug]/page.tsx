@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 // Map slugs to component imports (lazy loaded)
+// Includes aliases for common short slugs that the Help Center links to
 const articleImports: Record<string, () => Promise<any>> = {
+  // === Main entries (long slugs) ===
   'what-is-zrp': () => import('@/content/help/what-is-zrp'),
   'create-token-guide': () => import('@/content/help/create-token-guide'),
   'supported-wallets': () => import('@/content/help/supported-wallets'),
@@ -43,6 +45,29 @@ const articleImports: Record<string, () => Promise<any>> = {
   'open-source': () => import('@/content/help/open-source'),
   'privacy-policy': () => import('@/content/help/privacy'),
   'terms-of-service': () => import('@/content/help/terms'),
+
+  // === Aliases (shorter slugs that the Help Center likely links to) ===
+  'token-authorities': () => import('@/content/help/token-authorities'),
+  'faq': () => import('@/content/help/faq'),
+  'rpc-errors': () => import('@/content/help/rpc-errors'),
+  'token-parameters': () => import('@/content/help/token-parameters'),
+  'connect-wallet': () => import('@/content/help/connect-wallet'),
+  'view-token': () => import('@/content/help/view-token'),
+  'share-token': () => import('@/content/help/share-token'),
+  'add-liquidity': () => import('@/content/help/add-liquidity'),
+  'airdrop': () => import('@/content/help/airdrop'),
+  'revoke-after': () => import('@/content/help/revoke-after'),
+  'burn-lp': () => import('@/content/help/burn-lp'),
+  'rug-pull': () => import('@/content/help/rug-pull'),
+  'report-suspicious': () => import('@/content/help/report-suspicious'),
+  'insufficient-sol': () => import('@/content/help/insufficient-sol'),
+  'token-not-showing': () => import('@/content/help/token-not-showing'),
+  'image-upload-issue': () => import('@/content/help/image-upload-issue'),
+  'templates': () => import('@/content/help/templates'),
+  'mission': () => import('@/content/help/mission'),
+  'open-source': () => import('@/content/help/open-source'),
+  'privacy': () => import('@/content/help/privacy'),
+  'terms': () => import('@/content/help/terms'),
 };
 
 export default function HelpArticlePage() {
@@ -98,7 +123,6 @@ export default function HelpArticlePage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Help
       </Link>
-      {/* Wrap the article component with prose for beautiful typography */}
       <div className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-orbitron prose-p:text-[#BDDBDB] prose-a:text-[#FF2D2D] prose-a:no-underline prose-a:hover:underline prose-strong:text-white prose-li:text-[#BDDBDB] prose-li:marker:text-[#FF2D2D] prose-table:text-[#BDDBDB] prose-th:text-white prose-th:font-orbitron prose-th:border-[#1a1a1a] prose-td:border-[#1a1a1a] prose-code:text-[#FF2D2D] prose-code:bg-[#1a1a1a] prose-code:rounded prose-blockquote:border-l-[#FF2D2D] prose-blockquote:bg-[#1a1a1a] prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-xl">
         <Component />
       </div>

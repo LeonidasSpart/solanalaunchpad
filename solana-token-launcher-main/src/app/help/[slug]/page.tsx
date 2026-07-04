@@ -65,7 +65,7 @@ const articleImports: Record<string, () => Promise<any>> = {
   'image-upload-issue': () => import('@/content/help/image-upload-issue'),
   'templates': () => import('@/content/help/templates'),
   'mission': () => import('@/content/help/mission'),
-  'open-source': () => import('@/content/help/open-source'),
+  // open-source is already defined above (no duplicate needed)
   'privacy': () => import('@/content/help/privacy'),
   'terms': () => import('@/content/help/terms'),
 };

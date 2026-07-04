@@ -3,44 +3,64 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
-interface Article {
-  title: string;
-  description: string;
-  category: string;
-  order: number;
-  content: string;
-  slug: string;
-}
+// Map slugs to component imports (lazy loaded)
+const articleImports: Record<string, () => Promise<any>> = {
+  'what-is-zrp': () => import('@/content/help/what-is-zrp'),
+  'create-token-guide': () => import('@/content/help/create-token-guide'),
+  'supported-wallets': () => import('@/content/help/supported-wallets'),
+  'devnet-vs-mainnet': () => import('@/content/help/devnet-vs-mainnet'),
+  'glossary': () => import('@/content/help/glossary'),
+  'using-templates': () => import('@/content/help/using-templates'),
+  'token-parameters-explained': () => import('@/content/help/token-parameters-explained'),
+  'authority-revocation': () => import('@/content/help/authority-revocation'),
+  'security-settings': () => import('@/content/help/security-settings'),
+  'connecting-your-wallet': () => import('@/content/help/connecting-your-wallet'),
+  'troubleshooting-connection-issues': () => import('@/content/help/troubleshooting-connection-issues'),
+  'viewing-your-token': () => import('@/content/help/viewing-your-token'),
+  'sharing-your-token': () => import('@/content/help/sharing-your-token'),
+  'adding-liquidity': () => import('@/content/help/adding-liquidity'),
+  'airdrop-distribution': () => import('@/content/help/airdrop-distribution'),
+  'revoking-authorities-after-creation': () => import('@/content/help/revoking-authorities-after-creation'),
+  'burning-lp-tokens': () => import('@/content/help/burning-lp-tokens'),
+  'understanding-token-authorities': () => import('@/content/help/understanding-token-authorities'),
+  'rug-pull-prevention': () => import('@/content/help/rug-pull-prevention'),
+  'security-checklist': () => import('@/content/help/security-checklist'),
+  'reporting-suspicious-activity': () => import('@/content/help/reporting-suspicious-activity'),
+  'transaction-failed': () => import('@/content/help/transaction-failed'),
+  'insufficient-sol-balance': () => import('@/content/help/insufficient-sol-balance'),
+  'rpc-connection-errors': () => import('@/content/help/rpc-connection-errors'),
+  'token-not-showing-in-wallet': () => import('@/content/help/token-not-showing-in-wallet'),
+  'image-not-uploading': () => import('@/content/help/image-not-uploading'),
+  'browser-compatibility': () => import('@/content/help/browser-compatibility'),
+  'contact-support': () => import('@/content/help/contact-support'),
+  'feature-requests': () => import('@/content/help/feature-requests'),
+  'community-guidelines': () => import('@/content/help/community-guidelines'),
+  'affiliate-program': () => import('@/content/help/affiliate-program'),
+  'frequently-asked-questions': () => import('@/content/help/frequently-asked-questions'),
+  'our-mission': () => import('@/content/help/our-mission'),
+  'open-source': () => import('@/content/help/open-source'),
+  'privacy-policy': () => import('@/content/help/privacy-policy'),
+  'terms-of-service': () => import('@/content/help/terms-of-service'),
+};
 
 export default function HelpArticlePage() {
   const params = useParams();
   const slug = params.slug as string;
-
-  const [article, setArticle] = useState<Article | null>(null);
+  const [Component, setComponent] = useState<React.ComponentType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchArticle = async () => {
-      try {
-        const response = await fetch(`/api/help/${slug}`);
-        if (!response.ok) throw new Error('Article not found');
-        const data = await response.json();
-        setArticle(data);
-      } catch (err) {
-        setError('Article not found');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) {
-      fetchArticle();
+    if (slug && articleImports[slug]) {
+      articleImports[slug]()
+        .then(mod => {
+          setComponent(() => mod.default);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    } else {
+      setLoading(false);
     }
   }, [slug]);
 
@@ -53,7 +73,7 @@ export default function HelpArticlePage() {
     );
   }
 
-  if (error || !article) {
+  if (!Component) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <h2 className="text-2xl font-bold text-white mb-4">Article Not Found</h2>
@@ -70,121 +90,15 @@ export default function HelpArticlePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-[#BDDBDB] mb-6">
-          <Link href="/help" className="hover:text-white transition">
-            Help Center
-          </Link>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-white">{article.category}</span>
-          <ChevronRight className="h-4 w-4" />
-          <span className="text-[#FF2D2D]">{article.title}</span>
-        </div>
-
-        {/* Back Link */}
-        <Link
-          href="/help"
-          className="inline-flex items-center gap-2 text-[#BDDBDB] hover:text-white transition mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Help Center
-        </Link>
-
-        {/* Article Content */}
-        <motion.article
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-[#0D0D0D] rounded-2xl p-8 border border-[#1a1a1a]"
-        >
-          <div className="mb-6">
-            <span className="inline-block px-3 py-1 text-xs font-semibold text-[#FF2D2D] bg-[#FF2D2D]/10 rounded-full mb-3">
-              {article.category}
-            </span>
-            <h1 className="text-3xl font-orbitron font-bold text-white">
-              {article.title}
-            </h1>
-            {article.description && (
-              <p className="text-[#BDDBDB] mt-2">{article.description}</p>
-            )}
-          </div>
-
-          {/* 🔥 BRAND‑STYLED MARKDOWN CONTENT 🔥 */}
-          <div className="
-            prose 
-            prose-invert 
-            max-w-none
-            prose-headings:font-orbitron 
-            prose-headings:text-white 
-            prose-h1:text-3xl 
-            prose-h2:text-2xl 
-            prose-h2:mt-8 
-            prose-h2:border-b 
-            prose-h2:border-[#1a1a1a] 
-            prose-h2:pb-2
-            prose-h3:text-xl
-            prose-p:text-[#BDDBDB] 
-            prose-p:leading-relaxed
-            prose-a:text-[#FF2D2D] 
-            prose-a:no-underline 
-            prose-a:hover:underline 
-            prose-strong:text-white 
-            prose-ul:list-disc 
-            prose-ul:pl-6
-            prose-ol:list-decimal 
-            prose-ol:pl-6
-            prose-li:text-[#BDDBDB]
-            prose-li:marker:text-[#FF2D2D]
-            prose-code:text-[#FF2D2D] 
-            prose-code:bg-[#1a1a1a] 
-            prose-code:px-1 
-            prose-code:py-0.5 
-            prose-code:rounded 
-            prose-code:text-sm
-            prose-pre:bg-[#0D0D0D] 
-            prose-pre:border 
-            prose-pre:border-[#1a1a1a] 
-            prose-pre:rounded-xl
-            prose-blockquote:border-l-[#FF2D2D] 
-            prose-blockquote:bg-[#1a1a1a] 
-            prose-blockquote:px-4 
-            prose-blockquote:py-2 
-            prose-blockquote:rounded-r-xl
-            prose-table:border-collapse 
-            prose-th:border 
-            prose-th:border-[#1a1a1a] 
-            prose-th:bg-[#1a1a1a] 
-            prose-th:text-white 
-            prose-th:font-orbitron 
-            prose-th:px-4 
-            prose-th:py-2
-            prose-td:border 
-            prose-td:border-[#1a1a1a] 
-            prose-td:px-4 
-            prose-td:py-2 
-            prose-td:text-[#BDDBDB]
-            prose-img:rounded-xl 
-            prose-img:border 
-            prose-img:border-[#1a1a1a]
-          ">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {article.content}
-            </ReactMarkdown>
-          </div>
-        </motion.article>
-
-        {/* Still Need Help */}
-        <div className="mt-8 text-center">
-          <p className="text-[#BDDBDB] text-sm">
-            Still have questions?{' '}
-            <Link href="/contact" className="text-[#FF2D2D] hover:text-[#B10000] transition">
-              Contact Support
-            </Link>
-          </p>
-        </div>
-      </div>
+    <div className="relative">
+      <Link
+        href="/help"
+        className="absolute top-6 left-6 z-10 inline-flex items-center gap-2 text-[#BDDBDB] hover:text-white transition"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Help
+      </Link>
+      <Component />
     </div>
   );
 }

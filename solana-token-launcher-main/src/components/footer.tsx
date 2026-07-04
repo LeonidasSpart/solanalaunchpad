@@ -161,6 +161,7 @@ const Footer = () => {
               <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
+              <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>
             </ul>
           </div>

@@ -289,7 +289,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 - [Solana Foundation](https://solana.com/) — Blockchain infrastructure
 - [Metaplex](https://metaplex.com/) — Token metadata standards
-- [Pinata]((https://app.pinata.cloud) — IPFS storage
+- [Pinata](https://app.pinata.cloud) — IPFS storage
 - [Helius](https://helius.xyz/) — RPC infrastructure
 - [Railway](https://railway.app/) — Hosting
 - [Vercel](https://vercel.com/) — Deployment platform

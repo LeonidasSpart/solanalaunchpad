@@ -57,7 +57,103 @@ const DisplayTokens = () => {
     [network]
   );
 
-  // ... (keep your existing fetchMetadataFromUri and fetchWalletTokens unchanged)
+  const fetchMetadataFromUri = async (uri: string): Promise<any> => {
+    try {
+      const response = await fetch(uri);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  };
+
+  const fetchWalletTokens = useCallback(async () => {
+    if (!wallet.publicKey) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
+        wallet.publicKey,
+        { programId: TOKEN_PROGRAM_ID }
+      );
+
+      const tokenDataPromises = tokenAccounts.value.map(async (account) => {
+        const parsedInfo = account.account.data.parsed.info;
+        const mintAddress = parsedInfo.mint;
+        const tokenAmount = parsedInfo.tokenAmount;
+        const balance = Number(tokenAmount.uiAmount);
+        const decimals = tokenAmount.decimals;
+
+        if (balance === 0) return null;
+
+        try {
+          const metadata = await getTokenMetadata(
+            connection,
+            new PublicKey(mintAddress),
+            'confirmed',
+            TOKEN_PROGRAM_ID
+          );
+
+          let name = 'Unknown Token';
+          let symbol = '???';
+          let image = '/placeholder.svg?height=200&width=200';
+          let description = '';
+          let uri = '';
+
+          if (metadata && metadata.uri) {
+            uri = metadata.uri;
+            const offChainMetadata = await fetchMetadataFromUri(metadata.uri);
+            if (offChainMetadata) {
+              name = offChainMetadata.name || metadata.name || 'Unknown Token';
+              symbol = offChainMetadata.symbol || metadata.symbol || '???';
+              image = offChainMetadata.image || '/placeholder.svg?height=200&width=200';
+              description = offChainMetadata.description || '';
+            } else {
+              name = metadata.name || 'Unknown Token';
+              symbol = metadata.symbol || '???';
+            }
+          }
+
+          return {
+            mint: mintAddress,
+            name,
+            symbol,
+            image,
+            description,
+            balance,
+            decimals,
+            uri,
+          } as TokenData;
+        } catch {
+          return {
+            mint: mintAddress,
+            name: 'Unknown Token',
+            symbol: '???',
+            image: '/placeholder.svg?height=200&width=200',
+            description: '',
+            balance,
+            decimals,
+            uri: '',
+          } as TokenData;
+        }
+      });
+
+      const results = await Promise.all(tokenDataPromises);
+      const validTokens = results.filter((t): t is TokenData => t !== null);
+      validTokens.sort((a, b) => b.balance - a.balance);
+      setTokens(validTokens);
+    } catch (err) {
+      console.error('Error fetching tokens:', err);
+      setError('Failed to fetch your tokens. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, [wallet.publicKey, connection]);
 
   const fetchAllTokens = useCallback(async () => {
     setLoading(true);
@@ -91,54 +187,37 @@ const DisplayTokens = () => {
     }
   }, [network]);
 
-  // Auto-refresh for "All Tokens" view
+  useEffect(() => {
+    if (viewMode === 'my') {
+      fetchWalletTokens();
+    } else {
+      fetchAllTokens();
+    }
+  }, [viewMode, fetchWalletTokens, fetchAllTokens]);
+
+  // Auto-refresh for All Tokens
   useEffect(() => {
     if (viewMode === 'all') {
-      const interval = setInterval(() => {
-        fetchAllTokens();
-      }, 15000); // every 15 seconds
-
+      const interval = setInterval(fetchAllTokens, 15000);
       return () => clearInterval(interval);
     }
   }, [viewMode, fetchAllTokens]);
 
-  // ... keep the rest of your useEffect, handleCopyMint, etc. unchanged
+  const handleCopyMint = (mint: string) => {
+    navigator.clipboard.writeText(mint);
+    setCopiedMint(mint);
+    setTimeout(() => setCopiedMint(null), 2000);
+  };
+
+  const solscanBaseUrl = network === 'mainnet' 
+    ? 'https://solscan.io/token/' 
+    : 'https://solscan.io/token/?cluster=devnet';
+
+  // ... (keep your existing return JSX exactly as before, or let me know if you want me to adjust the card layout too)
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header - add refresh indicator */}
-        <motion.div className="mb-8">
-          {/* ... your existing header ... */}
-          {viewMode === 'all' && (
-            <p className="text-xs text-zinc-500 mt-1">
-              Auto-refreshing • Last updated: {lastRefresh.toLocaleTimeString()}
-            </p>
-          )}
-        </motion.div>
-
-        {/* Rest of your render logic stays the same, but improve image handling in cards */}
-
-        {tokens.map((token) => (
-          <motion.div key={token.mint} ... >
-            <div className="...">
-              <div className="relative h-48 bg-zinc-800 overflow-hidden">
-                <img
-                  src={token.image}
-                  alt={token.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x200/1f2937/ffffff?text=No+Image';
-                  }}
-                />
-                {/* ... your existing badges ... */}
-              </div>
-              {/* rest unchanged */}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
+    // Your original return JSX here — no changes needed for now
+    // Just make sure the image onError fallback is good
   );
 };
 

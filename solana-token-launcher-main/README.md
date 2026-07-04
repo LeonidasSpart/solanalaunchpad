@@ -1,81 +1,103 @@
+# ZRP — No-Code Solana Token Creator
 
-    <h1>ZRP — No-Code Solana Token Creator</h1>
-    
-    <div class="center">
-        <a href="https://zrp.one"><img src="https://img.shields.io/badge/🔗_Live_Demo-zrp.one-9945FF?style=for-the-badge&logo=solana&logoColor=white" alt="Live Demo"></a>
-        <a href="https://github.com/LeonidasSpart/solanalaunchpad/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License"></a>
-        <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js">
-        <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript">
-    </div>
+<p align="center">
+  <a href="https://zrp.one">
+    <img src="https://img.shields.io/badge/🔗_Live_Demo-zrp.one-9945FF?style=for-the-badge&logo=solana&logoColor=white" alt="Live Demo">
+  </a>
+  <a href="https://github.com/LeonidasSpart/solanalaunchpad/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
+  </a>
+  <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript">
+</p>
 
-    <p class="center"><strong>Create, test, and launch SPL tokens on Solana in under 60 seconds — no coding required.</strong></p>
+<p align="center">
+  <b>Create, test, and launch SPL tokens on Solana in under 60 seconds — no coding required.</b>
+</p>
 
-    <hr>
+---
 
-    <h2>Overview</h2>
-    <p>ZRP is a production-ready, open-source platform for creating and deploying custom SPL tokens on the Solana blockchain. Built for founders, creators, and developers who want to launch tokens without writing a single line of code.</p>
+## Table of Contents
 
-    <p><strong>Key differentiators:</strong></p>
-    <ul>
-        <li><strong>Free devnet testing</strong> — Experiment with zero cost and zero risk before going live</li>
-        <li><strong>Non-custodial by design</strong> — We never see or store your private keys</li>
-        <li><strong>Open source &amp; auditable</strong> — Fully transparent codebase</li>
-        <li><strong>Under 60 seconds</strong> — From wallet connection to live token on-chain</li>
-    </ul>
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
+- [Project Structure](#project-structure)
+- [Token Creation Flow](#token-creation-flow)
+- [Pricing](#pricing)
+- [Security](#security)
+- [Deployment](#deployment)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
+- [Support](#support)
 
-    <p class="center">🔗 <strong>Live:</strong> <a href="https://zrp.one">https://zrp.one</a></p>
+---
 
-    <hr>
+## Overview
 
-    <h2>Features</h2>
-    <h3>Core</h3>
-    <ul>
-        <li>🪙 <strong>One-Click Token Creation</strong> — Launch SPL tokens via simple form</li>
-        <li>🖼️ <strong>IPFS Metadata Storage</strong> — Upload token images and metadata via Pinata</li>
-        <li>👛 <strong>Wallet Integration</strong> — Phantom, Solflare, Backpack, and all Solana wallets</li>
-        <li>🔒 <strong>Authority Revocation</strong> — Revoke mint, freeze, and update authorities for maximum trust</li>
-        <li>⚡ <strong>Sub-60-Second Minting</strong> — Lightning-fast deployment on Solana</li>
-        <li>🧪 <strong>Free Devnet Testing</strong> — Test tokens with zero cost before mainnet launch</li>
-    </ul>
+ZRP is a production-ready, open-source platform for creating and deploying custom SPL tokens on the Solana blockchain. Built for founders, creators, and developers who want to launch tokens without writing a single line of code.
 
-    <h3>Platform</h3>
-    <ul>
-        <li>📱 <strong>Fully Responsive</strong> — Desktop, tablet, and mobile optimized</li>
-        <li>🎨 <strong>Modern UI/UX</strong> — Tailwind CSS with Framer Motion animations</li>
-        <li>📚 <strong>25+ Educational Guides</strong> — Tokenomics, marketing, security, DEX listings, and more</li>
-        <li>🔍 <strong>Token Explorer</strong> — Browse tokens created through the platform</li>
-        <li>🌐 <strong>SEO Optimized</strong> — Sitemap, structured data, and keyword-rich content</li>
-    </ul>
+**Key differentiators:**
+- **Free devnet testing** — Experiment with zero cost and zero risk before going live
+- **Non-custodial by design** — We never see or store your private keys
+- **Open source & auditable** — Fully transparent codebase
+- **Under 60 seconds** — From wallet connection to live token on-chain
 
-    <hr>
+🔗 **Live:** [https://zrp.one](https://zrp.one)
 
-    <h2>Tech Stack</h2>
-    <table>
-        <tr><th>Technology</th><th>Purpose</th></tr>
-        <tr><td><a href="https://nextjs.org/">Next.js 15</a></td><td>React framework with App Router</td></tr>
-        <tr><td><a href="https://www.typescriptlang.org/">TypeScript</a></td><td>Type safety</td></tr>
-        <tr><td><a href="https://solana-labs.github.io/solana-web3.js/">Solana Web3.js</a></td><td>Blockchain interaction</td></tr>
-        <tr><td><a href="https://metaplex.com/">Metaplex</a></td><td>Token metadata standards</td></tr>
-        <tr><td><a href="https://www.pinata.cloud/">Pinata</a></td><td>IPFS uploads</td></tr>
-        <tr><td><a href="https://helius.xyz/">Helius</a></td><td>Reliable RPC infrastructure</td></tr>
-        <tr><td><a href="https://tailwindcss.com/">Tailwind CSS</a></td><td>Styling</td></tr>
-        <tr><td><a href="https://www.framer.com/motion/">Framer Motion</a></td><td>Animations</td></tr>
-    </table>
+---
 
-    <hr>
+## Features
 
-    <h2>Quick Start</h2>
-    <h3>Prerequisites</h3>
-    <ul>
-        <li>Node.js 18+</li>
-        <li>npm or yarn</li>
-        <li>A Solana wallet (Phantom, Solflare, etc.)</li>
-        <li>Pinata API key</li>
-        <li>Helius RPC URL</li>
-    </ul>
+### Core
+- 🪙 **One-Click Token Creation** — Launch SPL tokens via simple form
+- 🖼️ **IPFS Metadata Storage** — Upload token images and metadata via NFT.Storage
+- 👛 **Wallet Integration** — Phantom, Solflare, Backpack, and all Solana wallets
+- 🔒 **Authority Revocation** — Revoke mint, freeze, and update authorities for maximum trust
+- ⚡ **Sub-60-Second Minting** — Lightning-fast deployment on Solana
+- 🧪 **Free Devnet Testing** — Test tokens with zero cost before mainnet launch
 
-    <h3>Installation</h3>
-    <pre><code># Clone the repository
+### Platform
+- 📱 **Fully Responsive** — Desktop, tablet, and mobile optimized
+- 🎨 **Modern UI/UX** — Tailwind CSS with Framer Motion animations
+- 📚 **25+ Educational Guides** — Tokenomics, marketing, security, DEX listings, and more
+- 🔍 **Token Explorer** — Browse tokens created through the platform
+- 🌐 **SEO Optimized** — Sitemap, structured data, and keyword-rich content
+
+---
+
+## Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| [Next.js 15](https://nextjs.org/) | React framework with App Router |
+| [TypeScript](https://www.typescriptlang.org/) | Type safety |
+| [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/) | Blockchain interaction |
+| [Metaplex](https://metaplex.com/) | Token metadata standards |
+| [NFT.Storage](https://nft.storage/) | IPFS uploads |
+| [Helius](https://helius.xyz/) | Reliable RPC infrastructure |
+| [Tailwind CSS](https://tailwindcss.com/) | Styling |
+| [Framer Motion](https://www.framer.com/motion/) | Animations |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- A Solana wallet (Phantom, Solflare, etc.)
+- NFT.Storage API key
+- Helius RPC URL
+
+### Installation
+
+```bash
+# Clone the repository
 git clone https://github.com/LeonidasSpart/solanalaunchpad.git
 cd solanalaunchpad
 
@@ -83,74 +105,236 @@ cd solanalaunchpad
 npm install
 
 # Set up environment variables
-cp .env.example .env.local</code></pre>
+cp .env.example .env.local
+```
 
-    <h3>Run Development Server</h3>
-    <pre><code>npm run dev</code></pre>
-    <p>Open <a href="http://localhost:3000">http://localhost:3000</a> to view the app.</p>
+### Run Development Server
 
-    <hr>
+```bash
+npm run dev
+```
 
-    <h2>Environment Variables</h2>
-    <p>Create a <code>.env.local</code> file with the following:</p>
-    <pre><code># Pinata API key for IPFS uploads (JWT)
-NEXT_PUBLIC_PINATA_JWT=your_pinata_jwt
+Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+---
+
+## Environment Variables
+
+Create a `.env.local` file with the following:
+
+```env
+# NFT.Storage API key for IPFS uploads
+NEXT_PUBLIC_NFT_STORAGE_API_KEY=your_nft_storage_key
 
 # Helius RPC URL for reliable Solana connection
 NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=your_helius_key
 
 # Wallet address to receive creation fees
-NEXT_PUBLIC_FEE_RECIPIENT=your_wallet_address</code></pre>
+NEXT_PUBLIC_FEE_RECIPIENT=your_wallet_address
+```
 
-    <hr>
+> **Note:** `NEXT_PUBLIC_FEE_RECIPIENT` is public by design. The fee amount is hardcoded and verified on-chain to prevent tampering.
 
-    <h2>Token Creation Flow</h2>
-    <ol>
-        <li><strong>Connect Wallet</strong> — User connects their Solana wallet</li>
-        <li><strong>Fill Token Details</strong> — Enter name, symbol, description, decimals, and supply</li>
-        <li><strong>Upload Image</strong> — Upload token logo to IPFS via Pinata</li>
-        <li><strong>Configure Authorities</strong> — Optionally revoke mint, freeze, and update authorities</li>
-        <li><strong>Review &amp; Confirm</strong> — Transaction is simulated; user approves in wallet</li>
-        <li><strong>Token Minted</strong> — Token is live on-chain in under 60 seconds</li>
-    </ol>
+---
 
-    <hr>
+## Project Structure
 
-    <h2>Pricing</h2>
-    <table>
-        <tr><th>Plan</th><th>Cost</th><th>Features</th></tr>
-        <tr><td><strong>Free</strong></td><td>$0</td><td>Devnet testing, token creation, IPFS storage, social links &amp; branding</td></tr>
-        <tr><td><strong>Basic</strong></td><td>0.15 SOL (~$25)</td><td>Everything in Free + Mainnet launch</td></tr>
-        <tr><td><strong>Secure</strong></td><td>0.60 SOL (~$100)</td><td>Everything in Basic + Revoke all authorities + Immutable metadata</td></tr>
-    </table>
+```
+solanalaunchpad/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── page.tsx            # Landing page
+│   │   ├── create-mint/        # Token creation interface
+│   │   ├── pricing/            # Pricing guide
+│   │   ├── faq/                # FAQ & support
+│   │   ├── guide/              # SPL token guide
+│   │   ├── revoke/             # Authority revocation tool
+│   │   ├── airdrop/            # Airdrop tool
+│   │   ├── add-liquidity/      # Liquidity addition guide
+│   │   ├── burn-lp/            # LP burn tool
+│   │   ├── tokens/             # Token explorer
+│   │   ├── about/              # About page
+│   │   ├── contact/            # Contact page
+│   │   ├── blog/               # Blog
+│   │   ├── terms/              # Terms of service
+│   │   ├── privacy/            # Privacy policy
+│   │   ├── tokenomics/         # Tokenomics guide
+│   │   ├── marketing/          # Marketing guide
+│   │   ├── security/           # Security guide
+│   │   ├── checklist/          # Launch checklist
+│   │   └── ...                 # Additional guides & tools
+│   ├── components/             # React components
+│   │   ├── CreateToken/        # Token creation form
+│   │   ├── Collection/         # Token display components
+│   │   └── header.tsx          # Navigation with wallet connect
+│   ├── lib/                    # Utilities
+│   │   ├── create-token.ts     # Token creation logic
+│   │   ├── upload.ts           # IPFS upload functions
+│   │   └── constants.ts        # Configuration
+│   └── providers/              # Wallet providers
+├── public/                     # Static assets
+│   ├── sitemap.xml             # SEO sitemap
+│   └── robots.txt              # Web crawler rules
+├── .env.local                  # Environment variables
+├── package.json                # Dependencies
+└── tsconfig.json               # TypeScript configuration
+```
 
-    <hr>
+---
 
-    <h2>Security</h2>
-    <ul>
-        <li><strong>Non-Custodial</strong> — We never see or store private keys.</li>
-        <li><strong>Wallet-Signed</strong> — Every transaction is signed directly in your wallet.</li>
-        <li><strong>Open Source</strong> — Fully auditable code.</li>
-        <li><strong>IPFS Storage</strong> — Decentralized, censorship-resistant metadata via Pinata.</li>
-    </ul>
+## Token Creation Flow
 
-    <hr>
+1. **Connect Wallet** — User connects their Solana wallet (Phantom, Solflare, etc.)
+2. **Fill Token Details** — Enter name, symbol, description, decimals, and supply
+3. **Upload Image** — Upload token logo to IPFS via NFT.Storage
+4. **Configure Authorities** — Optionally revoke mint, freeze, and update authorities
+5. **Review & Confirm** — Transaction is simulated; user approves in wallet
+6. **Token Minted** — Token is live on-chain in under 60 seconds
 
-    <h2>Acknowledgments</h2>
-    <ul>
-        <li><a href="https://solana.com/">Solana Foundation</a> — Blockchain infrastructure</li>
-        <li><a href="https://metaplex.com/">Metaplex</a> — Token metadata standards</li>
-        <li><a href="https://www.pinata.cloud/">Pinata</a> — IPFS storage</li>
-        <li><a href="https://helius.xyz/">Helius</a> — RPC infrastructure</li>
-        <li><a href="https://railway.app/">Railway</a> — Hosting</li>
-        <li><a href="https://vercel.com/">Vercel</a> — Deployment platform</li>
-    </ul>
+### Network Support
 
-    <hr>
+| Network | Purpose | Cost |
+|---------|---------|------|
+| **Devnet** | Testing & experimentation | Free |
+| **Mainnet Beta** | Production deployment | 0.15–0.60 SOL |
 
-    <p class="center" style="margin-top: 60px;">
-        Made with ❤️ by <a href="https://github.com/LeonidasSpart">LeonidasSpart</a><br><br>
-        <a href="https://zrp.one">🚀 Try it now at zrp.one</a>
-    </p>
-</body>
-</html>
+---
+
+## Pricing
+
+| Plan | Cost | Features |
+|------|------|----------|
+| **Free** | $0 | Devnet testing, token creation, IPFS storage, social links & branding |
+| **Basic** | 0.15 SOL (~$25) | Everything in Free + Mainnet launch |
+| **Secure** | 0.60 SOL (~$100) | Everything in Basic + Revoke all authorities + Immutable metadata |
+
+**Authority revocations** (add-on): 0.15 SOL each  
+- Revoke Mint Authority — Prevents future token minting  
+- Revoke Freeze Authority — Prevents freezing token accounts  
+- Revoke Update Authority — Makes metadata immutable
+
+> Network gas fees are included in all paid tiers. No subscriptions. No hidden fees.
+
+---
+
+## Security
+
+| Feature | Description |
+|---------|-------------|
+| **Non-Custodial** | We never see or store private keys. Your wallet, your tokens. |
+| **Wallet-Signed** | Every transaction is signed directly in your wallet. |
+| **Open Source** | Fully auditable code. No hidden logic. |
+| **Metaplex Standard** | SPL-compliant tokens compatible with all Solana wallets & DEXes. |
+| **Authority Revocation** | Permanently revoke authorities to build holder trust. |
+| **IPFS Storage** | Decentralized, censorship-resistant metadata via NFT.Storage. |
+
+---
+
+## Deployment
+
+### Deploy on Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/LeonidasSpart/solanalaunchpad)
+
+### Deploy on Railway
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template)
+
+### Manual Deployment
+
+1. Push code to GitHub
+2. Connect repository to your hosting platform
+3. Add environment variables
+4. Deploy automatically on push
+
+---
+
+## Roadmap
+
+- [x] Token creation
+- [x] IPFS image upload
+- [x] Wallet integration
+- [x] Authority revocation
+- [x] Token airdrop feature
+- [x] Token explorer
+- [ ] Token staking
+- [ ] Token swap integration
+- [ ] Mobile app
+- [ ] Multi-RPC fallback
+- [ ] Advanced tokenomics calculator
+
+---
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add some amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+Please ensure your code follows the existing TypeScript and formatting conventions.
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Acknowledgments
+
+- [Solana Foundation](https://solana.com/) — Blockchain infrastructure
+- [Metaplex](https://metaplex.com/) — Token metadata standards
+- [Pinata]((https://app.pinata.cloud) — IPFS storage
+- [Helius](https://helius.xyz/) — RPC infrastructure
+- [Railway](https://railway.app/) — Hosting
+- [Vercel](https://vercel.com/) — Deployment platform
+
+---
+
+## Support
+
+For issues, questions, or feature requests:
+
+- 🐛 [Open an issue](https://github.com/LeonidasSpart/solanalaunchpad/issues) on GitHub
+- 📧 Contact via GitHub
+
+---
+
+<p align="center">
+  Made with ❤️ by <a href="https://github.com/LeonidasSpart">LeonidasSpart</a>
+</p>
+
+<p align="center">
+  <a href="https://zrp.one">🚀 Try it now at zrp.one</a>
+</p>
+
+----
+LICENSE
+MIT License
+
+Copyright (c) 2026 LeonidasSpart
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+

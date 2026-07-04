@@ -75,3 +75,24 @@ When you create a token on ZRP, your image is uploaded to IPFS via Pinata. This 
 ## View Your Image
 
 After token creation, your image will be available at:
+
+https://gateway.pinata.cloud/ipfs/YOUR_CID
+---
+```
+
+You can see it on:
+- ✅ Solscan
+- ✅ Phantom/Solflare wallet
+- ✅ Token Explorer
+- ✅ Token Details page
+
+---
+
+## Related Articles
+
+- [How to Create a Token](/help/create-token)
+- [Token Parameters Explained](/help/token-parameters)
+- [Troubleshooting Image Issues](/help/image-upload-issue)
+```
+
+---

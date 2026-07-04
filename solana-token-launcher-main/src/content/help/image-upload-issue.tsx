@@ -23,7 +23,7 @@ export default function ImageNotUploadingPage() {
           <h3 className="text-white font-semibold mt-4 mb-3">1. File Size Too Large</h3>
           <div className="space-y-3">
             <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a] flex justify-between items-center">
-              <span className="text-[#BDDBDB]">File > 5MB</span>
+              <span className="text-[#BDDBDB]">File &gt; 5MB</span>
               <span className="text-white text-sm font-medium">Compress the image</span>
             </div>
             <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a] flex justify-between items-center">
@@ -126,7 +126,7 @@ export default function ImageNotUploadingPage() {
             <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 flex items-start gap-3">
               <span className="text-[#FF2D2D] text-sm font-bold">4</span>
               <div>
-                <p className="text-white text-sm font-medium">If > 5MB, compress it</p>
+                <p className="text-white text-sm font-medium">If &gt; 5MB, compress it</p>
                 <p className="text-[#BDDBDB] text-sm">Use an image compressor</p>
               </div>
             </div>

@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/providers/providers";
-import { Inter } from "next/font/google";
+import { Inter, Orbitron } from "next/font/google";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",     // ← makes it available as CSS variable
+});
+
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  variable: "--font-orbitron",  // ← for headings & logo
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://zrp.one"),
@@ -13,7 +21,8 @@ export const metadata: Metadata = {
     default: "ZRP — Free Devnet Testing Solana Token Launcher",
     template: "%s | ZRP",
   },
-  description: "Create Solana SPL tokens in 60 seconds. Free devnet testing, 0.15 SOL mainnet, open-source code. Mint, revoke authorities, burn LP. No hidden fees, full custody.",
+  description:
+    "Create Solana SPL tokens in 60 seconds. Free devnet testing, 0.15 SOL mainnet, open-source code. Mint, revoke authorities, burn LP. No hidden fees, full custody.",
   keywords: [
     "Solana token creator",
     "SPL token launcher",
@@ -129,7 +138,9 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body
+        className={`${inter.variable} ${orbitron.variable} bg-[#050505] text-white antialiased`}
+      >
         <Providers>
           <Header />
           <main className="min-h-screen">{children}</main>

@@ -65,3 +65,63 @@ To make your token tradeable, you need to add liquidity on a DEX like Raydium. T
 ### Step 5: Set Initial Price
 
 The price is determined by the ratio of SOL to tokens:
+
+
+**Example:**
+- 10 SOL + 100,000 tokens = 0.0001 SOL per token
+
+### Step 6: Add Liquidity
+
+1. Enter the amount of SOL
+2. Raydium will calculate tokens needed
+3. Click **"Add Liquidity"**
+4. Approve transactions in your wallet
+
+### Step 7: Lock Liquidity (Recommended)
+
+Locking liquidity prevents you from removing it:
+
+1. After adding liquidity, you receive LP tokens
+2. Lock these LP tokens using a locking service
+3. This builds trust with holders
+
+## Using ZRP's Add Liquidity Tool
+
+### Step 1: Enter Token Mint
+
+1. Go to [Add Liquidity](/add-liquidity)
+2. Enter your token's mint address
+
+### Step 2: Set Amounts
+
+1. Enter SOL amount
+2. Enter token amount
+
+### Step 3: Open Raydium
+
+1. Click **"Add Liquidity on Raydium"**
+2. Raydium opens with your token pre-filled
+
+## Common Issues
+
+### Insufficient Balance
+
+**Solution:** Make sure you have enough SOL and tokens.
+
+### Transaction Fails
+
+**Solution:** Check your SOL balance for fees.
+
+### Price Too High/Low
+
+**Solution:** Adjust the ratio of SOL to tokens.
+
+---
+
+## Related Articles
+
+- [Liquidity Guide](/help/liquidity-guide)
+- [Token Parameters Explained](/help/token-parameters)
+- [DEX Comparison](/help/dex-comparison)
+
+

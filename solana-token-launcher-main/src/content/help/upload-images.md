@@ -1,12 +1,3 @@
-
-```markdown
----
-title: Uploading Images to IPFS
-description: How to upload and manage token images on ZRP
-category: Creating Tokens
-order: 4
----
-
 # Uploading Images to IPFS
 
 When you create a token on ZRP, your image is uploaded to IPFS via Pinata. This guide explains the process.

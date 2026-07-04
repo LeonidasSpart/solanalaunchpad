@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Rocket, CheckCircle, ExternalLink } from 'lucide-react';
+import { Loader2, Rocket, CheckCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { NetworkContext } from '@/providers/providers';
 import TemplateLoader from './TemplateLoader';
 import { getConnection } from '@/lib/connection';
@@ -21,6 +21,7 @@ const CreateToken = () => {
   const { network } = useContext(NetworkContext);
 
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const templates = {
     meme: {
@@ -220,6 +221,14 @@ const CreateToken = () => {
       }
     } catch (error) {
       console.error('❌ Error saving token:', error);
+    }
+  };
+
+  const handleCopyMint = () => {
+    if (mintAddress) {
+      navigator.clipboard.writeText(mintAddress);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -567,20 +576,56 @@ const CreateToken = () => {
               )}
 
               {txId && (
-                <div className="bg-green-900/30 border border-green-500/30 rounded-xl p-6 text-center space-y-3">
+                <div className="bg-green-900/30 border border-green-500/30 rounded-xl p-6 text-center space-y-4">
                   <CheckCircle className="h-12 w-12 text-green-400 mx-auto" />
-                  <p className="text-green-400 font-bold text-xl">🎉 Token Created Successfully!</p>
-                  <p className="text-zinc-400 text-sm">
-                    Your token <span className="text-white font-semibold">{formData.symbol}</span> has been launched on Solana {network === 'devnet' ? 'Devnet' : 'Mainnet'}.
-                  </p>
-                  {mintAddress && (
-                    <div className="bg-zinc-800 rounded-lg p-3">
-                      <p className="text-xs text-zinc-500 mb-1">Mint Address</p>
-                      <p className="text-xs text-purple-400 font-mono break-all">{mintAddress}</p>
+                  
+                  {/* Token Image */}
+                  {imagePreview && (
+                    <div className="w-16 h-16 rounded-xl overflow-hidden mx-auto border border-[#1a1a1a]">
+                      <img src={imagePreview} alt={formData.symbol} className="w-full h-full object-cover" />
                     </div>
                   )}
-                  <div className="flex flex-col gap-2 pt-2">
-                    {/* 🔥 SHARE ON X BUTTON */}
+                  
+                  <p className="text-green-400 font-bold text-xl">🎉 Token Created Successfully!</p>
+                  <p className="text-[#BDDBDB] text-sm">
+                    Your token <span className="text-white font-semibold">${formData.symbol}</span> has been launched on Solana {network === 'devnet' ? 'Devnet' : 'Mainnet'}.
+                  </p>
+                  
+                  {/* Token Details Summary */}
+                  <div className="grid grid-cols-3 gap-2 text-xs text-[#BDDBDB] bg-[#050505] rounded-lg p-3 max-w-sm mx-auto">
+                    <div>
+                      <p className="text-zinc-500">Supply</p>
+                      <p className="text-white">{Number(formData.supply).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500">Decimals</p>
+                      <p className="text-white">{formData.decimals}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500">Network</p>
+                      <p className="text-white">{network === 'devnet' ? '🧪 Devnet' : '🔴 Mainnet'}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Mint Address with Copy */}
+                  {mintAddress && (
+                    <div className="bg-[#0D0D0D] rounded-lg p-3 max-w-sm mx-auto">
+                      <p className="text-xs text-zinc-500 mb-1">Mint Address</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-xs text-[#FF2D2D] font-mono break-all">{mintAddress}</p>
+                        <button
+                          onClick={handleCopyMint}
+                          className="p-1 hover:bg-[#1a1a1a] rounded transition"
+                          title="Copy mint address"
+                        >
+                          {copied ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-[#BDDBDB]" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex flex-col gap-2 pt-2 max-w-sm mx-auto">
+                    {/* Share on X Button */}
                     <button
                       onClick={() => {
                         const tweetText = `🚀 I just launched $${formData.symbol} on @ZRP_AI!\n\nCreate your own Solana token in 60 seconds → zrp.one\n\n#Solana #SPLToken #Crypto`;
@@ -589,7 +634,7 @@ const CreateToken = () => {
                       className="inline-flex items-center justify-center gap-2 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white text-sm px-4 py-2 rounded-lg transition-colors"
                     >
                       <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231z"/>
                       </svg>
                       Share on X
                     </button>
@@ -624,6 +669,8 @@ const CreateToken = () => {
                           decimals: '9' 
                         });
                         setSelectedTemplate(null);
+                        setCopied(false);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="text-sm text-zinc-400 hover:text-white transition-colors"
                     >

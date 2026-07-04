@@ -217,7 +217,7 @@ const DisplayTokens = () => {
   };
 
   const handleShareToX = (token: TokenData) => {
-    const text = `Just launched ${token.name} (${token.symbol}) on @zrp_ai! Check it out 👀`;
+    const text = `Just launched ${token.name} ($${token.symbol}) on @zrp_ai! Check it out 👀`;
     const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -327,7 +327,9 @@ const DisplayTokens = () => {
           />
 
           <div className="flex items-center gap-2 mt-4">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${network === 'mainnet' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
+              network === 'mainnet' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
+            }`}>
               <span className={`w-1.5 h-1.5 rounded-full ${network === 'mainnet' ? 'bg-green-400' : 'bg-yellow-400'}`} />
               {network === 'mainnet' ? '⚡ Live Mainnet' : '🧪 Devnet Testing'}
             </span>
@@ -445,7 +447,7 @@ const DisplayTokens = () => {
                         href={`${solscanBaseUrl}${token.mint}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 w-full"
+                        className="flex bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 w-full"
                       >
                         <ExternalLink className="h-4 w-4" />
                         View on Explorer

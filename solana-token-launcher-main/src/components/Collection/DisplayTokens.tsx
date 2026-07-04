@@ -61,6 +61,13 @@ const DisplayTokens = () => {
     [network]
   );
 
+  // Helper to fix image URLs
+  const fixImageUrl = (url: string): string => {
+    if (!url) return '/placeholder.svg?height=200&width=200';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `https://${url}`;
+  };
+
   const fetchMetadataFromUri = async (uri: string): Promise<any> => {
     if (metadataCache.has(uri)) return metadataCache.get(uri);
 
@@ -119,7 +126,7 @@ const DisplayTokens = () => {
             if (offChainMetadata) {
               name = offChainMetadata.name || metadata.name || 'Unknown Token';
               symbol = offChainMetadata.symbol || metadata.symbol || '???';
-              image = offChainMetadata.image || '/placeholder.svg?height=200&width=200';
+              image = fixImageUrl(offChainMetadata.image || '');
               description = offChainMetadata.description || '';
             } else {
               name = metadata.name || 'Unknown Token';
@@ -175,7 +182,7 @@ const DisplayTokens = () => {
         mint: t.mint_address,
         name: t.name || 'Unknown Token',
         symbol: t.symbol || '???',
-        image: t.image_url || '/placeholder.svg?height=200&width=200',
+        image: fixImageUrl(t.image_url),
         description: t.description || '',
         balance: Number(t.supply) / Math.pow(10, t.decimals || 9),
         decimals: t.decimals || 9,
@@ -217,14 +224,16 @@ const DisplayTokens = () => {
   };
 
   const handleShareToX = (token: TokenData) => {
-    const text = `Just launched ${token.name} ($${token.symbol}) on @zrp_ai! Check it out 👀`;
-    const url = `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    const text = `🚀 Just launched ${token.name} ($${token.symbol}) on @ZRP_AI!\n\nCreate your own Solana token in 60 seconds → zrp.one\n\n#Solana #SPLToken #Crypto`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
 
+  // ✅ Fixed Solscan URL
   const solscanBaseUrl = network === 'mainnet' 
     ? 'https://solscan.io/token/' 
-    : 'https://solscan.io/token/?cluster=devnet';
+    : 'https://solscan.io/token/';
+  const solscanCluster = network === 'devnet' ? '?cluster=devnet' : '';
 
   const filteredTokens = tokens.filter(token => 
     token.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -397,7 +406,7 @@ const DisplayTokens = () => {
                       />
                       <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm rounded-full px-3 py-1">
                         <span className="text-sm font-semibold text-white">
-                          {token.balance.toLocaleString()} {token.symbol}
+                          {token.balance.toLocaleString()} ${token.symbol}
                         </span>
                       </div>
                       {viewMode === 'all' && token.revoke_mint && token.revoke_freeze && token.revoke_update && (
@@ -411,7 +420,7 @@ const DisplayTokens = () => {
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="text-lg font-bold text-white">{token.name}</h3>
-                          <p className="text-sm text-purple-400 font-medium">{token.symbol}</p>
+                          <p className="text-sm text-purple-400 font-medium">${token.symbol}</p>
                         </div>
                       </div>
 
@@ -435,7 +444,7 @@ const DisplayTokens = () => {
                         <button onClick={() => handleCopyMint(token.mint)} className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors">
                           {copiedMint === token.mint ? <Check className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5 text-zinc-400" />}
                         </button>
-                        <a href={`${solscanBaseUrl}${token.mint}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors">
+                        <a href={`${solscanBaseUrl}${token.mint}${solscanCluster}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors">
                           <ExternalLink className="h-3.5 w-3.5 text-zinc-400" />
                         </a>
                         <button onClick={() => handleShareToX(token)} className="p-1.5 hover:bg-zinc-700 rounded-md transition-colors">
@@ -444,7 +453,7 @@ const DisplayTokens = () => {
                       </div>
 
                       <a
-                        href={`${solscanBaseUrl}${token.mint}`}
+                        href={`${solscanBaseUrl}${token.mint}${solscanCluster}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 w-full"

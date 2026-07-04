@@ -123,8 +123,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 Create a `.env.local` file with the following:
 
 ```env
-# NFT.Storage API key for IPFS uploads
-NEXT_PUBLIC_NFT_STORAGE_API_KEY=your_nft_storage_key
+# Pinata API key for IPFS uploads
+NEXT_PUBLIC_PINATA_API_KEY=your_pinata_key
 
 # Helius RPC URL for reliable Solana connection
 NEXT_PUBLIC_RPC_URL=https://devnet.helius-rpc.com/?api-key=your_helius_key

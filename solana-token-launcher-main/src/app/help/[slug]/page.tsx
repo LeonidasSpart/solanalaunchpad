@@ -6,20 +6,19 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 // Map slugs to component imports (lazy loaded)
-// IMPORTANT: match the actual filenames in src/content/help/
 const articleImports: Record<string, () => Promise<any>> = {
   'what-is-zrp': () => import('@/content/help/what-is-zrp'),
   'create-token-guide': () => import('@/content/help/create-token-guide'),
   'supported-wallets': () => import('@/content/help/supported-wallets'),
   'devnet-vs-mainnet': () => import('@/content/help/devnet-vs-mainnet'),
   'glossary': () => import('@/content/help/glossary'),
-  'using-templates': () => import('@/content/help/templates'), // file is templates.tsx
-  'token-parameters-explained': () => import('@/content/help/token-parameters'), // file is token-parameters.tsx
+  'using-templates': () => import('@/content/help/templates'),
+  'token-parameters-explained': () => import('@/content/help/token-parameters'),
   'authority-revocation': () => import('@/content/help/authority-revocation'),
   'security-settings': () => import('@/content/help/security-settings'),
-  'connecting-your-wallet': () => import('@/content/help/connect-wallet'), // file is connect-wallet.tsx
-  'troubleshooting-connection-issues': () => import('@/content/help/connection-issues'), // file is connection-issues.tsx
-  'viewing-your-token': () => import('@/content/help/view-token'), // file is view-token.tsx
+  'connecting-your-wallet': () => import('@/content/help/connect-wallet'),
+  'troubleshooting-connection-issues': () => import('@/content/help/connection-issues'),
+  'viewing-your-token': () => import('@/content/help/view-token'),
   'sharing-your-token': () => import('@/content/help/share-token'),
   'adding-liquidity': () => import('@/content/help/add-liquidity'),
   'airdrop-distribution': () => import('@/content/help/airdrop'),
@@ -99,7 +98,10 @@ export default function HelpArticlePage() {
         <ArrowLeft className="h-4 w-4" />
         Back to Help
       </Link>
-      <Component />
+      {/* Wrap the article component with prose for beautiful typography */}
+      <div className="prose prose-invert max-w-none prose-headings:text-white prose-headings:font-orbitron prose-p:text-[#BDDBDB] prose-a:text-[#FF2D2D] prose-a:no-underline prose-a:hover:underline prose-strong:text-white prose-li:text-[#BDDBDB] prose-li:marker:text-[#FF2D2D] prose-table:text-[#BDDBDB] prose-th:text-white prose-th:font-orbitron prose-th:border-[#1a1a1a] prose-td:border-[#1a1a1a] prose-code:text-[#FF2D2D] prose-code:bg-[#1a1a1a] prose-code:rounded prose-blockquote:border-l-[#FF2D2D] prose-blockquote:bg-[#1a1a1a] prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-xl">
+        <Component />
+      </div>
     </div>
   );
 }

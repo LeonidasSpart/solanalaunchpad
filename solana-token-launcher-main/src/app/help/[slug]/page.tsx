@@ -6,43 +6,44 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 // Map slugs to component imports (lazy loaded)
+// IMPORTANT: match the actual filenames in src/content/help/
 const articleImports: Record<string, () => Promise<any>> = {
   'what-is-zrp': () => import('@/content/help/what-is-zrp'),
   'create-token-guide': () => import('@/content/help/create-token-guide'),
   'supported-wallets': () => import('@/content/help/supported-wallets'),
   'devnet-vs-mainnet': () => import('@/content/help/devnet-vs-mainnet'),
   'glossary': () => import('@/content/help/glossary'),
-  'using-templates': () => import('@/content/help/using-templates'),
-  'token-parameters-explained': () => import('@/content/help/token-parameters-explained'),
+  'using-templates': () => import('@/content/help/templates'), // file is templates.tsx
+  'token-parameters-explained': () => import('@/content/help/token-parameters'), // file is token-parameters.tsx
   'authority-revocation': () => import('@/content/help/authority-revocation'),
   'security-settings': () => import('@/content/help/security-settings'),
-  'connecting-your-wallet': () => import('@/content/help/connecting-your-wallet'),
-  'troubleshooting-connection-issues': () => import('@/content/help/troubleshooting-connection-issues'),
-  'viewing-your-token': () => import('@/content/help/viewing-your-token'),
-  'sharing-your-token': () => import('@/content/help/sharing-your-token'),
-  'adding-liquidity': () => import('@/content/help/adding-liquidity'),
-  'airdrop-distribution': () => import('@/content/help/airdrop-distribution'),
-  'revoking-authorities-after-creation': () => import('@/content/help/revoking-authorities-after-creation'),
-  'burning-lp-tokens': () => import('@/content/help/burning-lp-tokens'),
-  'understanding-token-authorities': () => import('@/content/help/understanding-token-authorities'),
-  'rug-pull-prevention': () => import('@/content/help/rug-pull-prevention'),
+  'connecting-your-wallet': () => import('@/content/help/connect-wallet'), // file is connect-wallet.tsx
+  'troubleshooting-connection-issues': () => import('@/content/help/connection-issues'), // file is connection-issues.tsx
+  'viewing-your-token': () => import('@/content/help/view-token'), // file is view-token.tsx
+  'sharing-your-token': () => import('@/content/help/share-token'),
+  'adding-liquidity': () => import('@/content/help/add-liquidity'),
+  'airdrop-distribution': () => import('@/content/help/airdrop'),
+  'revoking-authorities-after-creation': () => import('@/content/help/revoke-after'),
+  'burning-lp-tokens': () => import('@/content/help/burn-lp'),
+  'understanding-token-authorities': () => import('@/content/help/token-authorities'),
+  'rug-pull-prevention': () => import('@/content/help/rug-pull'),
   'security-checklist': () => import('@/content/help/security-checklist'),
-  'reporting-suspicious-activity': () => import('@/content/help/reporting-suspicious-activity'),
+  'reporting-suspicious-activity': () => import('@/content/help/report-suspicious'),
   'transaction-failed': () => import('@/content/help/transaction-failed'),
-  'insufficient-sol-balance': () => import('@/content/help/insufficient-sol-balance'),
-  'rpc-connection-errors': () => import('@/content/help/rpc-connection-errors'),
-  'token-not-showing-in-wallet': () => import('@/content/help/token-not-showing-in-wallet'),
-  'image-not-uploading': () => import('@/content/help/image-not-uploading'),
+  'insufficient-sol-balance': () => import('@/content/help/insufficient-sol'),
+  'rpc-connection-errors': () => import('@/content/help/rpc-errors'),
+  'token-not-showing-in-wallet': () => import('@/content/help/token-not-showing'),
+  'image-not-uploading': () => import('@/content/help/image-upload-issue'),
   'browser-compatibility': () => import('@/content/help/browser-compatibility'),
   'contact-support': () => import('@/content/help/contact-support'),
   'feature-requests': () => import('@/content/help/feature-requests'),
   'community-guidelines': () => import('@/content/help/community-guidelines'),
   'affiliate-program': () => import('@/content/help/affiliate-program'),
-  'frequently-asked-questions': () => import('@/content/help/frequently-asked-questions'),
-  'our-mission': () => import('@/content/help/our-mission'),
+  'frequently-asked-questions': () => import('@/content/help/faq'),
+  'our-mission': () => import('@/content/help/mission'),
   'open-source': () => import('@/content/help/open-source'),
-  'privacy-policy': () => import('@/content/help/privacy-policy'),
-  'terms-of-service': () => import('@/content/help/terms-of-service'),
+  'privacy-policy': () => import('@/content/help/privacy'),
+  'terms-of-service': () => import('@/content/help/terms'),
 };
 
 export default function HelpArticlePage() {

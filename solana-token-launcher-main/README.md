@@ -91,9 +91,11 @@ ZRP is a production-ready, open-source platform for creating and deploying custo
 - Node.js 18+
 - npm or yarn
 - A Solana wallet (Phantom, Solflare, etc.)
-- NFT.Storage API key
+- Pinata API key
 - Helius RPC URL
 
+  
+---
 ### Installation
 
 ```bash

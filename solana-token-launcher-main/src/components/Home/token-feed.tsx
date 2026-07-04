@@ -18,12 +18,19 @@ interface Token {
   network: string;
   timestamp: string;
   mintAddress: string;
+  image_url?: string;
 }
 
 export default function TokenFeed() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const fixImageUrl = (url: string): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `https://${url}`;
+  };
 
   useEffect(() => {
     const fetchTokens = async () => {
@@ -44,6 +51,7 @@ export default function TokenFeed() {
           network: token.network || 'Devnet',
           timestamp: token.created_at ? new Date(token.created_at).toLocaleDateString() : 'Just now',
           mintAddress: token.mint_address,
+          image_url: token.image_url || '',
         }));
         
         setTokens(formattedTokens);
@@ -60,6 +68,7 @@ export default function TokenFeed() {
             network: 'Devnet',
             timestamp: 'July 4, 2026',
             mintAddress: 'GJ3ifj3UzKEsN1YZ2WEeP3Ss1QWVaNJAi6c3qwQYfPv5',
+            image_url: '',
           },
           {
             id: '3wJ2d1DUcMEamsHhKMezkaFrmqSsV14zviBQbEkXxFg6',
@@ -68,22 +77,7 @@ export default function TokenFeed() {
             network: 'Devnet',
             timestamp: 'July 4, 2026',
             mintAddress: '3wJ2d1DUcMEamsHhKMezkaFrmqSsV14zviBQbEkXxFg6',
-          },
-          {
-            id: '4AdLsic4h29Vo2F63T4CqpSpLZcotjtbhD9XrX...',
-            name: 'Sultana',
-            symbol: 'SOY',
-            network: 'Devnet',
-            timestamp: 'July 4, 2026',
-            mintAddress: '4AdLsic4h29Vo2F63T4CqpSpLZcotjtbhD9XrX...',
-          },
-          {
-            id: 'GKwx8jQtPAUGvCCVbv1kYa5W7cvS3CJYWzh...',
-            name: 'Tikatika',
-            symbol: 'TKA',
-            network: 'Devnet',
-            timestamp: 'July 4, 2026',
-            mintAddress: 'GKwx8jQtPAUGvCCVbv1kYa5W7cvS3CJYWzh...',
+            image_url: '',
           },
         ]);
       } finally {
@@ -168,11 +162,22 @@ export default function TokenFeed() {
                   className="group px-6 py-4 hover:bg-[#1a1a1a]/40 transition-all duration-300"
                 >
                   <div className="grid grid-cols-12 gap-4 items-center">
-                    {/* Token Name */}
+                    {/* Token Name with Image */}
                     <div className="col-span-4 sm:col-span-3 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF2D2D]/20 to-[#FF2D2D]/5 flex items-center justify-center border border-[#FF2D2D]/20 group-hover:border-[#FF2D2D]/40 transition-all">
-                        <span className="text-[#FF2D2D] font-bold text-sm">{token.symbol[0]}</span>
-                      </div>
+                      {token.image_url ? (
+                        <img
+                          src={fixImageUrl(token.image_url)}
+                          alt={token.symbol}
+                          className="w-10 h-10 rounded-xl object-cover border border-[#FF2D2D]/20 group-hover:border-[#FF2D2D]/40 transition-all"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF2D2D]/20 to-[#FF2D2D]/5 flex items-center justify-center border border-[#FF2D2D]/20 group-hover:border-[#FF2D2D]/40 transition-all">
+                          <span className="text-[#FF2D2D] font-bold text-sm">{token.symbol[0]}</span>
+                        </div>
+                      )}
                       <div className="text-white font-semibold text-sm group-hover:text-[#FF2D2D] transition-colors">
                         {token.name}
                       </div>

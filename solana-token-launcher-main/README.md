@@ -111,8 +111,8 @@ Open http://localhost:3000 http://localhost:3000 to view the app.
 
 ---
 
-----
-Environment Variables
+
+### Environment Variables
 Create a .env.local file with the following:
 # Pinata API key for IPFS uploads
 NEXT_PUBLIC_PINATA_API_KEY=your_pinata_key

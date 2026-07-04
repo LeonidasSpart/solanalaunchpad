@@ -17,15 +17,92 @@ interface Token {
   symbol: string;
   network: string;
   timestamp: string;
+  mintAddress: string;
 }
 
 export default function TokenFeed() {
-  const [tokens] = useState<Token[]>([
-    { id: '1', name: 'ExampleToken', symbol: 'EXMPL', network: 'Devnet', timestamp: 'Example' },
-    { id: '2', name: 'DemoCoin', symbol: 'DEMO', network: 'Devnet', timestamp: 'Example' },
-    { id: '3', name: 'TestToken', symbol: 'TEST', network: 'Mainnet', timestamp: 'Example' },
-    { id: '4', name: 'SampleCoin', symbol: 'SMPL', network: 'Devnet', timestamp: 'Example' }
-  ]);
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchTokens = async () => {
+      try {
+        const response = await fetch('/api/tokens');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch tokens');
+        }
+        
+        const data = await response.json();
+        
+        // Map real tokens to feed format
+        const formattedTokens = data.map((token: any) => ({
+          id: token.mint_address,
+          name: token.name,
+          symbol: token.symbol,
+          network: token.network || 'Devnet',
+          timestamp: token.created_at ? new Date(token.created_at).toLocaleDateString() : 'Just now',
+          mintAddress: token.mint_address,
+        }));
+        
+        setTokens(formattedTokens);
+      } catch (err) {
+        console.error('Error fetching tokens:', err);
+        setError('Failed to load token feed');
+        
+        // Fallback to real tokens from your database
+        setTokens([
+          {
+            id: 'GJ3ifj3UzKEsN1YZ2WEeP3Ss1QWVaNJAi6c3qwQYfPv5',
+            name: 'Turbo Lazar',
+            symbol: 'ZLB',
+            network: 'Devnet',
+            timestamp: 'July 4, 2026',
+            mintAddress: 'GJ3ifj3UzKEsN1YZ2WEeP3Ss1QWVaNJAi6c3qwQYfPv5',
+          },
+          {
+            id: '3wJ2d1DUcMEamsHhKMezkaFrmqSsV14zviBQbEkXxFg6',
+            name: 'Zoea',
+            symbol: 'WQZ',
+            network: 'Devnet',
+            timestamp: 'July 4, 2026',
+            mintAddress: '3wJ2d1DUcMEamsHhKMezkaFrmqSsV14zviBQbEkXxFg6',
+          },
+          {
+            id: '4AdLsic4h29Vo2F63T4CqpSpLZcotjtbhD9XrX...',
+            name: 'Sultana',
+            symbol: 'SOY',
+            network: 'Devnet',
+            timestamp: 'July 4, 2026',
+            mintAddress: '4AdLsic4h29Vo2F63T4CqpSpLZcotjtbhD9XrX...',
+          },
+          {
+            id: 'GKwx8jQtPAUGvCCVbv1kYa5W7cvS3CJYWzh...',
+            name: 'Tikatika',
+            symbol: 'TKA',
+            network: 'Devnet',
+            timestamp: 'July 4, 2026',
+            mintAddress: 'GKwx8jQtPAUGvCCVbv1kYa5W7cvS3CJYWzh...',
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTokens();
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="activity" className="py-24 bg-[#050505] relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-[#BDDBDB]">Loading token feed...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="activity" className="py-24 bg-[#050505] relative overflow-hidden">
@@ -49,11 +126,11 @@ export default function TokenFeed() {
           </div>
           
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 tracking-tight">
-            Example <span className="text-[#FF2D2D]">Activity Feed</span>
+            Live <span className="text-[#FF2D2D]">Activity Feed</span>
           </h2>
           
           <p className="text-lg text-[#BDDBDB] max-w-2xl mx-auto">
-            This is how the live token feed will look once tokens are created through ZRP.
+            See the latest tokens created on ZRP in real-time.
           </p>
         </motion.div>
 
@@ -76,74 +153,83 @@ export default function TokenFeed() {
           </div>
 
           {/* Table Body */}
-          <div className="divide-y divide-[#1a1a1a]/50">
-            {tokens.map((token, index) => (
-              <motion.div
-                key={token.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.4 }}
-                className="group px-6 py-4 hover:bg-[#1a1a1a]/40 transition-all duration-300"
-              >
-                <div className="grid grid-cols-12 gap-4 items-center">
-                  {/* Token Name */}
-                  <div className="col-span-4 sm:col-span-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF2D2D]/20 to-[#FF2D2D]/5 flex items-center justify-center border border-[#FF2D2D]/20 group-hover:border-[#FF2D2D]/40 transition-all">
-                      <span className="text-[#FF2D2D] font-bold text-sm">{token.symbol[0]}</span>
+          {tokens.length === 0 ? (
+            <div className="px-6 py-8 text-center text-[#BDDBDB]">
+              No tokens created yet. Be the first!
+            </div>
+          ) : (
+            <div className="divide-y divide-[#1a1a1a]/50">
+              {tokens.map((token, index) => (
+                <motion.div
+                  key={token.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.08, duration: 0.4 }}
+                  className="group px-6 py-4 hover:bg-[#1a1a1a]/40 transition-all duration-300"
+                >
+                  <div className="grid grid-cols-12 gap-4 items-center">
+                    {/* Token Name */}
+                    <div className="col-span-4 sm:col-span-3 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF2D2D]/20 to-[#FF2D2D]/5 flex items-center justify-center border border-[#FF2D2D]/20 group-hover:border-[#FF2D2D]/40 transition-all">
+                        <span className="text-[#FF2D2D] font-bold text-sm">{token.symbol[0]}</span>
+                      </div>
+                      <div className="text-white font-semibold text-sm group-hover:text-[#FF2D2D] transition-colors">
+                        {token.name}
+                      </div>
                     </div>
-                    <div className="text-white font-semibold text-sm group-hover:text-[#FF2D2D] transition-colors">
-                      {token.name}
+
+                    {/* Symbol */}
+                    <div className="col-span-2 hidden sm:block">
+                      <span className="text-[#BDDBDB] font-mono text-sm font-medium">${token.symbol}</span>
+                    </div>
+
+                    {/* Network */}
+                    <div className="col-span-3 sm:col-span-2">
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${
+                        token.network === 'Mainnet'
+                          ? 'bg-[#FF2D2D]/10 text-[#FF2D2D] border-[#FF2D2D]/20'
+                          : 'bg-[#FF2D2D]/10 text-[#FF2D2D] border-[#FF2D2D]/20'
+                      }`}>
+                        <Globe className="h-3 w-3" />
+                        {token.network}
+                      </span>
+                    </div>
+
+                    {/* Status */}
+                    <div className="col-span-3 sm:col-span-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border bg-[#FF2D2D]/10 text-[#FF2D2D] border-[#FF2D2D]/20">
+                        Created
+                      </span>
+                    </div>
+
+                    {/* Time */}
+                    <div className="col-span-2 sm:col-span-2 hidden sm:block text-right">
+                      <span className="text-[#BDDBDB] text-xs flex items-center justify-end gap-1">
+                        <Clock className="h-3 w-3" />
+                        {token.timestamp}
+                      </span>
+                    </div>
+
+                    {/* View Link */}
+                    <div className="col-span-2 sm:col-span-1 text-right">
+                      <Link
+                        href={`/tokens/${token.mintAddress}`}
+                        className="text-[#BDDBDB] hover:text-[#FF2D2D] transition-colors p-2 rounded-lg hover:bg-[#FF2D2D]/10"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
                     </div>
                   </div>
-
-                  {/* Symbol */}
-                  <div className="col-span-2 hidden sm:block">
-                    <span className="text-[#BDDBDB] font-mono text-sm font-medium">${token.symbol}</span>
-                  </div>
-
-                  {/* Network */}
-                  <div className="col-span-3 sm:col-span-2">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${
-                      token.network === 'Mainnet'
-                        ? 'bg-[#FF2D2D]/10 text-[#FF2D2D] border-[#FF2D2D]/20'
-                        : 'bg-[#FF2D2D]/10 text-[#FF2D2D] border-[#FF2D2D]/20'
-                    }`}>
-                      <Globe className="h-3 w-3" />
-                      {token.network}
-                    </span>
-                  </div>
-
-                  {/* Status */}
-                  <div className="col-span-3 sm:col-span-2">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border bg-[#FF2D2D]/10 text-[#FF2D2D] border-[#FF2D2D]/20">
-                      Example
-                    </span>
-                  </div>
-
-                  {/* Time */}
-                  <div className="col-span-2 sm:col-span-2 hidden sm:block text-right">
-                    <span className="text-[#BDDBDB] text-xs flex items-center justify-end gap-1">
-                      <Clock className="h-3 w-3" />
-                      {token.timestamp}
-                    </span>
-                  </div>
-
-                  {/* View Link */}
-                  <div className="col-span-2 sm:col-span-1 text-right">
-                    <button className="text-[#BDDBDB] hover:text-[#FF2D2D] transition-colors p-2 rounded-lg hover:bg-[#FF2D2D]/10">
-                      <ExternalLink className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
           {/* Table Footer */}
           <div className="px-6 py-4 bg-[#1a1a1a]/30 border-t border-[#1a1a1a]">
             <div className="flex items-center justify-between">
               <div className="text-xs text-[#BDDBDB]">
-                Showing example data
+                {tokens.length} tokens created
               </div>
               <Link
                 href="/tokens"

@@ -54,7 +54,7 @@ ZRP is a production-ready, open-source platform for creating and deploying custo
 
 ### Core
 - 🪙 **One-Click Token Creation** — Launch SPL tokens via simple form
-- 🖼️ **IPFS Metadata Storage** — Upload token images and metadata via NFT.Storage
+- 🖼️ **IPFS Metadata Storage** — Upload token images and metadata via Pinata
 - 👛 **Wallet Integration** — Phantom, Solflare, Backpack, and all Solana wallets
 - 🔒 **Authority Revocation** — Revoke mint, freeze, and update authorities for maximum trust
 - ⚡ **Sub-60-Second Minting** — Lightning-fast deployment on Solana
@@ -77,7 +77,7 @@ ZRP is a production-ready, open-source platform for creating and deploying custo
 | [TypeScript](https://www.typescriptlang.org/) | Type safety |
 | [Solana Web3.js](https://solana-labs.github.io/solana-web3.js/) | Blockchain interaction |
 | [Metaplex](https://metaplex.com/) | Token metadata standards |
-| [NFT.Storage](https://nft.storage/) | IPFS uploads |
+| [Pinata](https://app.pinata.cloud) | IPFS uploads |
 | [Helius](https://helius.xyz/) | Reliable RPC infrastructure |
 | [Tailwind CSS](https://tailwindcss.com/) | Styling |
 | [Framer Motion](https://www.framer.com/motion/) | Animations |

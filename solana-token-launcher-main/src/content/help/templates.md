@@ -27,7 +27,7 @@ ZRP offers four pre-configured templates to help you launch your token quickly w
 | Parameter | Value |
 |-----------|-------|
 | Supply | 1,000,000,000 |
-| Decimals | 0 |
+| Decimals | 6 |
 | Mint Authority | ✅ Revoked |
 | Freeze Authority | ✅ Revoked |
 | Update Authority | ✅ Revoked |

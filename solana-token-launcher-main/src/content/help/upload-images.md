@@ -1,3 +1,5 @@
+
+```markdown
 ---
 title: Uploading Images to IPFS
 description: How to upload and manage token images on ZRP
@@ -76,8 +78,10 @@ When you create a token on ZRP, your image is uploaded to IPFS via Pinata. This 
 
 After token creation, your image will be available at:
 
+```
+
 https://gateway.pinata.cloud/ipfs/YOUR_CID
----
+
 ```
 
 You can see it on:

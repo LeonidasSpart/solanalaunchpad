@@ -1,10 +1,3 @@
----
-title: Troubleshooting Connection Issues
-description: Common wallet connection problems and how to fix them
-category: Wallet & Connection
-order: 4
----
-
 # Troubleshooting Connection Issues
 
 Having trouble connecting your wallet to ZRP? Here's how to fix common issues.
@@ -81,3 +74,71 @@ Sometimes the simplest fix works best:
 ## Error Messages
 
 ### "No wallet found"
+
+```
+
+No wallet found. Please install Phantom, Solflare, or Backpack.
+
+```
+
+**Solution:** Install a wallet extension.
+
+### "Connection failed"
+
+```
+
+Failed to connect to wallet. Please try again.
+
+```
+
+**Solution:** Check your wallet and try again.
+
+### "Network mismatch"
+
+```
+
+Network mismatch. Please switch to Devnet/Mainnet.
+
+```
+
+**Solution:** Switch your wallet to the correct network.
+
+### "User rejected"
+
+```
+
+Transaction rejected by user.
+
+```
+
+**Solution:** Approve the transaction in your wallet.
+
+## Still Having Issues?
+
+### Try This Checklist
+
+- [ ] Wallet installed and unlocked
+- [ ] Correct network selected
+- [ ] Browser updated
+- [ ] Cache cleared
+- [ ] No other wallet extensions conflicting
+
+### Contact Support
+
+If you've tried everything:
+
+1. [Contact us](/contact)
+2. Include:
+   - Wallet type
+   - Browser
+   - Error message
+   - Steps you've tried
+
+---
+
+## Related Articles
+
+- [Connecting Your Wallet](/help/connect-wallet)
+- [Supported Wallets](/help/supported-wallets)
+- [Wallet Security Best Practices](/help/wallet-security)
+```

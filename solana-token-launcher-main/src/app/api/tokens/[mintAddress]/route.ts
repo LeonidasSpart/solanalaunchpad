@@ -8,10 +8,10 @@ const pool = new Pool({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { mintAddress: string } }
+  { params }: { params: Promise<{ mintAddress: string }> }
 ) {
   try {
-    const { mintAddress } = params;
+    const { mintAddress } = await params;
     
     const result = await pool.query(
       `SELECT * FROM tokens WHERE mint_address = $1`,

@@ -7,7 +7,6 @@ const JWT_SECRET = process.env.JWT_SECRET || '';
 
 export async function GET() {
   try {
-    // 1. Verify admin token
     const cookieStore = await cookies();
     const token = cookieStore.get('admin_token')?.value;
     if (!token) {
@@ -20,27 +19,30 @@ export async function GET() {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    // 2. Fetch REAL data from PostgreSQL
+    // Fetch real data with all columns
     const [
       totalTokensResult,
+      totalUsersResult,
+      totalRevenueResult,
+      activeUsersResult,
       recentTokensResult,
     ] = await Promise.all([
       query('SELECT COUNT(*) FROM tokens'),
-      query('SELECT name, symbol, created_at FROM tokens ORDER BY created_at DESC LIMIT 10'),
+      query('SELECT COUNT(DISTINCT creator) FROM tokens WHERE creator IS NOT NULL'),
+      query('SELECT COALESCE(SUM(fee), 0) FROM tokens'),
+      query("SELECT COUNT(DISTINCT creator) FROM tokens WHERE creator IS NOT NULL AND created_at > NOW() - INTERVAL '30 days'"),
+      query('SELECT name, symbol, network, created_at FROM tokens ORDER BY created_at DESC LIMIT 10'),
     ]);
 
     const totalTokens = parseInt(totalTokensResult.rows[0].count, 10);
-
-    // Note: Your tokens table doesn't have creator/fee/network yet.
-    // These will show as 0 until you add them.
-    const totalUsers = 0;      // Add a 'creator' column
-    const totalRevenue = 0;    // Add a 'fee' column
-    const activeUsers = 0;     // Add a 'creator' column
+    const totalUsers = parseInt(totalUsersResult.rows[0].count, 10);
+    const totalRevenue = parseFloat(totalRevenueResult.rows[0].sum);
+    const activeUsers = parseInt(activeUsersResult.rows[0].count, 10);
 
     const recentTokens = recentTokensResult.rows.map((row: any) => ({
       name: row.name,
       symbol: row.symbol,
-      network: 'Devnet',       // You can add a 'network' column later
+      network: row.network || 'Devnet',
       created: row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : 'N/A',
     }));
 

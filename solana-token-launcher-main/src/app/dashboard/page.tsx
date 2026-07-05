@@ -61,11 +61,10 @@ export default function DashboardPage() {
   });
 
   const connection = new Connection(
-    process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com',
+    `${window?.location?.origin}/api/rpc?network=${network}` || 'https://api.devnet.solana.com',
     'confirmed'
   );
 
-  // Fetch tokens on component mount or wallet change
   useEffect(() => {
     const fetchTokens = async () => {
       if (!connected || !publicKey) {
@@ -75,45 +74,62 @@ export default function DashboardPage() {
 
       setLoading(true);
       try {
-        // For now, we'll use mock data until we have a backend
-        const mockTokens: Token[] = [
-          {
-            mintAddress: 'So11111111111111111111111111111111111111112',
-            name: 'ZRPDEEPSEEK',
-            symbol: 'ZDP',
-            decimals: 9,
-            supply: 1000000000,
-            createdAt: new Date().toISOString(),
-            network: 'Devnet',
-            balance: 500000000,
-          },
-          {
-            mintAddress: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-            name: 'SolToken',
-            symbol: 'SOLT',
-            decimals: 9,
-            supply: 500000000,
-            createdAt: new Date(Date.now() - 86400000).toISOString(),
-            network: 'Devnet',
-            balance: 250000000,
-          },
-        ];
+        // Fetch real tokens from database
+        const response = await fetch(
+          `/api/tokens?wallet=${publicKey.toBase58()}&network=${network}`
+        );
 
-        setTokens(mockTokens);
+        if (!response.ok) {
+          throw new Error('Failed to fetch tokens');
+        }
+
+        const data = await response.json();
+
+        // Map API response to Token interface
+        const realTokens: Token[] = (data.tokens || []).map((t: any) => ({
+          mintAddress: t.mint_address,
+          name: t.name,
+          symbol: t.symbol,
+          decimals: t.decimals,
+          supply: t.supply,
+          createdAt: t.created_at,
+          network: t.network === 'mainnet' ? 'Mainnet' : 'Devnet',
+          balance: t.supply, // fallback; real balance fetched below
+        }));
+
+        // Fetch real on-chain balances
+        const tokensWithBalances = await Promise.all(
+          realTokens.map(async (token) => {
+            try {
+              const mintPubkey = new PublicKey(token.mintAddress);
+              const ata = await getAssociatedTokenAddress(mintPubkey, publicKey);
+              const account = await getAccount(connection, ata);
+              return {
+                ...token,
+                balance: Number(account.amount) / Math.pow(10, token.decimals),
+              };
+            } catch {
+              return token;
+            }
+          })
+        );
+
+        setTokens(tokensWithBalances);
         setStats({
-          totalTokens: mockTokens.length,
-          totalSupply: mockTokens.reduce((acc, t) => acc + t.supply, 0),
-          totalHolders: 1427,
+          totalTokens: tokensWithBalances.length,
+          totalSupply: tokensWithBalances.reduce((acc, t) => acc + t.supply, 0),
+          totalHolders: 0, // requires indexer — leave as 0 for now
         });
       } catch (error) {
         console.error('Error fetching tokens:', error);
+        setTokens([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTokens();
-  }, [connected, publicKey]);
+  }, [connected, publicKey, network]);
 
   const handleBurn = async () => {
     if (!burnModal.token || !publicKey || !signTransaction) {
@@ -144,18 +160,8 @@ export default function DashboardPage() {
 
       const amountInBaseUnits = amount * Math.pow(10, token.decimals);
 
-      // Check if burn address has an associated token account
-      let burnAccountExists = true;
-      try {
-        await getAccount(connection, burnAta);
-      } catch (error) {
-        burnAccountExists = false;
-      }
-
       const transaction = new Transaction();
 
-      // If burn address doesn't have the token account, we need to create it
-      // For simplicity in this version, we'll just transfer to the burn address
       const transferIx = createTransferInstruction(
         senderAta,
         burnAta,
@@ -175,7 +181,6 @@ export default function DashboardPage() {
       const signature = await connection.sendRawTransaction(signedTx.serialize());
       await connection.confirmTransaction(signature);
 
-      // Update token balance locally
       setTokens((prev) =>
         prev.map((t) =>
           t.mintAddress === token.mintAddress && t.balance !== undefined
@@ -189,7 +194,6 @@ export default function DashboardPage() {
         message: `🔥 Successfully burned ${amount} ${token.symbol} tokens!`,
       });
 
-      // Close modal after success
       setTimeout(() => {
         setBurnModal({ open: false, token: null });
         setBurnAmount('');
@@ -219,7 +223,6 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
@@ -243,7 +246,6 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -296,7 +298,6 @@ export default function DashboardPage() {
             </motion.div>
           </div>
 
-          {/* Tokens List */}
           <div className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] overflow-hidden">
             <div className="px-6 py-4 border-b border-[#1a1a1a]">
               <h2 className="text-white font-semibold">Your Tokens</h2>
@@ -353,7 +354,7 @@ export default function DashboardPage() {
                         <td className="px-6 py-3">
                           <div className="flex items-center gap-3">
                             <a
-                              href={`https://solscan.io/address/${token.mintAddress}`}
+                              href={`https://solscan.io/address/${token.mintAddress}${token.network === 'Devnet' ? '?cluster=devnet' : ''}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[#FF2D2D] hover:text-[#B10000] transition"
@@ -453,25 +454,11 @@ export default function DashboardPage() {
               </div>
 
               {burnStatus.type && (
-                <div
-                  className={`rounded-xl p-3 flex items-start gap-2 ${
-                    burnStatus.type === 'success'
-                      ? 'bg-[#FF2D2D]/10 border border-[#FF2D2D]/30'
-                      : burnStatus.type === 'error'
-                      ? 'bg-[#FF2D2D]/10 border border-[#FF2D2D]/30'
-                      : 'bg-[#FF2D2D]/10 border border-[#FF2D2D]/30'
-                  }`}
-                >
+                <div className="rounded-xl p-3 flex items-start gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30">
                   {burnStatus.type === 'success' && <CheckCircle className="h-4 w-4 text-[#FF2D2D] flex-shrink-0 mt-0.5" />}
                   {burnStatus.type === 'error' && <AlertCircle className="h-4 w-4 text-[#FF2D2D] flex-shrink-0 mt-0.5" />}
                   {burnStatus.type === 'info' && <Loader2 className="h-4 w-4 text-[#FF2D2D] flex-shrink-0 mt-0.5 animate-spin" />}
-                  <p className={`text-xs ${
-                    burnStatus.type === 'success' ? 'text-[#FF2D2D]' :
-                    burnStatus.type === 'error' ? 'text-[#FF2D2D]' :
-                    'text-[#BDDBDB]'
-                  }`}>
-                    {burnStatus.message}
-                  </p>
+                  <p className="text-xs text-[#BDDBDB]">{burnStatus.message}</p>
                 </div>
               )}
 

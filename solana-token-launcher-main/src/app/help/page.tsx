@@ -26,6 +26,11 @@ interface HelpCategory {
 
 export default function HelpPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+
+  const toggleExpand = (index: number) => {
+    setExpanded(prev => ({ ...prev, [index]: !prev[index] }));
+  };
 
   const categories: HelpCategory[] = [
     {
@@ -123,7 +128,7 @@ export default function HelpPage() {
         { title: 'Open Source', slug: 'open-source' },
         { title: 'Privacy Policy', slug: 'privacy' },
         { title: 'Terms of Service', slug: 'terms' },
-        { title: 'Powered by DeepSeek', slug: 'deepseek' },
+        // 'Powered by DeepSeek' removed – not a valid article
       ],
     },
   ];
@@ -163,41 +168,52 @@ export default function HelpPage() {
 
       {/* Categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCategories.map((category, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.05 }}
-            className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center">
-                {category.icon}
+        {filteredCategories.map((category, index) => {
+          const isExpanded = expanded[index] || false;
+          const visibleArticles = isExpanded ? category.articles : category.articles.slice(0, 5);
+          const hasMore = category.articles.length > 5;
+
+          return (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center">
+                  {category.icon}
+                </div>
+                <h2 className="text-lg font-bold text-white">{category.title}</h2>
               </div>
-              <h2 className="text-lg font-bold text-white">{category.title}</h2>
-            </div>
-            <p className="text-[#BDDBDB] text-sm mb-4">{category.description}</p>
-            <ul className="space-y-2">
-              {category.articles.slice(0, 5).map((article, i) => (
-                <li key={i}>
-                  <Link
-                    href={`/help/${article.slug}`}
-                    className="flex items-center justify-between text-sm text-[#BDDBDB] hover:text-white transition group"
-                  >
-                    <span>{article.title}</span>
-                    <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition" />
-                  </Link>
-                </li>
-              ))}
-              {category.articles.length > 5 && (
-                <li className="text-sm text-[#BDDBDB] opacity-50">
-                  +{category.articles.length - 5} more articles
-                </li>
-              )}
-            </ul>
-          </motion.div>
-        ))}
+              <p className="text-[#BDDBDB] text-sm mb-4">{category.description}</p>
+              <ul className="space-y-2">
+                {visibleArticles.map((article, i) => (
+                  <li key={i}>
+                    <Link
+                      href={`/help/${article.slug}`}
+                      className="flex items-center justify-between text-sm text-[#BDDBDB] hover:text-white transition group"
+                    >
+                      <span>{article.title}</span>
+                      <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition" />
+                    </Link>
+                  </li>
+                ))}
+                {hasMore && (
+                  <li>
+                    <button
+                      onClick={() => toggleExpand(index)}
+                      className="text-sm text-[#FF2D2D] hover:text-[#B10000] transition font-medium"
+                    >
+                      {isExpanded ? 'Show less ↑' : `+${category.articles.length - 5} more articles ↓`}
+                    </button>
+                  </li>
+                )}
+              </ul>
+            </motion.div>
+          );
+        })}
       </div>
 
       {/* Still Need Help */}

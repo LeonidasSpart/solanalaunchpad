@@ -25,7 +25,7 @@ export async function GET() {
       );
     }
 
-    // 2. Fetch real data from database (replace mock with real queries)
+    // 2. Fetch real data (replace mock with real DB queries)
     const mockData = {
       totalTokens: 1427,
       totalUsers: 856,

@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-// import { prisma } from '@/lib/prisma'; // Uncomment for Prisma
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
 export async function GET() {
   try {
-    // 1. Verify admin token
-    const token = cookies().get('admin_token')?.value;
+    // 1. Verify admin token – await cookies()
+    const cookieStore = await cookies();
+    const token = cookieStore.get('admin_token')?.value;
     if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -25,44 +25,7 @@ export async function GET() {
       );
     }
 
-    // 2. Fetch real data from database
-    // ⚠️ REPLACE THIS WITH YOUR ACTUAL DATABASE QUERIES
-
-    // Example with Prisma (uncomment and use):
-    /*
-    const [totalTokens, totalUsers, totalRevenue, activeUsers, recentTokens] = await Promise.all([
-      prisma.token.count(),
-      prisma.token.groupBy({ by: ['creator'], _count: true }).then(groups => groups.length),
-      prisma.token.aggregate({ _sum: { fee: true } }).then(res => res._sum.fee || 0),
-      prisma.token.count({ 
-        where: { 
-          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
-        } 
-      }),
-      prisma.token.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 10,
-        select: { name: true, symbol: true, network: true, createdAt: true },
-      }),
-    ]);
-
-    const formattedRecent = recentTokens.map(t => ({
-      name: t.name,
-      symbol: t.symbol,
-      network: t.network,
-      created: t.createdAt.toISOString().split('T')[0],
-    }));
-
-    return NextResponse.json({
-      totalTokens,
-      totalUsers,
-      totalRevenue,
-      activeUsers,
-      recentTokens: formattedRecent,
-    });
-    */
-
-    // ⚠️ TEMPORARY MOCK DATA – REMOVE WHEN USING REAL DB
+    // 2. Fetch real data from database (replace mock with real queries)
     const mockData = {
       totalTokens: 1427,
       totalUsers: 856,
@@ -72,8 +35,6 @@ export async function GET() {
         { name: 'ZRPDEEPSEEK', symbol: 'ZDP', network: 'Devnet', created: '2026-06-29' },
         { name: 'SolToken', symbol: 'SOLT', network: 'Devnet', created: '2026-06-29' },
         { name: 'Memecoin', symbol: 'MEME', network: 'Devnet', created: '2026-06-28' },
-        { name: 'TestToken', symbol: 'TEST', network: 'Devnet', created: '2026-06-27' },
-        { name: 'MyToken', symbol: 'MYT', network: 'Mainnet', created: '2026-06-26' },
       ],
     };
 

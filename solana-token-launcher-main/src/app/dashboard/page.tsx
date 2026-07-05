@@ -60,11 +60,6 @@ export default function DashboardPage() {
     totalHolders: 0,
   });
 
-  const connection = new Connection(
-    `${window?.location?.origin}/api/rpc?network=${network}` || 'https://api.devnet.solana.com',
-    'confirmed'
-  );
-
   useEffect(() => {
     const fetchTokens = async () => {
       if (!connected || !publicKey) {
@@ -72,9 +67,14 @@ export default function DashboardPage() {
         return;
       }
 
+      // Connection created inside useEffect — client-side only
+      const connection = new Connection(
+        `${window.location.origin}/api/rpc?network=${network}`,
+        'confirmed'
+      );
+
       setLoading(true);
       try {
-        // Fetch real tokens from database
         const response = await fetch(
           `/api/tokens?wallet=${publicKey.toBase58()}&network=${network}`
         );
@@ -85,7 +85,6 @@ export default function DashboardPage() {
 
         const data = await response.json();
 
-        // Map API response to Token interface
         const realTokens: Token[] = (data.tokens || []).map((t: any) => ({
           mintAddress: t.mint_address,
           name: t.name,
@@ -94,7 +93,7 @@ export default function DashboardPage() {
           supply: t.supply,
           createdAt: t.created_at,
           network: t.network === 'mainnet' ? 'Mainnet' : 'Devnet',
-          balance: t.supply, // fallback; real balance fetched below
+          balance: t.supply,
         }));
 
         // Fetch real on-chain balances
@@ -118,7 +117,7 @@ export default function DashboardPage() {
         setStats({
           totalTokens: tokensWithBalances.length,
           totalSupply: tokensWithBalances.reduce((acc, t) => acc + t.supply, 0),
-          totalHolders: 0, // requires indexer — leave as 0 for now
+          totalHolders: 0,
         });
       } catch (error) {
         console.error('Error fetching tokens:', error);
@@ -148,6 +147,12 @@ export default function DashboardPage() {
       setBurnStatus({ type: 'error', message: `You only have ${token.balance} tokens to burn` });
       return;
     }
+
+    // Connection created inside handler — client-side only
+    const connection = new Connection(
+      `${window.location.origin}/api/rpc?network=${network}`,
+      'confirmed'
+    );
 
     setBurnLoading(true);
     setBurnStatus({ type: 'info', message: 'Burning tokens...' });
@@ -455,9 +460,9 @@ export default function DashboardPage() {
 
               {burnStatus.type && (
                 <div className="rounded-xl p-3 flex items-start gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30">
-                  {burnStatus.type === 'success' && <CheckCircle className="h-4 w-4 text-[#FF2D2D] flex-shrink-0 mt-0.5" />}
+                  {burnStatus.type === 'success' && <CheckCircle className="h-4 w-4 text-green-400 flex-shrink-0 mt-0.5" />}
                   {burnStatus.type === 'error' && <AlertCircle className="h-4 w-4 text-[#FF2D2D] flex-shrink-0 mt-0.5" />}
-                  {burnStatus.type === 'info' && <Loader2 className="h-4 w-4 text-[#FF2D2D] flex-shrink-0 mt-0.5 animate-spin" />}
+                  {burnStatus.type === 'info' && <Loader2 className="h-4 w-4 text-[#BDDBDB] flex-shrink-0 mt-0.5 animate-spin" />}
                   <p className="text-xs text-[#BDDBDB]">{burnStatus.message}</p>
                 </div>
               )}

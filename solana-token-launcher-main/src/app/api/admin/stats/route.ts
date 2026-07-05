@@ -6,27 +6,27 @@ const JWT_SECRET = process.env.JWT_SECRET || '';
 
 export async function GET() {
   try {
-    // 1. Verify admin token
-    const token = cookies().get('admin_token')?.value;
+    // 1. Verify admin token – await cookies() (FIXED)
+    const cookieStore = await cookies();
+    const token = cookieStore.get('admin_token')?.value;
     if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     try {
       jwt.verify(token, JWT_SECRET);
     } catch {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
     }
 
-    // 2. Fetch real data from your database
-    // ⚠️ REPLACE THESE with actual database queries
-    // Example using Prisma:
-    // const totalTokens = await prisma.token.count();
-    // const totalUsers = await prisma.token.groupBy({ by: ['creator'], _count: true }).then(...);
-    // const totalRevenue = await prisma.token.aggregate({ _sum: { fee: true } });
-    // const activeUsers = await prisma.token.count({ where: { createdAt: { gte: new Date(Date.now() - 30*24*60*60*1000) } } });
-
-    // Mock data – replace with real queries!
+    // 2. Fetch stats (replace mock data with real DB queries)
+    // ⚠️ When you have a database, replace this with actual queries.
     const stats = {
       totalTokens: 1427,
       totalUsers: 856,
@@ -40,9 +40,8 @@ export async function GET() {
     };
 
     return NextResponse.json(stats);
-
   } catch (error) {
-    console.error('Dashboard stats error:', error);
+    console.error('Stats API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

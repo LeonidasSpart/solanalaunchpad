@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    // 2. Fetch real data from PostgreSQL
+    // 2. Fetch REAL data from PostgreSQL
     const [
       totalTokensResult,
       recentTokensResult,
@@ -31,17 +31,16 @@ export async function GET() {
 
     const totalTokens = parseInt(totalTokensResult.rows[0].count, 10);
 
-    // ⚠️ Note: You don't have a `creator` or `fee` column in your tokens table.
+    // Note: Your tokens table doesn't have creator/fee/network yet.
     // These will show as 0 until you add them.
-    // For now, we'll use mock values for totalUsers, totalRevenue, activeUsers.
-    const totalUsers = 0; // Add a 'creator' column to tokens or a separate users table
-    const totalRevenue = 0; // Add a 'fee' column to tokens
-    const activeUsers = 0; // Add a 'creator' column and track activity
+    const totalUsers = 0;      // Add a 'creator' column
+    const totalRevenue = 0;    // Add a 'fee' column
+    const activeUsers = 0;     // Add a 'creator' column
 
     const recentTokens = recentTokensResult.rows.map((row: any) => ({
       name: row.name,
       symbol: row.symbol,
-      network: 'Devnet', // Add a 'network' column to tokens if you track this
+      network: 'Devnet',       // You can add a 'network' column later
       created: row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : 'N/A',
     }));
 

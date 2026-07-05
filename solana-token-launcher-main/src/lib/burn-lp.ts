@@ -14,24 +14,14 @@ import {
 
 // ─── Helius Config ───────────────────────────────────────────────
 
-const HELIUS_KEY = (() => {
-  const devnetUrl = process.env.RPC_URL_DEVNET || '';
-  const mainnetUrl = process.env.RPC_URL_MAINNET || '';
+// ✅ Use the public environment variable (available in browser)
+const HELIUS_KEY = process.env.NEXT_PUBLIC_HELIUS_API_KEY || '';
 
-  const extractKey = (url: string): string | null => {
-    const match = url.match(/api-key=([a-f0-9-]+)/i);
-    return match ? match[1] : null;
-  };
+if (!HELIUS_KEY) {
+  console.warn('⚠️ NEXT_PUBLIC_HELIUS_API_KEY is not set. LP token detection will fail.');
+}
 
-  const key = extractKey(devnetUrl) || extractKey(mainnetUrl);
-
-  if (!key) {
-    throw new Error('Helius API key not found in RPC URLs. Check RPC_URL_DEVNET or RPC_URL_MAINNET.');
-  }
-
-  return key;
-})();
-
+// Build RPC URLs using the API key
 const rpc = (net: 'devnet' | 'mainnet') => 
   `https://${net}.helius-rpc.com/?api-key=${HELIUS_KEY}`;
 
@@ -75,6 +65,9 @@ const LP_PATTERNS = [
 // ─── Helius: Fetch Token Metadata ─────────────────────────────────
 
 async function heliusMetadata(mints: string[], network: 'devnet' | 'mainnet') {
+  if (!HELIUS_KEY) {
+    throw new Error('Helius API key missing – cannot fetch metadata');
+  }
   const res = await fetch(`${api(network)}/token-metadata?api-key=${HELIUS_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -109,6 +102,11 @@ export async function fetchLPTokens(
   wallet: PublicKey,
   network: 'devnet' | 'mainnet' = 'mainnet'
 ): Promise<LPToken[]> {
+  if (!HELIUS_KEY) {
+    console.warn('⚠️ Helius API key missing – returning empty LP tokens');
+    return [];
+  }
+
   const w = wallet.toBase58();
 
   const [t1, t2] = await Promise.all([
@@ -182,17 +180,15 @@ export async function burnLPTokens({
   const mint = new PublicKey(lpToken.mint);
   const sourceAta = new PublicKey(lpToken.ata);
 
-  // Get the latest blockhash
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
-  // Create burn instruction
   const burnIx = createBurnInstruction(
-    sourceAta,          // token account to burn from
-    mint,               // mint of the token
-    wallet,             // owner of the token account
-    lpToken.rawBalance, // amount to burn (raw units)
-    [],                 // multi-signers
-    TOKEN_PROGRAM_ID    // token program ID
+    sourceAta,
+    mint,
+    wallet,
+    lpToken.rawBalance,
+    [],
+    TOKEN_PROGRAM_ID
   );
 
   const tx = new Transaction();
@@ -200,20 +196,17 @@ export async function burnLPTokens({
   tx.recentBlockhash = blockhash;
   tx.feePayer = wallet;
 
-  // Simulate transaction to catch errors early
   const sim = await connection.simulateTransaction(tx);
   if (sim.value.err) {
     throw new Error(`Simulation failed: ${JSON.stringify(sim.value.err)}`);
   }
 
-  // Sign and send
   const signed = await signTransaction(tx);
   const sig = await connection.sendRawTransaction(signed.serialize(), {
     skipPreflight: false,
     preflightCommitment: 'confirmed',
   });
 
-  // Confirm
   const conf = await connection.confirmTransaction(
     { signature: sig, blockhash, lastValidBlockHeight },
     'confirmed'

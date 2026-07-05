@@ -2,26 +2,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { useState } from 'react';
 import { Menu, X, Zap, Rocket, ChevronDown, Droplets, Lock, Gift, Flame } from 'lucide-react';
 
 const Header = () => {
   const pathname = usePathname();
-  const { connected, connecting, disconnect, publicKey } = useWallet();
-  const { setVisible } = useWalletModal();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
-
-  const handleWalletClick = () => {
-    if (connected) {
-      disconnect();
-    } else {
-      setVisible(true);
-    }
-  };
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -47,10 +36,6 @@ const Header = () => {
     { href: '/faq', label: 'FAQ' },
     { href: '/about', label: 'About' },
   ];
-
-  const displayAddress = connected && publicKey
-    ? `${publicKey.toBase58().slice(0, 4)}...${publicKey.toBase58().slice(-4)}`
-    : '';
 
   return (
     <header className="sticky top-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-b border-[#FF2D2D]/10">
@@ -156,14 +141,10 @@ const Header = () => {
               <NetworkSwitcher />
             </div>
 
-            {/* Custom Wallet Button */}
-            <button
-              onClick={handleWalletClick}
-              disabled={connecting}
-              className="px-4 py-2.5 rounded-xl font-semibold text-sm text-white transition-all shadow-lg shadow-[#FF2D2D]/20 bg-gradient-to-r from-[#FF2D2D] via-[#1a1a1a] to-[#BDDBDB] hover:from-[#B10000] hover:via-[#0D0D0D] hover:to-[#9a9a9a] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {connecting ? 'Connecting...' : connected ? displayAddress : 'Select Wallet'}
-            </button>
+            {/* Wallet Button - Red, Black, Silver Gradient */}
+            <div className="[&>button]:!bg-gradient-to-r [&>button]:!from-[#FF2D2D] [&>button]:!via-[#1a1a1a] [&>button]:!to-[#BDDBDB] [&>button]:hover:!from-[#B10000] [&>button]:hover:!via-[#0D0D0D] [&>button]:hover:!to-[#9a9a9a] [&>button]:!rounded-xl [&>button]:!px-4 [&>button]:!py-2.5 [&>button]:!font-semibold [&>button]:!text-white [&>button]:!text-sm [&>button]:!transition-all [&>button]:!shadow-lg [&>button]:!shadow-[#FF2D2D]/20">
+              <WalletMultiButton />
+            </div>
 
             {/* Mobile Menu Button */}
             <button

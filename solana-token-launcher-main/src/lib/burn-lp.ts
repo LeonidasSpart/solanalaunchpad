@@ -4,7 +4,7 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import {
-  createTransferInstruction,
+  createBurnInstruction,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountInstruction,
   TOKEN_PROGRAM_ID,
@@ -180,35 +180,47 @@ export async function burnLPTokens({
   lpToken,
 }: BurnLPParams): Promise<string> {
   const mint = new PublicKey(lpToken.mint);
-  const source = new PublicKey(lpToken.ata);
-  const burnDest = mint;
-  const burnATA = getAssociatedTokenAddressSync(mint, burnDest, true);
+  const sourceAta = new PublicKey(lpToken.ata);
+
+  // Get the latest blockhash
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+
+  // Create burn instruction
+  const burnIx = createBurnInstruction(
+    sourceAta,          // token account to burn from
+    mint,               // mint of the token
+    wallet,             // owner of the token account
+    lpToken.rawBalance, // amount to burn (raw units)
+    [],                 // multi-signers
+    TOKEN_PROGRAM_ID    // token program ID
+  );
 
   const tx = new Transaction();
-
-  try {
-    await getAccount(connection, burnATA);
-  } catch {
-    tx.add(createAssociatedTokenAccountInstruction(wallet, burnATA, burnDest, mint));
-  }
-
-  tx.add(createTransferInstruction(source, burnATA, wallet, lpToken.rawBalance, [], TOKEN_PROGRAM_ID));
-
-  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+  tx.add(burnIx);
   tx.recentBlockhash = blockhash;
   tx.feePayer = wallet;
 
+  // Simulate transaction to catch errors early
   const sim = await connection.simulateTransaction(tx);
-  if (sim.value.err) throw new Error(`Sim failed: ${JSON.stringify(sim.value.err)}`);
+  if (sim.value.err) {
+    throw new Error(`Simulation failed: ${JSON.stringify(sim.value.err)}`);
+  }
 
+  // Sign and send
   const signed = await signTransaction(tx);
   const sig = await connection.sendRawTransaction(signed.serialize(), {
     skipPreflight: false,
     preflightCommitment: 'confirmed',
   });
 
-  const conf = await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, 'confirmed');
-  if (conf.value.err) throw new Error(`Tx failed: ${conf.value.err}`);
+  // Confirm
+  const conf = await connection.confirmTransaction(
+    { signature: sig, blockhash, lastValidBlockHeight },
+    'confirmed'
+  );
+  if (conf.value.err) {
+    throw new Error(`Transaction failed: ${conf.value.err}`);
+  }
 
   return sig;
 }

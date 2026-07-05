@@ -10,8 +10,8 @@ import {
   TrustWalletAdapter,
   TorusWalletAdapter,
   CoinbaseWalletAdapter,
-  BackpackWalletAdapter,
-  AlphaWalletAdapter,
+  // BackpackWalletAdapter, // ❌ Not available in this version – update package to use it
+  AlphaWalletAdapter, // Fallback for any wallet
 } from '@solana/wallet-adapter-wallets';
 import '@solana/wallet-adapter-react-ui/styles.css';
 
@@ -56,8 +56,8 @@ export function Providers({ children }: ProvidersProps) {
       new TrustWalletAdapter(),
       new TorusWalletAdapter(),
       new CoinbaseWalletAdapter(),
-      new BackpackWalletAdapter(), // Jupiter’s wallet
-      new AlphaWalletAdapter(),    // Generic fallback
+      // new BackpackWalletAdapter(), // Uncomment after updating the package
+      new AlphaWalletAdapter(), // Fallback – works with Phantom, Solflare, etc.
     ],
     []
   );

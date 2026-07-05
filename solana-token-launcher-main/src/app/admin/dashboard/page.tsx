@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Coins, TrendingUp, LogOut, Eye, EyeOff } from 'lucide-react';
+import { Users, Coins, TrendingUp, LogOut } from 'lucide-react';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -16,36 +16,36 @@ export default function AdminDashboard() {
   const [recentTokens, setRecentTokens] = useState<any[]>([]);
 
   useEffect(() => {
-    // Check authentication
-    const checkAuth = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/admin/verify');
-        if (!response.ok) {
+        // 1. Verify auth
+        const authRes = await fetch('/api/admin/verify');
+        if (!authRes.ok) {
           router.push('/admin/login');
           return;
         }
-        // Fetch dashboard data
-        // const data = await fetch('/api/admin/stats').then(res => res.json());
-        // setStats(data);
-        // setRecentTokens(data.recentTokens);
+
+        // 2. Fetch stats
+        const statsRes = await fetch('/api/admin/stats');
+        if (!statsRes.ok) throw new Error('Failed to fetch stats');
+        const data = await statsRes.json();
+
         setStats({
-          totalTokens: 1427,
-          totalUsers: 856,
-          totalRevenue: 214.5,
-          activeUsers: 234,
+          totalTokens: data.totalTokens || 0,
+          totalUsers: data.totalUsers || 0,
+          totalRevenue: data.totalRevenue || 0,
+          activeUsers: data.activeUsers || 0,
         });
-        setRecentTokens([
-          { name: 'ZRPDEEPSEEK', symbol: 'ZDP', created: '2026-06-29', network: 'Devnet' },
-          { name: 'SolToken', symbol: 'SOLT', created: '2026-06-29', network: 'Devnet' },
-          { name: 'Memecoin', symbol: 'MEME', created: '2026-06-28', network: 'Devnet' },
-        ]);
+        setRecentTokens(data.recentTokens || []);
       } catch (error) {
+        console.error('Error loading dashboard:', error);
         router.push('/admin/login');
       } finally {
         setLoading(false);
       }
     };
-    checkAuth();
+
+    fetchData();
   }, [router]);
 
   const handleLogout = async () => {

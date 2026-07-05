@@ -126,7 +126,7 @@ export default function HowToCreateATokenOnZRPPage() {
                 <tr className="border border-[#1a1a1a]">
                   <td className="px-4 py-3 text-white text-sm font-medium border border-[#1a1a1a]">Meme Coin</td>
                   <td className="px-4 py-3 text-[#BDDBDB] text-sm border border-[#1a1a1a]">1,000,000,000</td>
-                  <td className="px-4 py-3 text-[#BDDBDB] text-sm border border-[#1a1a1a]">0</td>
+                  <td className="px-4 py-3 text-[#BDDBDB] text-sm border border-[#1a1a1a]">6</td>
                   <td className="px-4 py-3 text-[#BDDBDB] text-sm border border-[#1a1a1a]">Viral community tokens</td>
                 </tr>
                 <tr className="border border-[#1a1a1a] bg-[#050505]/20">
@@ -187,7 +187,7 @@ export default function HowToCreateATokenOnZRPPage() {
 
           <h3 className="text-white font-semibold mt-4 mb-3">Decimals</h3>
           <ul className="list-disc pl-5 text-[#BDDBDB] text-sm space-y-1">
-            <li><span className="text-white font-medium">0</span> — For memecoins (no fractions)</li>
+            <li><span className="text-white font-medium">6</span> — For memecoins (no fractions)</li>
             <li><span className="text-white font-medium">6</span> — For utility tokens and DAOs</li>
             <li><span className="text-white font-medium">9</span> — For standard tokens (Solana default)</li>
           </ul>

@@ -12,8 +12,9 @@ const pool = new Pool({
 });
 
 // ─── Rate Limiting (Simple In-Memory) ─────────────────────────────
+// In production, use Redis for distributed rate limiting
 const rateLimitMap = new Map<string, number[]>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = 10;
 
 function isRateLimited(ip: string): boolean {
@@ -57,6 +58,7 @@ interface TokenData {
 }
 
 function validateTokenData(body: any): { valid: boolean; error?: string } {
+  // Required fields
   if (!body.mint_address) return { valid: false, error: "mint_address is required" };
   if (!body.name) return { valid: false, error: "name is required" };
   if (!body.symbol) return { valid: false, error: "symbol is required" };
@@ -64,6 +66,7 @@ function validateTokenData(body: any): { valid: boolean; error?: string } {
   if (body.supply === undefined) return { valid: false, error: "supply is required" };
   if (body.decimals === undefined) return { valid: false, error: "decimals is required" };
 
+  // Validate Solana addresses
   try {
     new PublicKey(body.mint_address);
   } catch {
@@ -75,33 +78,57 @@ function validateTokenData(body: any): { valid: boolean; error?: string } {
     return { valid: false, error: "Invalid creator_wallet format" };
   }
 
+  // Validate name
   if (body.name.length > MAX_NAME_LENGTH) {
-    return { valid: false, error: `name must be ≤ ${MAX_NAME_LENGTH} characters` };
-  }
-  if (body.symbol.length > MAX_SYMBOL_LENGTH) {
-    return { valid: false, error: `symbol must be ≤ ${MAX_SYMBOL_LENGTH} characters` };
-  }
-  if (body.description && body.description.length > MAX_DESCRIPTION_LENGTH) {
-    return { valid: false, error: `description must be ≤ ${MAX_DESCRIPTION_LENGTH} characters` };
+    return {
+      valid: false,
+      error: `name must be ≤ ${MAX_NAME_LENGTH} characters`,
+    };
   }
 
+  // Validate symbol
+  if (body.symbol.length > MAX_SYMBOL_LENGTH) {
+    return {
+      valid: false,
+      error: `symbol must be ≤ ${MAX_SYMBOL_LENGTH} characters`,
+    };
+  }
+
+  // Validate description
+  if (body.description && body.description.length > MAX_DESCRIPTION_LENGTH) {
+    return {
+      valid: false,
+      error: `description must be ≤ ${MAX_DESCRIPTION_LENGTH} characters`,
+    };
+  }
+
+  // Validate URLs
   const urlFields = ["image_url", "metadata_uri", "website", "twitter", "telegram", "discord"];
   for (const field of urlFields) {
     if (body[field] && body[field].length > MAX_URL_LENGTH) {
-      return { valid: false, error: `${field} must be ≤ ${MAX_URL_LENGTH} characters` };
+      return {
+        valid: false,
+        error: `${field} must be ≤ ${MAX_URL_LENGTH} characters`,
+      };
     }
   }
 
+  // Validate network
   if (!["devnet", "mainnet"].includes(body.network)) {
     return { valid: false, error: 'network must be "devnet" or "mainnet"' };
   }
+
+  // Validate decimals
   if (typeof body.decimals !== "number" || body.decimals < 0 || body.decimals > 18) {
     return { valid: false, error: "decimals must be between 0 and 18" };
   }
+
+  // Validate supply
   if (typeof body.supply !== "number" || body.supply <= 0) {
     return { valid: false, error: "supply must be a positive number" };
   }
 
+  // Validate booleans
   const boolFields = ["revoke_mint", "revoke_freeze", "revoke_update"];
   for (const field of boolFields) {
     if (body[field] !== undefined && typeof body[field] !== "boolean") {
@@ -116,6 +143,7 @@ function validateTokenData(body: any): { valid: boolean; error?: string } {
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
 
+  // Rate limiting
   if (isRateLimited(ip)) {
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
@@ -126,9 +154,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Validate input
     const validation = validateTokenData(body);
     if (!validation.valid) {
-      return NextResponse.json({ error: validation.error }, { status: 400 });
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      );
     }
 
     const {
@@ -182,10 +214,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ token: result.rows[0] }, { status: 201 });
+    return NextResponse.json(result.rows[0], { status: 201 });
   } catch (error) {
     console.error("Error saving token:", error);
-    return NextResponse.json({ error: "Failed to save token" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to save token" },
+      { status: 500 }
+    );
   }
 }
 
@@ -193,6 +228,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request);
 
+  // Rate limiting
   if (isRateLimited(ip)) {
     return NextResponse.json(
       { error: "Rate limit exceeded. Please try again later." },
@@ -203,14 +239,16 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const network = searchParams.get("network") || "devnet";
-    const wallet = searchParams.get("wallet");
 
+    // Validate and cap limit
     const rawLimit = parseInt(searchParams.get("limit") || "50");
-    const limit = Math.min(Math.max(rawLimit, 1), 100);
+    const limit = Math.min(Math.max(rawLimit, 1), 100); // 1-100
 
+    // Validate offset
     const rawOffset = parseInt(searchParams.get("offset") || "0");
     const offset = Math.max(rawOffset, 0);
 
+    // Validate network
     if (!["devnet", "mainnet"].includes(network)) {
       return NextResponse.json(
         { error: 'Invalid network. Must be "devnet" or "mainnet"' },
@@ -218,47 +256,20 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Validate wallet if provided
-    if (wallet) {
-      try {
-        new PublicKey(wallet);
-      } catch {
-        return NextResponse.json(
-          { error: "Invalid wallet address" },
-          { status: 400 }
-        );
-      }
-    }
+    const query = `
+      SELECT * FROM tokens
+      WHERE network = $1
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
 
-    let query: string;
-    let values: any[];
-
-    if (wallet) {
-      // Filter by both network and creator_wallet
-      query = `
-        SELECT * FROM tokens
-        WHERE network = $1 AND creator_wallet = $2
-        ORDER BY created_at DESC
-        LIMIT $3 OFFSET $4
-      `;
-      values = [network, wallet, limit, offset];
-    } else {
-      // Return all tokens for the network (public explorer use)
-      query = `
-        SELECT * FROM tokens
-        WHERE network = $1
-        ORDER BY created_at DESC
-        LIMIT $2 OFFSET $3
-      `;
-      values = [network, limit, offset];
-    }
-
-    const result = await pool.query(query, values);
-
-    // Always return { tokens: [] } shape so dashboard can do data.tokens
-    return NextResponse.json({ tokens: result.rows }, { status: 200 });
+    const result = await pool.query(query, [network, limit, offset]);
+    return NextResponse.json(result.rows, { status: 200 });
   } catch (error) {
     console.error("Error fetching tokens:", error);
-    return NextResponse.json({ error: "Failed to fetch tokens" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch tokens" },
+      { status: 500 }
+    );
   }
 }

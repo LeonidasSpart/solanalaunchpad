@@ -74,7 +74,7 @@ export default function FrequentlyAskedQuestionsPage() {
             <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold">What are the template options?</h3>
               <ul className="list-disc pl-5 text-[#BDDBDB] text-sm mt-1 space-y-1">
-                <li><span className="text-white font-medium">Meme Coin:</span> 1B supply, 0 decimals</li>
+                <li><span className="text-white font-medium">Meme Coin:</span> 1B supply, 6 decimals</li>
                 <li><span className="text-white font-medium">Utility Token:</span> 10M supply, 6 decimals</li>
                 <li><span className="text-white font-medium">Governance DAO:</span> 100M supply, 6 decimals</li>
                 <li><span className="text-white font-medium">Simple Token:</span> 1M supply, 9 decimals</li>

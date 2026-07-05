@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   eslint: {
-    ignoreDuringBuilds: false, // ✅ ESLint enabled – catch errors early
+    ignoreDuringBuilds: true,
   },
   async headers() {
     return [

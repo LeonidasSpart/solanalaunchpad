@@ -139,7 +139,7 @@ export default function TokenParametersExplainedPage() {
           <h3 className="text-white font-semibold mt-4 mb-3">Guidelines</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] text-center">
-              <p className="text-white font-semibold text-lg">0</p>
+              <p className="text-white font-semibold text-lg">6</p>
               <p className="text-[#BDDBDB] text-sm mt-1">Memecoins</p>
               <span className="inline-block mt-2 px-2 py-0.5 bg-[#050505] text-[#BDDBDB] text-xs border border-[#1a1a1a] rounded">1,000,000</span>
             </div>

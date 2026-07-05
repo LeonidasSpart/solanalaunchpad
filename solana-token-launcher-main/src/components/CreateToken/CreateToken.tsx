@@ -12,6 +12,7 @@ import { Loader2, Rocket, CheckCircle, ExternalLink, Copy, Check } from 'lucide-
 import { NetworkContext } from '@/providers/providers';
 import TemplateLoader from './TemplateLoader';
 import { getConnection } from '@/lib/connection';
+import { validateAndSanitizeUrl } from '@/lib/validate-url'; // ✅ Added URL validation
 
 const MAX_IMAGE_SIZE_MB = 5;
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -258,6 +259,21 @@ const CreateToken = () => {
     if (formData.name.length > 32) {
       setStatus('❌ Name must be 32 characters or less');
       return;
+    }
+
+    // ✅ Validate social URLs
+    const socialFields = ['website', 'twitter', 'telegram', 'discord'] as const;
+    for (const field of socialFields) {
+      const value = formData[field]?.trim();
+      if (value) {
+        const result = validateAndSanitizeUrl(value);
+        if (!result.isValid) {
+          setStatus(`❌ Invalid ${field} URL: ${result.error}`);
+          return;
+        }
+        // Update formData with sanitized URL
+        formData[field] = result.sanitized;
+      }
     }
 
     setUploading(true);

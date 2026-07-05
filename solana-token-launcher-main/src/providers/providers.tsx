@@ -6,7 +6,7 @@ import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  TrustWalletAdapter,
+  BackpackWalletAdapter,
   LedgerWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 import '@solana/wallet-adapter-react-ui/styles.css';
@@ -40,14 +40,15 @@ export function Providers({ children }: ProvidersProps) {
   const [network, setNetwork] = useState('devnet');
 
   const endpoint = useMemo(() => {
-    return RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS][0];
+    const endpoints = RPC_ENDPOINTS[network as keyof typeof RPC_ENDPOINTS];
+    return endpoints && endpoints.length > 0 ? endpoints[0] : 'https://api.devnet.solana.com';
   }, [network]);
 
   const wallets = useMemo(
     () => [
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
-      new TrustWalletAdapter(),
+      new BackpackWalletAdapter(), // ✅ Use Backpack instead of Trust
       new LedgerWalletAdapter(),
     ],
     []
@@ -56,7 +57,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <NetworkContext.Provider value={{ network, setNetwork, endpoint }}>
       <ConnectionProvider endpoint={endpoint}>
-        <WalletProvider wallets={wallets} autoConnect={false}>
+        <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>{children}</WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>

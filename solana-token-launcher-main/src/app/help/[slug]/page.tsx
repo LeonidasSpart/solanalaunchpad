@@ -46,12 +46,13 @@ const articleImports: Record<string, () => Promise<any>> = {
   'privacy-policy': () => import('@/content/help/privacy'),
   'terms-of-service': () => import('@/content/help/terms'),
 
-  // === Aliases (shorter slugs that the Help Center likely links to) ===
+  // === Aliases (shorter slugs that the Help Center links to) ===
   'token-authorities': () => import('@/content/help/token-authorities'),
   'faq': () => import('@/content/help/faq'),
   'rpc-errors': () => import('@/content/help/rpc-errors'),
   'token-parameters': () => import('@/content/help/token-parameters'),
   'connect-wallet': () => import('@/content/help/connect-wallet'),
+  'connection-issues': () => import('@/content/help/connection-issues'), // ✅ ADDED
   'view-token': () => import('@/content/help/view-token'),
   'share-token': () => import('@/content/help/share-token'),
   'add-liquidity': () => import('@/content/help/add-liquidity'),
@@ -65,9 +66,15 @@ const articleImports: Record<string, () => Promise<any>> = {
   'image-upload-issue': () => import('@/content/help/image-upload-issue'),
   'templates': () => import('@/content/help/templates'),
   'mission': () => import('@/content/help/mission'),
-  // open-source is already defined above (no duplicate needed)
   'privacy': () => import('@/content/help/privacy'),
   'terms': () => import('@/content/help/terms'),
+  // Aliases added for missing Help Center links
+  'upload-images': () => import('@/content/help/image-upload-issue'), // ✅ ADDED
+  'transaction-signing': () => import('@/content/help/transaction-signing'), // ✅ ADDED
+  'wallet-security': () => import('@/content/help/wallet-security'), // ✅ ADDED
+  'create-token': () => import('@/content/help/create-token-guide'), // ✅ ADDED
+  'report-bug': () => import('@/content/help/report-bug'), // ✅ ADDED
+  // open-source is already defined above (no duplicate needed)
 };
 
 export default function HelpArticlePage() {

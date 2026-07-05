@@ -1,4 +1,3 @@
-// src/app/airdrop/page.tsx
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -11,6 +10,10 @@ import {
   TOKEN_PROGRAM_ID,
   getMint,
 } from '@solana/spl-token';
+
+// ✅ Maximum recipients allowed per airdrop
+// Can be overridden with NEXT_PUBLIC_MAX_AIRDROP_RECIPIENTS env var
+const MAX_RECIPIENTS = parseInt(process.env.NEXT_PUBLIC_MAX_AIRDROP_RECIPIENTS || '100', 10);
 
 export default function AirdropPage() {
   const { publicKey, connected, signTransaction } = useWallet();
@@ -71,6 +74,15 @@ export default function AirdropPage() {
       return;
     }
 
+    // ✅ Enforce recipient limit
+    if (wallets.length > MAX_RECIPIENTS) {
+      setStatus({
+        type: 'error',
+        message: `Too many recipients. Maximum allowed is ${MAX_RECIPIENTS}. You entered ${wallets.length}.`,
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setProgress({ current: 0, total: wallets.length });
     setTxResults([]);
@@ -80,17 +92,14 @@ export default function AirdropPage() {
       const mintPubkey = new PublicKey(tokenMint);
       const senderAta = await getAssociatedTokenAddress(mintPubkey, publicKey);
 
-      // Get token decimals using getMint
       let decimals = 9;
       try {
         const mintInfo = await getMint(connection, mintPubkey);
         decimals = mintInfo.decimals;
       } catch (error) {
-        // Use default decimals if we can't fetch
         console.warn('Could not fetch mint info, using default decimals (9)');
       }
 
-      // Check sender's token balance
       const senderBalance = await connection.getTokenAccountBalance(senderAta);
       const amountInBaseUnits = amountNum * Math.pow(10, decimals);
 
@@ -188,7 +197,7 @@ export default function AirdropPage() {
           <span className="text-[#FF2D2D]">to Multiple Wallets</span>
         </h1>
         <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
-          Send your tokens to hundreds of wallets at once. Perfect for community rewards, giveaways, and token distribution.
+          Send your tokens to up to {MAX_RECIPIENTS} wallets at once. Perfect for community rewards, giveaways, and token distribution.
         </p>
       </div>
 
@@ -232,7 +241,9 @@ export default function AirdropPage() {
         {/* Wallet List */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-white font-semibold text-sm">Step 3: Wallet Addresses</label>
+            <label className="text-white font-semibold text-sm">
+              Step 3: Wallet Addresses (max {MAX_RECIPIENTS})
+            </label>
             <label className="cursor-pointer bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] text-xs font-medium px-3 py-1.5 rounded-lg transition">
               Upload CSV
               <input type="file" accept=".csv,.txt" onChange={handleFileUpload} className="hidden" />
@@ -242,10 +253,14 @@ export default function AirdropPage() {
             value={walletList}
             onChange={(e) => setWalletList(e.target.value)}
             rows={6}
-            placeholder="Paste wallet addresses here, one per line"
+            placeholder={`Enter up to ${MAX_RECIPIENTS} wallet addresses, one per line`}
             className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm font-mono"
           />
-          <p className="text-[#BDDBDB] text-xs mt-1">{wallets.length > 0 ? `${wallets.length} wallets detected` : 'Paste wallet addresses, one per line'}</p>
+          <p className="text-[#BDDBDB] text-xs mt-1">
+            {wallets.length > 0
+              ? `${wallets.length} wallets detected (${MAX_RECIPIENTS - wallets.length} remaining)`
+              : `Enter up to ${MAX_RECIPIENTS} addresses, one per line`}
+          </p>
         </div>
 
         {/* Summary */}
@@ -268,6 +283,9 @@ export default function AirdropPage() {
                 <p className="text-white font-medium">{totalAmount.toLocaleString()} tokens</p>
               </div>
             </div>
+            {wallets.length > MAX_RECIPIENTS && (
+              <p className="text-[#FF2D2D] text-xs mt-2">⚠️ Too many recipients. Maximum is {MAX_RECIPIENTS}.</p>
+            )}
           </div>
         )}
 
@@ -327,7 +345,7 @@ export default function AirdropPage() {
         {/* Airdrop Button */}
         <button
           onClick={handleAirdrop}
-          disabled={isProcessing || !connected || !tokenMint || !amount || wallets.length === 0}
+          disabled={isProcessing || !connected || !tokenMint || !amount || wallets.length === 0 || wallets.length > MAX_RECIPIENTS}
           className="w-full bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2"
         >
           {isProcessing ? 'Processing Airdrop...' : 'Send Airdrop'}
@@ -345,7 +363,7 @@ export default function AirdropPage() {
         <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
           <div className="text-3xl mb-2">👥</div>
           <h3 className="text-white font-semibold">Step 2</h3>
-          <p className="text-[#BDDBDB] text-sm">Add wallet addresses</p>
+          <p className="text-[#BDDBDB] text-sm">Add wallet addresses (max {MAX_RECIPIENTS})</p>
         </div>
         <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
           <div className="text-3xl mb-2">🚀</div>

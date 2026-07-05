@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
-
-// ⚠️ Import your database client here
-// Example with Prisma:
-// import { prisma } from '@/lib/prisma';
-// Example with Drizzle:
-// import { db } from '@/lib/db';
+// import { prisma } from '@/lib/prisma'; // Uncomment for Prisma
 
 const JWT_SECRET = process.env.JWT_SECRET || '';
 
@@ -30,16 +25,20 @@ export async function GET() {
       );
     }
 
-    // 2. Fetch real data from your database
-    // Replace the mock queries with your actual database calls.
+    // 2. Fetch real data from database
+    // ⚠️ REPLACE THIS WITH YOUR ACTUAL DATABASE QUERIES
 
-    // --- Example with Prisma ---
+    // Example with Prisma (uncomment and use):
     /*
     const [totalTokens, totalUsers, totalRevenue, activeUsers, recentTokens] = await Promise.all([
       prisma.token.count(),
       prisma.token.groupBy({ by: ['creator'], _count: true }).then(groups => groups.length),
       prisma.token.aggregate({ _sum: { fee: true } }).then(res => res._sum.fee || 0),
-      prisma.token.count({ where: { createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } } }),
+      prisma.token.count({ 
+        where: { 
+          createdAt: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
+        } 
+      }),
       prisma.token.findMany({
         orderBy: { createdAt: 'desc' },
         take: 10,
@@ -47,27 +46,23 @@ export async function GET() {
       }),
     ]);
 
-    const formattedTokens = recentTokens.map(t => ({
+    const formattedRecent = recentTokens.map(t => ({
       name: t.name,
       symbol: t.symbol,
       network: t.network,
       created: t.createdAt.toISOString().split('T')[0],
     }));
+
+    return NextResponse.json({
+      totalTokens,
+      totalUsers,
+      totalRevenue,
+      activeUsers,
+      recentTokens: formattedRecent,
+    });
     */
 
-    // --- Example with raw SQL (PostgreSQL) ---
-    /*
-    const [totalTokens, totalUsers, totalRevenue, activeUsers, recentTokens] = await Promise.all([
-      db.query('SELECT COUNT(*) FROM tokens'),
-      db.query('SELECT COUNT(DISTINCT creator) FROM tokens'),
-      db.query('SELECT SUM(fee) FROM tokens'),
-      db.query('SELECT COUNT(DISTINCT creator) FROM tokens WHERE created_at > NOW() - INTERVAL \'30 days\''),
-      db.query('SELECT name, symbol, network, created_at FROM tokens ORDER BY created_at DESC LIMIT 10'),
-    ]);
-    */
-
-    // ⚠️ Remove this mock data block and uncomment the real queries above.
-    // For demonstration, we return mock data.
+    // ⚠️ TEMPORARY MOCK DATA – REMOVE WHEN USING REAL DB
     const mockData = {
       totalTokens: 1427,
       totalUsers: 856,
@@ -77,6 +72,8 @@ export async function GET() {
         { name: 'ZRPDEEPSEEK', symbol: 'ZDP', network: 'Devnet', created: '2026-06-29' },
         { name: 'SolToken', symbol: 'SOLT', network: 'Devnet', created: '2026-06-29' },
         { name: 'Memecoin', symbol: 'MEME', network: 'Devnet', created: '2026-06-28' },
+        { name: 'TestToken', symbol: 'TEST', network: 'Devnet', created: '2026-06-27' },
+        { name: 'MyToken', symbol: 'MYT', network: 'Mainnet', created: '2026-06-26' },
       ],
     };
 

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: 'ZRP Contact <contact@zrp.one>', // Must be verified in Resend
       to: ['contact@zrp.one'],               // Your support email
-      replyTo: email,                        // So you can reply directly
+      reply_to: email,                       // ✅ Correct property name
       subject: `Contact Form: ${subject}`,
       html: `
         <h2>New Contact Form Submission</h2>

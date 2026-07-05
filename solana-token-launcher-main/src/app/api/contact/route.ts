@@ -1,5 +1,8 @@
-// src/app/api/contact/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { Resend } from 'resend';
+
+// Initialize Resend with your API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,35 +25,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // TODO: Integrate with email service (Resend, SendGrid, AWS SES, etc.)
-    // For now, log the message to console
-    console.log('Contact form submission:', {
-      name,
-      email,
-      subject,
-      message,
-      timestamp: new Date().toISOString(),
+    // Check if Resend API key is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.error('RESEND_API_KEY is not set in environment variables');
+      return NextResponse.json(
+        { error: 'Email service is not configured. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: 'ZRP Contact <contact@zrp.one>', // Must be verified in Resend
+      to: ['contact@zrp.one'],               // Your support email
+      replyTo: email,                        // So you can reply directly
+      subject: `Contact Form: ${subject}`,
+      html: `
+        <h2>New Contact Form Submission</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Subject:</strong> ${subject}</p>
+        <p><strong>Message:</strong></p>
+        <p>${message.replace(/\n/g, '<br>')}</p>
+        <hr>
+        <p style="color: #666; font-size: 12px;">
+          This message was sent from the ZRP contact form.
+        </p>
+      `,
     });
 
-    // Option 1: Send email using Resend (recommended)
-    // const resend = new Resend(process.env.RESEND_API_KEY);
-    // await resend.emails.send({
-    //   from: 'ZRP Contact <contact@zrp.one>',
-    //   to: 'contact@zrp.one',
-    //   subject: `Contact Form: ${subject}`,
-    //   html: `<p><strong>From:</strong> ${name} (${email})</p><p><strong>Message:</strong></p><p>${message}</p>`,
-    // });
+    if (error) {
+      console.error('Resend error:', error);
+      return NextResponse.json(
+        { error: 'Failed to send message. Please try again later.' },
+        { status: 500 }
+      );
+    }
 
-    // Option 2: Send to Discord webhook
-    // await fetch('YOUR_DISCORD_WEBHOOK_URL', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     content: `New contact form submission\n**Name:** ${name}\n**Email:** ${email}\n**Subject:** ${subject}\n**Message:** ${message}`,
-    //   }),
-    // });
+    // Log success
+    console.log(`✅ Contact form sent from ${email} (${name})`);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true, message: 'Message sent successfully!' },
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Contact form error:', error);
     return NextResponse.json(

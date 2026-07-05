@@ -2,10 +2,9 @@ import {
   Connection, 
   PublicKey, 
   Transaction, 
-  SystemProgram,
 } from '@solana/web3.js';
 import {
-  getAccount,
+  getMint,
   createSetAuthorityInstruction,
   AuthorityType,
   TOKEN_PROGRAM_ID,
@@ -42,25 +41,17 @@ export async function fetchTokenAuthorities(
 ): Promise<TokenAuthorityInfo> {
   const mintPubkey = new PublicKey(mintAddress);
   
-  // Try to get the token account info to determine program ID
+  // Get mint info using getMint (which includes decimals, mintAuthority, freezeAuthority)
+  const mintInfo = await getMint(connection, mintPubkey);
+  
+  // Determine program ID (Token or Token-2022)
+  const accountInfo = await connection.getAccountInfo(mintPubkey);
   let programId = TOKEN_PROGRAM_ID;
-  try {
-    const accountInfo = await connection.getAccountInfo(mintPubkey);
-    if (accountInfo) {
-      // Check if it's Token-2022
-      if (accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-        programId = TOKEN_2022_PROGRAM_ID;
-      }
-    }
-  } catch {
-    // fallback
+  if (accountInfo && accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+    programId = TOKEN_2022_PROGRAM_ID;
   }
 
-  // Fetch mint info
-  const mintInfo = await getAccount(connection, mintPubkey);
-  
-  // For metadata, we could query Helius or use a simple placeholder
-  // We'll use basic info and let the user see the mint address
+  // For metadata (name, symbol), we could query Helius, but we'll use placeholders
   const name = `Token ${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)}`;
   const symbol = '??';
 
@@ -71,7 +62,7 @@ export async function fetchTokenAuthorities(
     decimals: mintInfo.decimals,
     mintAuthority: mintInfo.mintAuthority?.toBase58() || null,
     freezeAuthority: mintInfo.freezeAuthority?.toBase58() || null,
-    updateAuthority: mintInfo.updateAuthority?.toBase58() || null,
+    updateAuthority: null, // standard SPL mint does not have update authority
     programId,
   };
 }
@@ -95,15 +86,11 @@ export async function revokeAuthorities({
   tx.recentBlockhash = blockhash;
   tx.feePayer = wallet;
 
-  // Determine which program ID to use
+  // Determine program ID
+  const accountInfo = await connection.getAccountInfo(mintPubkey);
   let programId = TOKEN_PROGRAM_ID;
-  try {
-    const accountInfo = await connection.getAccountInfo(mintPubkey);
-    if (accountInfo?.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-      programId = TOKEN_2022_PROGRAM_ID;
-    }
-  } catch {
-    // fallback
+  if (accountInfo && accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+    programId = TOKEN_2022_PROGRAM_ID;
   }
 
   // Revoke Mint Authority
@@ -134,16 +121,10 @@ export async function revokeAuthorities({
     );
   }
 
-  // Revoke Update Authority
-  // Note: Update Authority is not a standard token authority; it's usually for metadata.
-  // We'll handle it if the mint has an updateAuthority field (like from Metaplex)
+  // Revoke Update Authority – not standard for SPL Token, but we keep it for Metaplex metadata.
+  // For now, we skip because it requires metadata program.
   if (revokeUpdate) {
-    // For standard SPL Token mint, updateAuthority is not present.
-    // If we have one, we can try to revoke it.
-    // We'll check if the mint has an updateAuthority field (Metaplex metadata).
-    // For now, we'll skip this because it requires the metadata program.
-    // We'll log a warning and not add an instruction.
-    console.warn('Update authority revocation is not implemented for standard SPL tokens.');
+    console.warn('Update authority revocation is not supported for standard SPL tokens.');
   }
 
   // Simulate

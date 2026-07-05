@@ -58,7 +58,7 @@ export default function UsingTemplatesPage() {
               </div>
               <div className="bg-[#050505] rounded-lg p-2 border border-[#1a1a1a] flex justify-between items-center">
                 <span className="text-[#BDDBDB] text-sm">Decimals</span>
-                <span className="text-white font-mono text-sm">0</span>
+                <span className="text-white font-mono text-sm">6</span>
               </div>
               <div className="bg-[#050505] rounded-lg p-2 border border-[#1a1a1a] flex justify-between items-center">
                 <span className="text-[#BDDBDB] text-sm">Mint Authority</span>

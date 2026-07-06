@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, Component, ReactNode } from 'react';
+import { useState, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { motion } from 'framer-motion';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { 
   Copy, 
   Check, 
@@ -18,50 +17,6 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 
-// ─── Error Boundary ────────────────────────────────────────────────
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
-
-class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
-  constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: any) {
-    console.error('Affiliate page error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-6">
-            <p className="text-[#FF2D2D] font-bold text-lg">⚠️ Affiliate Page Error</p>
-            <pre className="text-[#BDDBDB] text-sm mt-2 whitespace-pre-wrap bg-[#050505] p-4 rounded-lg border border-[#1a1a1a] text-left">
-              {this.state.error?.message || 'Unknown error'}
-            </pre>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition"
-            >
-              Reload Page
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-// ─── AffiliateData Interface ──────────────────────────────────────
 interface AffiliateData {
   stats: {
     total_referrals: number;
@@ -81,9 +36,9 @@ interface AffiliateData {
   };
 }
 
-// ─── Main Component ────────────────────────────────────────────────
-function AffiliatePageContent() {
-  const { publicKey, connected } = useWallet();
+export default function AffiliatePage() {
+  const { publicKey, connected, disconnect } = useWallet();
+  const { setVisible } = useWalletModal();
   const [data, setData] = useState<AffiliateData | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -111,23 +66,28 @@ function AffiliatePageContent() {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
       const json = await res.json();
+
+      // ✅ Parse all numeric values to numbers
+      const stats = {
+        total_referrals: Number(json.stats?.total_referrals) ?? 0,
+        total_commission: Number(json.stats?.total_commission) ?? 0,
+        claimed_commission: Number(json.stats?.claimed_commission) ?? 0,
+      };
+      const analytics = {
+        totalclicks: Number(json.analytics?.totalclicks) ?? 0,
+        uniqueSignups: Number(json.analytics?.uniqueSignups) ?? 0,
+        conversions: Number(json.analytics?.conversions) ?? 0,
+        conversionRate: Number(json.analytics?.conversionRate) ?? 0,
+      };
+
       setData({
-        stats: {
-          total_referrals: json.stats?.total_referrals ?? 0,
-          total_commission: json.stats?.total_commission ?? 0,
-          claimed_commission: json.stats?.claimed_commission ?? 0,
-        },
+        stats,
         recentReferrals: json.recentReferrals ?? [],
         leaderboard: json.leaderboard ?? [],
         referrallink: json.referrallink || '',
         milestones: json.milestones ?? [],
-        rank: json.rank ?? 0,
-        analytics: {
-          totalclicks: json.analytics?.totalclicks ?? 0,
-          uniqueSignups: json.analytics?.uniqueSignups ?? 0,
-          conversions: json.analytics?.conversions ?? 0,
-          conversionRate: json.analytics?.conversionRate ?? 0,
-        },
+        rank: Number(json.rank) ?? 0,
+        analytics,
       });
     } catch (err: any) {
       console.error('Fetch error:', err);
@@ -179,6 +139,14 @@ function AffiliatePageContent() {
     window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const handleWalletClick = () => {
+    if (connected) {
+      disconnect();
+    } else {
+      setVisible(true);
+    }
+  };
+
   if (!connected) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
@@ -186,7 +154,12 @@ function AffiliatePageContent() {
           <Users className="h-16 w-16 text-[#FF2D2D] mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h2>
           <p className="text-[#BDDBDB] mb-6">Connect your wallet to view your affiliate dashboard and start earning SOL.</p>
-          <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-6 !py-3 !font-semibold !text-white" />
+          <button
+            onClick={handleWalletClick}
+            className="px-8 py-4 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
+          >
+            Select Wallet
+          </button>
         </div>
       </div>
     );
@@ -224,19 +197,15 @@ function AffiliatePageContent() {
   }
 
   const unclaimed = data.stats.total_commission - data.stats.claimed_commission;
-  const totalClicks = data.analytics?.totalclicks ?? 0;
-  const uniqueSignups = data.analytics?.uniqueSignups ?? 0;
-  const conversions = data.analytics?.conversions ?? 0;
-  const conversionRate = data.analytics?.conversionRate ?? 0;
+  const totalClicks = data.analytics.totalclicks;
+  const uniqueSignups = data.analytics.uniqueSignups;
+  const conversions = data.analytics.conversions;
+  const conversionRate = data.analytics.conversionRate;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-20">
       {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-12"
-      >
+      <div className="text-center mb-12">
         <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Affiliate Program</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
           Earn SOL by <span className="text-[#FF2D2D]">Sharing ZRP</span>
@@ -244,16 +213,10 @@ function AffiliatePageContent() {
         <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
           Refer users to ZRP and earn 15% commission on every token they create.
         </p>
-      </motion.div>
+      </div>
 
       {/* Stats Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="space-y-6 mb-8"
-      >
-        {/* Row 1: Core Stats */}
+      <div className="space-y-6 mb-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
             <Users className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
@@ -277,7 +240,7 @@ function AffiliatePageContent() {
           </div>
         </div>
 
-        {/* 📊 Row 2: Analytics */}
+        {/* Analytics Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
             <p className="text-2xl font-bold text-[#BDDBDB]">{totalClicks}</p>
@@ -292,21 +255,14 @@ function AffiliatePageContent() {
             <p className="text-[#BDDBDB] text-xs opacity-70">Token Created</p>
           </div>
           <div className="bg-[#FF2D2D]/5 border border-[#FF2D2D]/20 rounded-xl p-5 text-center">
-            <p className="text-2xl font-bold text-[#FF2D2D]">
-              {conversionRate.toFixed(1)}%
-            </p>
+            <p className="text-2xl font-bold text-[#FF2D2D]">{conversionRate.toFixed(1)}%</p>
             <p className="text-[#BDDBDB] text-xs opacity-70">Conversion Rate</p>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Referral Link */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a] mb-8"
-      >
+      <div className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a] mb-8">
         <h3 className="text-white font-semibold mb-3">Your Referral Link</h3>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 bg-[#050505] rounded-xl px-4 py-3 border border-[#1a1a1a] flex items-center">
@@ -321,7 +277,6 @@ function AffiliatePageContent() {
             {copied ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
-
         <div className="flex flex-wrap gap-2 mt-4">
           <button
             onClick={shareOnTwitter}
@@ -349,16 +304,11 @@ function AffiliatePageContent() {
             Share
           </button>
         </div>
-      </motion.div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Milestones */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a]"
-        >
+        <div className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a]">
           <h3 className="text-white font-semibold mb-4">Milestones</h3>
           <div className="space-y-3">
             {(data.milestones || []).map((milestone, index) => (
@@ -377,15 +327,10 @@ function AffiliatePageContent() {
               </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Claim Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a] flex flex-col justify-between"
-        >
+        <div className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a] flex flex-col justify-between">
           <div>
             <h3 className="text-white font-semibold mb-2">Claim Your Commission</h3>
             <p className="text-[#BDDBDB] text-sm mb-4">
@@ -399,16 +344,11 @@ function AffiliatePageContent() {
           >
             {claiming ? 'Claiming...' : `Claim ${unclaimed.toFixed(4)} SOL`}
           </button>
-        </motion.div>
+        </div>
       </div>
 
       {/* Leaderboard */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-[#0D0D0D] rounded-2xl border border-[#1a1a1a] overflow-hidden mt-8"
-      >
+      <div className="bg-[#0D0D0D] rounded-2xl border border-[#1a1a1a] overflow-hidden mt-8">
         <div className="px-6 py-4 border-b border-[#1a1a1a] flex items-center gap-2">
           <Crown className="h-5 w-5 text-[#FF2D2D]" />
           <h3 className="text-white font-semibold">Leaderboard</h3>
@@ -458,16 +398,11 @@ function AffiliatePageContent() {
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </div>
 
       {/* Recent Referrals */}
       {data.recentReferrals && data.recentReferrals.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-[#0D0D0D] rounded-2xl border border-[#1a1a1a] overflow-hidden mt-8"
-        >
+        <div className="bg-[#0D0D0D] rounded-2xl border border-[#1a1a1a] overflow-hidden mt-8">
           <div className="px-6 py-4 border-b border-[#1a1a1a]">
             <h3 className="text-white font-semibold">Recent Referrals</h3>
           </div>
@@ -505,29 +440,15 @@ function AffiliatePageContent() {
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* CTA */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.7 }}
-        className="mt-12 text-center"
-      >
+      <div className="mt-12 text-center">
         <p className="text-[#BDDBDB] text-sm">
           Share ZRP and start earning SOL today!
         </p>
-      </motion.div>
+      </div>
     </div>
-  );
-}
-
-// ─── Wrapped Component ─────────────────────────────────────────────
-export default function AffiliatePage() {
-  return (
-    <ErrorBoundary>
-      <AffiliatePageContent />
-    </ErrorBoundary>
   );
 }

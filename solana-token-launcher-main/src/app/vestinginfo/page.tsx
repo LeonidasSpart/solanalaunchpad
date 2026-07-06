@@ -183,7 +183,7 @@ export default function VestingPage() {
           <p className="text-[#BDDBDB] mt-1">Lock tokens with cliff and vesting periods for team, advisors, or investors.</p>
         </div>
         <Link
-          href="/vesting/create"
+          href="/vestinginfo/create"
           className="flex items-center gap-2 px-6 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition whitespace-nowrap"
         >
           <Plus className="h-4 w-4" />
@@ -314,7 +314,7 @@ export default function VestingPage() {
                   <ul className="text-xs text-[#BDDBDB] mt-1 list-disc list-inside opacity-70">
                     <li>Conservative: 5-15%</li>
                     <li>Aggressive: 30-50%</li>
-                    <li className="text-[#FF2D2D]">Unlocks >25% correlate with 72% price decline</li>
+                    <li className="text-[#FF2D2D]">Unlocks &gt;25% correlate with 72% price decline</li>
                   </ul>
                 </div>
                 <div>
@@ -340,7 +340,7 @@ export default function VestingPage() {
                 <li>Vesting duration under 24 months for core team — insufficient commitment</li>
                 <li>TGE unlock exceeding 30% of total supply — excessive immediate selling pressure</li>
                 <li>Opaque or missing smart contract implementation — vesting is a promise, not a guarantee</li>
-                <li>Large unlocks concentrated in short windows — monthly unlocks >5% of circulating supply</li>
+                <li>Large unlocks concentrated in short windows — monthly unlocks &gt;5% of circulating supply</li>
               </ul>
             </div>
 
@@ -404,7 +404,7 @@ export default function VestingPage() {
                   Create a new vesting schedule to lock tokens for your team or investors.
                 </p>
                 <Link
-                  href="/vesting/create"
+                  href="/vestinginfo/create"
                   className="inline-block mt-4 px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition"
                 >
                   Create Vesting Schedule
@@ -507,7 +507,7 @@ export default function VestingPage() {
                             </span>
                           )}
                           <Link
-                            href={`/vesting/${contract.id}`}
+                            href={`/vestinginfo/${contract.id}`}
                             className="text-[#FF2D2D] hover:text-[#B10000] text-sm flex items-center gap-1 transition"
                           >
                             Details <ArrowRight className="h-3 w-3" />
@@ -530,7 +530,7 @@ export default function VestingPage() {
           Create a vesting schedule to build trust with your community and align long-term incentives.
         </p>
         <Link
-          href="/vesting/create"
+          href="/vestinginfo/create"
           className="inline-flex items-center gap-2 px-8 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
         >
           <Plus className="h-4 w-4" />

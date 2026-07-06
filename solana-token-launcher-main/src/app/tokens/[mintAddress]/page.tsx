@@ -16,6 +16,7 @@ import {
   Globe,
   Shield,
   ShieldCheck,
+  BarChart3, // ✅ Added for analytics icon
 } from 'lucide-react';
 
 interface TokenData {
@@ -103,17 +104,17 @@ export default function TokenDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
-      {/* Back Link */}
-      <div className="flex items-center gap-4 mb-8">
+      {/* Back Link & Header Actions */}
+      <div className="flex items-center gap-4 mb-8 flex-wrap">
         <Link
           href="/tokens"
           className="text-[#BDDBDB] hover:text-white transition p-2 rounded-lg hover:bg-[#1a1a1a]"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-3xl font-bold text-white">{token.name}</h1>
-          <div className="flex items-center gap-3 text-[#BDDBDB] text-sm">
+          <div className="flex items-center gap-3 text-[#BDDBDB] text-sm flex-wrap">
             <span className="font-semibold text-[#FF2D2D]">${token.symbol}</span>
             <span>•</span>
             <span className="font-mono text-xs">{token.mint_address.slice(0, 8)}...{token.mint_address.slice(-8)}</span>
@@ -126,23 +127,32 @@ export default function TokenDetailPage() {
             </button>
           </div>
         </div>
-        <div className="flex gap-2">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            href={`/analytics/${mintAddress}`}
+            className="px-3 py-1.5 bg-[#FF2D2D]/10 hover:bg-[#FF2D2D]/20 text-[#FF2D2D] rounded-xl transition border border-[#FF2D2D]/30 text-xs flex items-center gap-1.5 font-medium"
+          >
+            <BarChart3 className="h-3.5 w-3.5" />
+            Analytics
+          </Link>
+          <a
+            href={`https://solscan.io/address/${token.mint_address}?cluster=${token.network === 'mainnet' ? '' : 'devnet'}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-xl transition border border-[#1a1a1a] text-xs flex items-center gap-1"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Solscan
+          </a>
+          <span className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
             token.network === 'mainnet'
               ? 'bg-green-500/10 text-green-400 border border-green-500/20'
               : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'
           }`}>
             {token.network === 'mainnet' ? '⚡ Mainnet' : '🧪 Devnet'}
           </span>
-          <a
-            href={`https://solscan.io/address/${token.mint_address}?cluster=${token.network === 'mainnet' ? '' : 'devnet'}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-3 py-1 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-xl transition border border-[#1a1a1a] text-xs flex items-center gap-1"
-          >
-            <ExternalLink className="h-3 w-3" />
-            Solscan
-          </a>
         </div>
       </div>
 
@@ -234,7 +244,41 @@ export default function TokenDetailPage() {
         </div>
       </div>
 
-      {/* Back to Tokens */}
+      {/* Quick Actions */}
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link
+          href={`/analytics/${mintAddress}`}
+          className="flex items-center gap-2 px-4 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl text-sm font-medium transition"
+        >
+          <BarChart3 className="h-4 w-4" />
+          View Analytics
+        </Link>
+        <Link
+          href={`/add-liquidity?mint=${mintAddress}`}
+          className="px-4 py-2 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-[#BDDBDB] rounded-xl border border-[#1a1a1a] text-sm transition"
+        >
+          Add Liquidity
+        </Link>
+        <Link
+          href={`/airdrop?mint=${mintAddress}`}
+          className="px-4 py-2 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-[#BDDBDB] rounded-xl border border-[#1a1a1a] text-sm transition"
+        >
+          Airdrop
+        </Link>
+        <Link
+          href={`/revoke?mint=${mintAddress}`}
+          className="px-4 py-2 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-[#BDDBDB] rounded-xl border border-[#1a1a1a] text-sm transition"
+        >
+          Revoke Authority
+        </Link>
+        <Link
+          href={`/burn-lp?mint=${mintAddress}`}
+          className="px-4 py-2 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-[#BDDBDB] rounded-xl border border-[#1a1a1a] text-sm transition"
+        >
+          Burn LP
+        </Link>
+      </div>
+
       <div className="mt-8 text-center">
         <Link
           href="/tokens"

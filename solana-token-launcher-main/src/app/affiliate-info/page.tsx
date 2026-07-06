@@ -104,7 +104,7 @@ export default function AffiliateInfoPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/affiliate"
+                href="/affiliates"
                 className="px-8 py-4 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition text-lg flex items-center justify-center gap-2"
               >
                 Start Earning SOL <ArrowRight className="h-5 w-5" />
@@ -276,7 +276,7 @@ export default function AffiliateInfoPage() {
               See how you rank against other referrers. Top performers get recognized and earn extra rewards.
             </p>
             <Link
-              href="/affiliate"
+              href="/affiliates"
               className="inline-flex items-center gap-2 px-6 py-3 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white font-semibold rounded-xl transition border border-[#1a1a1a]"
             >
               View Leaderboard <ExternalLink className="h-4 w-4" />
@@ -335,7 +335,7 @@ export default function AffiliateInfoPage() {
               Join the ZRP affiliate program today and start earning 15% commission on every token created by your referrals.
             </p>
             <Link
-              href="/affiliate"
+              href="/affiliates"
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition text-lg shadow-lg shadow-[#FF2D2D]/25"
             >
               Join Now <ArrowRight className="h-5 w-5" />

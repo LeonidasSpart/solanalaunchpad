@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { query } from '@/lib/db';
 import { getStakingPool, getStakingPosition } from '@/lib/staking';
+import { getDecimals, getPlatformKeypair } from '@/lib/solana';
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,45 +13,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get pool
+    // 1. Get pool
     const pool = await getStakingPool(poolId.toString());
     if (!pool) return NextResponse.json({ error: 'Pool not found' }, { status: 404 });
 
-    // Check existing position
-    const existing = await getStakingPosition(poolId, userWallet);
-    if (existing) {
-      // Update existing position
-      await query(
-        `UPDATE staking_positions
-         SET amount = amount + $1, last_reward_calc = NOW()
-         WHERE id = $2`,
-        [amount, existing.id]
-      );
-    } else {
-      // Create new position
-      await query(
-        `INSERT INTO staking_positions (pool_id, user_wallet, amount, staked_at, last_reward_calc)
-         VALUES ($1, $2, $3, NOW(), NOW())`,
-        [poolId, userWallet, amount]
-      );
+    // 2. Validate min/max
+    if (amount < pool.min_stake || amount > pool.max_stake) {
+      return NextResponse.json({ error: 'Amount outside pool limits' }, { status: 400 });
     }
 
-    // Update pool total
-    await query(
-      `UPDATE staking_pools SET total_staked = total_staked + $1 WHERE id = $2`,
-      [amount, poolId]
+    // 3. Build transfer transaction from user → platform
+    const mint = new PublicKey(pool.token_mint);
+    const decimals = await getDecimals(mint);
+    const rawAmount = amount * Math.pow(10, decimals);
+
+    const userATA = await getAssociatedTokenAddress(mint, new PublicKey(userWallet));
+    const platformATA = await getAssociatedTokenAddress(mint, new PublicKey(process.env.PLATFORM_PUBLIC_KEY!));
+
+    const connection = new Connection(process.env.RPC_URL_DEVNET!);
+    const { blockhash } = await connection.getLatestBlockhash();
+
+    const transferIx = createTransferInstruction(
+      userATA,
+      platformATA,
+      new PublicKey(userWallet),
+      rawAmount,
+      [],
+      TOKEN_PROGRAM_ID
     );
 
-    // Log transaction
-    await query(
-      `INSERT INTO staking_transactions (user_wallet, pool_id, type, amount)
-       VALUES ($1, $2, 'stake', $3)`,
-      [userWallet, poolId, amount]
-    );
+    const tx = new Transaction({ feePayer: new PublicKey(userWallet), recentBlockhash: blockhash }).add(transferIx);
 
-    return NextResponse.json({ success: true, message: `Staked ${amount} tokens` });
+    // 4. Return serialized transaction for frontend to sign
+    const serialized = tx.serialize({ requireAllSignatures: false }).toString('base64');
+
+    // 5. (Optional) Store temporary data in session or just return tx + poolId + amount
+    // We'll let the frontend call `/confirm` after signing.
+
+    return NextResponse.json({
+      transaction: serialized,
+      poolId,
+      amount,
+    });
   } catch (error) {
-    console.error('Stake error:', error);
-    return NextResponse.json({ error: 'Failed to stake' }, { status: 500 });
+    console.error('Stake build error:', error);
+    return NextResponse.json({ error: 'Failed to build stake transaction' }, { status: 500 });
   }
 }

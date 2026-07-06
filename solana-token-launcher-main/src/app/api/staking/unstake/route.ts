@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
     const tx = new Transaction({ feePayer: platformKeypair.publicKey, recentBlockhash: blockhash }).add(transferIx);
     tx.sign(platformKeypair);
 
-    const signature = await connection.sendTransaction(tx);
+    // ✅ Send raw transaction
+    const signature = await connection.sendRawTransaction(tx.serialize());
     await connection.confirmTransaction(signature, 'confirmed');
 
     // Update position

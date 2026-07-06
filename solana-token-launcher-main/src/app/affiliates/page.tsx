@@ -1,211 +1,417 @@
-// src/app/affiliates/page.tsx
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Copy, Check, Share2, Users, Coins, TrendingUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { motion } from 'framer-motion';
+import { 
+  Copy, 
+  Check, 
+  Users, 
+  Coins, 
+  TrendingUp, 
+  Gift,
+  Crown,
+  Share2,
+  Twitter,
+  Send,
+  Link as LinkIcon,
+} from 'lucide-react';
 
-export default function AffiliatesPage() {
-  const [walletAddress, setWalletAddress] = useState('');
-  const [referralLink, setReferralLink] = useState('');
-  const [isCopied, setIsCopied] = useState(false);
+interface AffiliateData {
+  stats: {
+    total_referrals: number;
+    total_commission: number;
+    claimed_commission: number;
+  };
+  recentReferrals: any[];
+  leaderboard: any[];
+  referralLink: string;
+  milestones: any[];
+  rank: number;
+}
 
-  const generateLink = () => {
-    if (!walletAddress || walletAddress.length < 32) {
-      alert('Please enter a valid Solana wallet address');
-      return;
+export default function AffiliatePage() {
+  const { publicKey, connected } = useWallet();
+  const [data, setData] = useState<AffiliateData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+
+  const walletAddress = publicKey?.toBase58() || '';
+
+  useEffect(() => {
+    if (connected && walletAddress) {
+      fetchData();
+    } else {
+      setData(null);
+      setLoading(false);
     }
-    // In production, this would create a unique link with the wallet encoded
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const encodedWallet = encodeURIComponent(walletAddress);
-    setReferralLink(`${baseUrl}/?ref=${encodedWallet}`);
+  }, [connected, walletAddress]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/affiliate/stats?wallet=${walletAddress}`);
+      if (!res.ok) throw new Error('Failed to load affiliate data');
+      const data = await res.json();
+      setData(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const copyToClipboard = () => {
-    if (referralLink) {
-      navigator.clipboard.writeText(referralLink);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
+  const handleCopy = async () => {
+    if (data?.referralLink) {
+      await navigator.clipboard.writeText(data.referralLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleClaim = async () => {
+    setClaiming(true);
+    try {
+      const res = await fetch('/api/affiliate/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wallet: walletAddress }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        await fetchData();
+        alert(result.message);
+      } else {
+        alert(result.message || 'No commissions to claim');
+      }
+    } catch (err) {
+      alert('Failed to claim commissions');
+    } finally {
+      setClaiming(false);
     }
   };
 
   const shareOnTwitter = () => {
-    if (referralLink) {
-      const text = `🚀 Create your own Solana token with ZRP! Use my referral link to get started: ${referralLink}`;
-      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
-    }
+    const text = `🚀 Create your own Solana token in 60 seconds with @ZRP_AI!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referralLink}\n\n#Solana #SPLToken #Crypto`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const shareOnTelegram = () => {
+    const text = `🚀 Create your own Solana token in 60 seconds with ZRP!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referralLink}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(data?.referralLink || '')}&text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  if (!connected) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div className="bg-[#0D0D0D] rounded-2xl p-12 border border-[#1a1a1a]">
+          <Users className="h-16 w-16 text-[#FF2D2D] mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h2>
+          <p className="text-[#BDDBDB] mb-6">Connect your wallet to view your affiliate dashboard and start earning SOL.</p>
+          <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-6 !py-3 !font-semibold !text-white" />
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div className="w-10 h-10 border-2 border-[#FF2D2D]/30 border-t-[#FF2D2D] rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[#BDDBDB]">Loading affiliate dashboard...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <p className="text-[#FF2D2D]">{error}</p>
+        <button onClick={fetchData} className="mt-4 text-[#FF2D2D] hover:text-[#B10000] transition">
+          Try again
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+        <p className="text-[#BDDBDB]">No affiliate data found.</p>
+      </div>
+    );
+  }
+
+  const unclaimed = data.stats.total_commission - data.stats.claimed_commission;
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-20">
-      {/* Hero Section */}
-      <div className="text-center mb-12">
+    <div className="max-w-6xl mx-auto px-4 py-20">
+      {/* Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center mb-12"
+      >
         <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Affiliate Program</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
-          Earn SOL by <br className="hidden sm:block" />
-          <span className="text-[#FF2D2D]">Sharing ZRP</span>
+          Earn SOL by <span className="text-[#FF2D2D]">Sharing ZRP</span>
         </h1>
         <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
-          Generate a unique referral link, share it, and earn a percentage of every token creation fee paid through your link.
+          Refer users to ZRP and earn 15% commission on every token they create.
         </p>
+      </motion.div>
+
+      {/* Stats Grid */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+      >
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+          <Users className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+          <p className="text-2xl font-bold text-white">{data.stats.total_referrals}</p>
+          <p className="text-[#BDDBDB] text-sm">Total Referrals</p>
+        </div>
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+          <Coins className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+          <p className="text-2xl font-bold text-white">{data.stats.total_commission.toFixed(4)} SOL</p>
+          <p className="text-[#BDDBDB] text-sm">Total Earned</p>
+        </div>
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+          <Gift className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+          <p className="text-2xl font-bold text-white">{unclaimed.toFixed(4)} SOL</p>
+          <p className="text-[#BDDBDB] text-sm">Unclaimed</p>
+        </div>
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+          <TrendingUp className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+          <p className="text-2xl font-bold text-white">#{data.rank || '—'}</p>
+          <p className="text-[#BDDBDB] text-sm">Leaderboard Rank</p>
+        </div>
+      </motion.div>
+
+      {/* Referral Link */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a] mb-8"
+      >
+        <h3 className="text-white font-semibold mb-3">Your Referral Link</h3>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 bg-[#050505] rounded-xl px-4 py-3 border border-[#1a1a1a] flex items-center">
+            <LinkIcon className="h-4 w-4 text-[#BDDBDB] mr-2 flex-shrink-0" />
+            <span className="text-[#BDDBDB] text-sm truncate">{data.referralLink}</span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className="px-4 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition flex items-center justify-center gap-2"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? 'Copied!' : 'Copy Link'}
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-4">
+          <button
+            onClick={shareOnTwitter}
+            className="flex-1 sm:flex-none px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-lg transition flex items-center justify-center gap-2"
+          >
+            <Twitter className="h-4 w-4" />
+            Share on X
+          </button>
+          <button
+            onClick={shareOnTelegram}
+            className="flex-1 sm:flex-none px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-lg transition flex items-center justify-center gap-2"
+          >
+            <Send className="h-4 w-4" />
+            Share on Telegram
+          </button>
+          <button
+            onClick={() => {
+              if (data?.referralLink) {
+                navigator.share?.({ title: 'Create Tokens on ZRP', url: data.referralLink });
+              }
+            }}
+            className="flex-1 sm:flex-none px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-lg transition flex items-center justify-center gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            Share
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Milestones */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a]"
+        >
+          <h3 className="text-white font-semibold mb-4">Milestones</h3>
+          <div className="space-y-3">
+            {data.milestones.map((milestone, index) => (
+              <div
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-xl border ${
+                  milestone.unlocked
+                    ? 'bg-[#FF2D2D]/10 border-[#FF2D2D]/30'
+                    : 'bg-[#050505] border-[#1a1a1a] opacity-50'
+                }`}
+              >
+                <span className="text-[#BDDBDB] text-sm">{milestone.label}</span>
+                <span className="text-sm font-medium text-[#FF2D2D]">
+                  {milestone.unlocked ? '✅ Unlocked' : `${milestone.target - data.stats.total_referrals} left`}
+                </span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Claim Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-[#0D0D0D] rounded-2xl p-6 border border-[#1a1a1a] flex flex-col justify-between"
+        >
+          <div>
+            <h3 className="text-white font-semibold mb-2">Claim Your Commission</h3>
+            <p className="text-[#BDDBDB] text-sm mb-4">
+              You have <span className="text-[#FF2D2D] font-semibold">{unclaimed.toFixed(4)} SOL</span> available to claim.
+            </p>
+          </div>
+          <button
+            onClick={handleClaim}
+            disabled={claiming || unclaimed === 0}
+            className="w-full px-6 py-3 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition"
+          >
+            {claiming ? 'Claiming...' : `Claim ${unclaimed.toFixed(4)} SOL`}
+          </button>
+        </motion.div>
       </div>
 
-      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-8">
-        {/* Stats Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-            <div className="text-2xl font-bold text-[#FF2D2D]">15%</div>
-            <p className="text-[#BDDBDB] text-xs">Commission Rate</p>
-          </div>
-          <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-            <div className="text-2xl font-bold text-[#FF2D2D]">Instant</div>
-            <p className="text-[#BDDBDB] text-xs">Link Generation</p>
-          </div>
-          <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-            <div className="text-2xl font-bold text-[#FF2D2D]">0</div>
-            <p className="text-[#BDDBDB] text-xs">Sign-ups Needed</p>
-          </div>
-          <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-            <div className="text-2xl font-bold text-[#FF2D2D]">SOL</div>
-            <p className="text-[#BDDBDB] text-xs">Payout Currency</p>
-          </div>
+      {/* Leaderboard */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="bg-[#0D0D0D] rounded-2xl border border-[#1a1a1a] overflow-hidden mt-8"
+      >
+        <div className="px-6 py-4 border-b border-[#1a1a1a] flex items-center gap-2">
+          <Crown className="h-5 w-5 text-[#FF2D2D]" />
+          <h3 className="text-white font-semibold">Leaderboard</h3>
         </div>
-
-        {/* Generate Link Section */}
-        <div className="bg-[#1a1a1a]/50 rounded-xl p-6 border border-[#1a1a1a]">
-          <h2 className="text-xl font-bold text-white mb-4">Generate Your Referral Link</h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">No login required — your wallet address is used to create a unique link.</p>
-          
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              value={walletAddress}
-              onChange={(e) => setWalletAddress(e.target.value)}
-              placeholder="Enter your Solana wallet address"
-              className="flex-1 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm"
-            />
-            <button
-              onClick={generateLink}
-              className="px-6 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition text-sm whitespace-nowrap"
-            >
-              Generate Link
-            </button>
-          </div>
-
-          {referralLink && (
-            <div className="mt-4 bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
-              <div className="flex flex-col sm:flex-row items-center gap-3">
-                <code className="flex-1 text-[#FF2D2D] text-sm break-all bg-[#050505]/50 px-3 py-2 rounded-lg font-mono">
-                  {referralLink}
-                </code>
-                <div className="flex gap-2">
-                  <button
-                    onClick={copyToClipboard}
-                    className="px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white rounded-lg transition flex items-center gap-2 text-sm"
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#1a1a1a]/30">
+              <tr>
+                <th className="px-6 py-3 text-left text-[#BDDBDB] font-medium">#</th>
+                <th className="px-6 py-3 text-left text-[#BDDBDB] font-medium">Wallet</th>
+                <th className="px-6 py-3 text-right text-[#BDDBDB] font-medium">Referrals</th>
+                <th className="px-6 py-3 text-right text-[#BDDBDB] font-medium">Commission</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.leaderboard.map((item, index) => {
+                const isUser = item.wallet === walletAddress;
+                return (
+                  <tr
+                    key={index}
+                    className={`border-t border-[#1a1a1a]/50 ${
+                      isUser ? 'bg-[#FF2D2D]/10' : 'hover:bg-[#1a1a1a]/20'
+                    }`}
                   >
-                    {isCopied ? <Check className="h-4 w-4 text-[#FF2D2D]" /> : <Copy className="h-4 w-4" />}
-                    {isCopied ? 'Copied!' : 'Copy'}
-                  </button>
-                  <button
-                    onClick={shareOnTwitter}
-                    className="px-4 py-2 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white rounded-lg transition flex items-center gap-2 text-sm"
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+                    <td className="px-6 py-3 text-[#BDDBDB]">
+                      {index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                    </td>
+                    <td className="px-6 py-3 text-white font-mono">
+                      {isUser ? (
+                        <span className="text-[#FF2D2D]">{item.wallet.slice(0, 6)}...{item.wallet.slice(-6)}</span>
+                      ) : (
+                        `${item.wallet.slice(0, 6)}...${item.wallet.slice(-6)}`
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-[#BDDBDB] text-right">{item.total_referrals}</td>
+                    <td className="px-6 py-3 text-[#BDDBDB] text-right">{item.total_commission.toFixed(4)} SOL</td>
+                  </tr>
+                );
+              })}
+              {data.leaderboard.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-4 text-center text-[#BDDBDB] text-sm">
+                    No referrals yet. Be the first!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
+      </motion.div>
 
-        {/* How It Works */}
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">How It Works</h2>
-          <div className="space-y-3">
-            <div className="flex items-start gap-4 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-              <div>
-                <p className="text-white font-medium">Enter your wallet address</p>
-                <p className="text-[#BDDBDB] text-sm">No login needed — just your Solana wallet address.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-              <div>
-                <p className="text-white font-medium">Copy your unique referral link</p>
-                <p className="text-[#BDDBDB] text-sm">Share it anywhere: Twitter, Telegram, Discord, YouTube, your website.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-              <div>
-                <p className="text-white font-medium">Earn commission</p>
-                <p className="text-[#BDDBDB] text-sm">When someone creates a token through your link, you earn a percentage of their fee.</p>
-              </div>
-            </div>
+      {/* Recent Referrals */}
+      {data.recentReferrals.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-[#0D0D0D] rounded-2xl border border-[#1a1a1a] overflow-hidden mt-8"
+        >
+          <div className="px-6 py-4 border-b border-[#1a1a1a]">
+            <h3 className="text-white font-semibold">Recent Referrals</h3>
           </div>
-        </div>
-
-        {/* Example Earnings */}
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">Example Earnings</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-              <p className="text-[#BDDBDB] text-xs">1 referral @ 0.1 SOL</p>
-              <p className="text-[#FF2D2D] font-bold text-lg">0.015 SOL</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-              <p className="text-[#BDDBDB] text-xs">1 referral @ 0.5 SOL</p>
-              <p className="text-[#FF2D2D] font-bold text-lg">0.075 SOL</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-              <p className="text-[#BDDBDB] text-xs">10 referrals @ 0.3 SOL</p>
-              <p className="text-[#FF2D2D] font-bold text-lg">0.45 SOL</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
-              <p className="text-[#BDDBDB] text-xs">50 referrals @ 0.3 SOL</p>
-              <p className="text-[#FF2D2D] font-bold text-lg">2.25 SOL</p>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[#1a1a1a]/30">
+                <tr>
+                  <th className="px-6 py-3 text-left text-[#BDDBDB] font-medium">Wallet</th>
+                  <th className="px-6 py-3 text-left text-[#BDDBDB] font-medium">Status</th>
+                  <th className="px-6 py-3 text-right text-[#BDDBDB] font-medium">Commission</th>
+                  <th className="px-6 py-3 text-right text-[#BDDBDB] font-medium">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.recentReferrals.map((ref, index) => (
+                  <tr key={index} className="border-t border-[#1a1a1a]/50">
+                    <td className="px-6 py-3 text-white font-mono text-xs">
+                      {ref.referred_wallet.slice(0, 6)}...{ref.referred_wallet.slice(-6)}
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        ref.status === 'claimed' ? 'bg-green-500/20 text-green-400' :
+                        ref.status === 'completed' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}>
+                        {ref.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-[#BDDBDB] text-right">{ref.commission_earned || 0} SOL</td>
+                    <td className="px-6 py-3 text-[#BDDBDB] text-right">
+                      {new Date(ref.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <p className="text-[#BDDBDB] text-xs text-center mt-2">Based on 15% commission rate. Actual earnings vary.</p>
-        </div>
+        </motion.div>
+      )}
 
-        {/* Programme Details */}
-        <div>
-          <h2 className="text-xl font-bold text-white mb-4">Everything You Need to Know</h2>
-          <div className="space-y-3">
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">📋 Programme Terms</h3>
-              <ul className="list-disc pl-5 mt-1 space-y-1 text-[#BDDBDB] text-sm">
-                <li>Enter your wallet address to generate a unique referral link — no sign-up required.</li>
-                <li>Share your link anywhere: Twitter, Telegram, Discord, YouTube, your website.</li>
-                <li>When someone creates a token using your link, you earn <span className="text-[#FF2D2D] font-medium">15%</span> of the total fee they pay.</li>
-                <li>The commission is based on the full creation fee including any add-ons — not just the base fee.</li>
-                <li>No monthly minimums, no expiry dates. Your link stays active as long as you want.</li>
-              </ul>
-            </div>
-
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">❓ Common Questions</h3>
-              <ul className="list-disc pl-5 mt-1 space-y-1 text-[#BDDBDB] text-sm">
-                <li><span className="text-white">When do I receive payouts?</span> Your payout arrives immediately when the referral creates their token.</li>
-                <li><span className="text-white">Do referred users pay more?</span> No. The price they pay is identical — your commission comes from our share.</li>
-                <li><span className="text-white">Can I have multiple links?</span> Each wallet address generates one link. Use different wallets for different campaigns.</li>
-                <li><span className="text-white">What counts as a conversion?</span> Any token successfully minted through your referral link with a confirmed on-chain payment.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA */}
-        <div className="text-center border-t border-[#1a1a1a] pt-6 mt-4">
-          <h2 className="text-2xl font-bold text-white mb-3">Ready to Earn SOL from Referrals?</h2>
-          <p className="text-[#BDDBDB] max-w-xl mx-auto text-sm">
-            Enter your wallet address above to generate your unique referral link — no sign-up required.
-          </p>
-        </div>
-      </div>
+      {/* CTA */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        className="mt-12 text-center"
+      >
+        <p className="text-[#BDDBDB] text-sm">
+          Share ZRP and start earning SOL today!
+        </p>
+      </motion.div>
     </div>
   );
 }

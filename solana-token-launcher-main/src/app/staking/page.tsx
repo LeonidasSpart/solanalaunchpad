@@ -1,246 +1,208 @@
-// src/app/staking/page.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { Coins, TrendingUp, Gift, ArrowRight, Lock, Unlock, Plus, Clock, DollarSign } from 'lucide-react';
+
+interface StakingPool {
+  id: number;
+  token_mint: string;
+  token_symbol: string;
+  token_name: string;
+  apy: number;
+  lock_duration: number;
+  min_stake: number;
+  max_stake: number;
+  total_staked: number;
+  total_rewards_paid: number;
+  is_active: boolean;
+}
+
+interface StakingPosition {
+  id: number;
+  pool_id: number;
+  user_wallet: string;
+  amount: number;
+  reward_earned: number;
+  reward_claimed: number;
+  staked_at: string;
+  last_reward_calc: string;
+  unlocked_at: string | null;
+  status: string;
+  token_symbol: string;
+  token_name: string;
+  apy: number;
+  lock_duration: number;
+}
 
 export default function StakingPage() {
+  const { publicKey, connected } = useWallet();
+  const [pools, setPools] = useState<StakingPool[]>([]);
+  const [positions, setPositions] = useState<StakingPosition[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch pools
+      const poolsRes = await fetch('/api/staking/pools');
+      if (!poolsRes.ok) throw new Error('Failed to fetch pools');
+      const poolsData = await poolsRes.json();
+      setPools(poolsData);
+
+      // Fetch user positions
+      if (connected && publicKey) {
+        const posRes = await fetch(`/api/staking/positions?wallet=${publicKey.toBase58()}`);
+        if (posRes.ok) {
+          const posData = await posRes.json();
+          setPositions(posData);
+        }
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [connected, publicKey]);
+
+  const totalStaked = positions.reduce((sum, p) => sum + p.amount, 0);
+  const totalRewards = positions.reduce((sum, p) => sum + (p.reward_earned - p.reward_claimed), 0);
+
+  if (!connected) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-20">
+        <div className="bg-[#0D0D0D] rounded-2xl p-12 border border-[#1a1a1a] text-center">
+          <Lock className="h-16 w-16 text-[#FF2D2D] mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-3">Connect Your Wallet</h2>
+          <p className="text-[#BDDBDB] mb-6">Connect your wallet to stake tokens and earn rewards.</p>
+          <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-6 !py-3 !font-semibold !text-white" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-4xl mx-auto px-4 py-20">
-      {/* Hero Section */}
-      <div className="text-center mb-12">
-        <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Staking Guide</span>
-        <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
-          Solana Token Staking: <br className="hidden sm:block" />
-          <span className="text-[#FF2D2D]">How It Works &amp; Best Practices</span>
-        </h1>
-        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
-          Learn what token staking is, how it works on Solana, and best practices for implementing staking rewards. Understand staking mechanics and reward distribution.
-        </p>
+    <div className="max-w-6xl mx-auto px-4 py-12">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-1">
+          <TrendingUp className="h-5 w-5 text-[#FF2D2D]" />
+          <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Staking</span>
+        </div>
+        <h1 className="text-3xl md:text-4xl font-bold text-white">Stake Tokens, Earn Rewards</h1>
+        <p className="text-[#BDDBDB] mt-1">Lock your tokens and earn passive income.</p>
       </div>
 
-      <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-12 text-[#BDDBDB] text-sm leading-relaxed">
-        {/* Introduction */}
-        <section>
-          <p>
-            Token staking is a mechanism where holders lock their tokens to earn rewards. It incentivizes long-term holding, reduces circulating supply, and can create sustainable value for your token. Understanding staking helps you design better tokenomics.
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
+          <p className="text-[#BDDBDB] text-sm">Total Staked</p>
+          <p className="text-2xl font-bold text-white">{totalStaked.toFixed(2)}</p>
+        </div>
+        <div className="bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
+          <p className="text-[#BDDBDB] text-sm">Available Rewards</p>
+          <p className="text-2xl font-bold text-[#FF2D2D]">{totalRewards.toFixed(4)}</p>
+        </div>
+        <div className="bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
+          <p className="text-[#BDDBDB] text-sm">Active Positions</p>
+          <p className="text-2xl font-bold text-white">{positions.length}</p>
+        </div>
+        <div className="bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
+          <p className="text-[#BDDBDB] text-sm">Avg. APY</p>
+          <p className="text-2xl font-bold text-white">
+            {pools.length > 0 ? (pools.reduce((sum, p) => sum + p.apy, 0) / pools.length).toFixed(1) : 0}%
           </p>
-          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 mt-4">
-            <p className="text-[#FF2D2D] text-sm font-semibold">⚠️ Staking Requires Development</p>
-            <p className="text-[#BDDBDB] text-sm mt-1">
-              Staking requires custom development on Solana. Standard SPL tokens don't have built-in staking capabilities. This guide explains how staking works, what's required to implement it, and best practices for staking programs.
-            </p>
-          </div>
-        </section>
-
-        {/* What is Token Staking */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-3">What is Token Staking?</h2>
-          <p>
-            Token staking is the process of locking tokens in a smart contract or program to earn rewards. Stakers deposit their tokens for a period and receive rewards, typically in the same token or another token. Staking incentivizes long-term holding and participation.
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a] text-center">
-              <p className="text-2xl mb-1">🔒</p>
-              <p className="text-white font-semibold text-xs">Token Locking</p>
-              <p className="text-[#BDDBDB] text-xs">Tokens are locked in a program</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a] text-center">
-              <p className="text-2xl mb-1">🎁</p>
-              <p className="text-white font-semibold text-xs">Rewards</p>
-              <p className="text-[#BDDBDB] text-xs">Stakers earn rewards</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a] text-center">
-              <p className="text-2xl mb-1">⏳</p>
-              <p className="text-white font-semibold text-xs">Time Periods</p>
-              <p className="text-[#BDDBDB] text-xs">Lock periods or vesting</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a] text-center">
-              <p className="text-2xl mb-1">📉</p>
-              <p className="text-white font-semibold text-xs">Reduced Supply</p>
-              <p className="text-[#BDDBDB] text-xs">Removed from circulation</p>
-            </div>
-          </div>
-          <p className="mt-3">
-            Staking creates incentives for holders to keep tokens rather than sell them. This can reduce selling pressure and create more stable price action. Learn more about <Link href="/tokenomics" className="text-[#FF2D2D] hover:text-[#B10000] transition">tokenomics design</Link> and how staking fits into your economic model.
-          </p>
-        </section>
-
-        {/* How Staking Works on Solana */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">How Staking Works on Solana</h2>
-          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 mb-4">
-            <p className="text-[#FF2D2D] text-sm font-semibold">⚠️ Important</p>
-            <p className="text-[#BDDBDB] text-sm mt-1">
-              Standard SPL tokens created through no-code platforms <span className="text-white font-medium">don't include staking</span>. Adding staking requires custom development of a Solana program or using an existing staking platform.
-            </p>
-          </div>
-
-          <h3 className="text-white font-semibold mt-4 mb-3">Staking Program Components</h3>
-          <ul className="list-disc pl-5 space-y-1 text-[#BDDBDB] text-sm">
-            <li><span className="text-white">Staking pool:</span> A program account that holds staked tokens</li>
-            <li><span className="text-white">Reward pool:</span> Tokens reserved for distribution as rewards</li>
-            <li><span className="text-white">Staking logic:</span> Code that calculates rewards based on amount staked and duration</li>
-            <li><span className="text-white">Unstaking mechanism:</span> Process for unlocking tokens after the staking period</li>
-          </ul>
-
-          <h3 className="text-white font-semibold mt-4 mb-3">Staking Process</h3>
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 bg-[#050505]/40 rounded-lg p-2 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">1</span>
-              <p className="text-[#BDDBDB] text-sm">User approves token transfer to staking program</p>
-            </div>
-            <div className="flex items-center gap-3 bg-[#050505]/40 rounded-lg p-2 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">2</span>
-              <p className="text-[#BDDBDB] text-sm">Tokens are locked in the staking pool</p>
-            </div>
-            <div className="flex items-center gap-3 bg-[#050505]/40 rounded-lg p-2 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">3</span>
-              <p className="text-[#BDDBDB] text-sm">Rewards accumulate based on staking amount and duration</p>
-            </div>
-            <div className="flex items-center gap-3 bg-[#050505]/40 rounded-lg p-2 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">4</span>
-              <p className="text-[#BDDBDB] text-sm">User can claim rewards periodically</p>
-            </div>
-            <div className="flex items-center gap-3 bg-[#050505]/40 rounded-lg p-2 border border-[#1a1a1a]">
-              <span className="bg-[#FF2D2D] text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">5</span>
-              <p className="text-[#BDDBDB] text-sm">After lock period, user can unstake and withdraw tokens</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Implementing Staking */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Implementing Staking for Your Token</h2>
-          <p className="mb-4">Adding staking to your token requires development work. Here are your options:</p>
-
-          <div className="space-y-4">
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">🛠️ Option 1: Custom Staking Program</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">Develop a custom Solana program for staking. Gives you full control over mechanics and rewards. Requires Solana development knowledge or hiring a developer.</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-2 py-0.5 rounded-full">Most flexible</span>
-                <span className="text-xs bg-[#FF2D2D]/10 text-[#BDDBDB] px-2 py-0.5 rounded-full">Most complex</span>
-              </div>
-            </div>
-
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">📦 Option 2: Use Existing Staking Platform</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">Use an existing staking platform or service that supports your token. Less control but faster to implement.</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-2 py-0.5 rounded-full">Faster to implement</span>
-                <span className="text-xs bg-[#FF2D2D]/10 text-[#BDDBDB] px-2 py-0.5 rounded-full">Less control</span>
-              </div>
-            </div>
-
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">🤝 Option 3: Partner with Staking Service</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">Partner with a staking service provider that can implement staking for your token. They handle development and maintenance.</p>
-              <div className="flex flex-wrap gap-2 mt-2">
-                <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-2 py-0.5 rounded-full">No development needed</span>
-                <span className="text-xs bg-[#FF2D2D]/10 text-[#BDDBDB] px-2 py-0.5 rounded-full">Requires partnership</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Staking Rewards and Mechanics */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Staking Rewards and Mechanics</h2>
-
-          <h3 className="text-white font-semibold mt-4 mb-3">Reward Types</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <p className="text-white font-semibold text-sm">🔄 Same Token Rewards</p>
-              <p className="text-[#BDDBDB] text-xs mt-1">Stakers earn more of the same token. Requires mint authority or reserved supply.</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <p className="text-white font-semibold text-sm">💎 Different Token Rewards</p>
-              <p className="text-[#BDDBDB] text-xs mt-1">Stakers earn a different token (like SOL). Requires holding the reward token in a pool.</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <p className="text-white font-semibold text-sm">📊 Percentage-Based</p>
-              <p className="text-[#BDDBDB] text-xs mt-1">Rewards calculated as a percentage of staked amount (APY). Common and easy to understand.</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <p className="text-white font-semibold text-sm">📈 Variable Rates</p>
-              <p className="text-[#BDDBDB] text-xs mt-1">Reward rates change based on total staked, time, or other factors. More complex but can balance incentives.</p>
-            </div>
-          </div>
-
-          <h3 className="text-white font-semibold mt-4 mb-3">Lock Periods</h3>
-          <ul className="list-disc pl-5 space-y-1 text-[#BDDBDB] text-sm">
-            <li><span className="text-white">No lock:</span> Tokens can be unstaked anytime (flexible but less commitment)</li>
-            <li><span className="text-white">Fixed lock:</span> Tokens locked for a specific period (e.g., 30, 60, 90 days)</li>
-            <li><span className="text-white">Tiered locks:</span> Longer locks earn higher rewards (incentivizes commitment)</li>
-          </ul>
-        </section>
-
-        {/* Staking Best Practices */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Staking Best Practices</h2>
-          <div className="space-y-3">
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold text-sm">♻️ Sustainable Rewards</h3>
-              <p className="text-[#BDDBDB] text-xs mt-1">Design reward rates that are sustainable long-term. Balance attractive rates with sustainability.</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold text-sm">📋 Clear Terms</h3>
-              <p className="text-[#BDDBDB] text-xs mt-1">Clearly communicate staking terms: lock periods, reward rates, unstaking conditions, and risks.</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold text-sm">🔒 Security First</h3>
-              <p className="text-[#BDDBDB] text-xs mt-1">Ensure staking programs are secure and audited. Staking involves locking tokens, so security is critical.</p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-3 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold text-sm">💰 Reward Pool Management</h3>
-              <p className="text-[#BDDBDB] text-xs mt-1">Plan how to fund and maintain reward pools. Ensure sustainable funding for rewards.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4">Frequently Asked Questions</h2>
-          <div className="space-y-4">
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">What is token staking on Solana?</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">
-                Token staking is the process of locking tokens in a smart contract or program to earn rewards. Stakers lock their tokens for a period and receive rewards, typically in the same token or another token. It incentivizes long-term holding and participation.
-              </p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">How does staking work for Solana tokens?</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">
-                Staking requires a custom Solana program (smart contract) that locks tokens and distributes rewards. Standard SPL tokens don't have built-in staking. You need to develop or use a staking program that handles token locking, reward calculation, and distribution.
-              </p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">Can I add staking to my Solana token?</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">
-                Yes, but it requires custom development. You'll need to develop a staking program or use an existing staking platform that supports your token. This requires technical knowledge or hiring a developer.
-              </p>
-            </div>
-            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <h3 className="text-white font-semibold">Do I need to keep mint authority for staking rewards?</h3>
-              <p className="text-[#BDDBDB] text-sm mt-1">
-                If you want to reward stakers with the same token, you'll need mint authority to create new tokens for rewards. However, many projects use different reward tokens (like SOL) or reserve tokens for rewards, which doesn't require mint authority. Plan your reward structure before revoking mint authority.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Ready to Launch */}
-        <section className="text-center border-t border-[#1a1a1a] pt-8 mt-4">
-          <h2 className="text-2xl font-bold text-white mb-3">Ready to Launch Your Token?</h2>
-          <p className="text-[#BDDBDB] max-w-xl mx-auto">
-            No coding required. Live on mainnet in under 60 seconds.
-          </p>
-          <Link
-            href="/create-mint"
-            className="inline-block mt-6 px-8 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition"
-          >
-            Create Your Token
-          </Link>
-        </section>
+        </div>
       </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="w-10 h-10 border-2 border-[#FF2D2D]/30 border-t-[#FF2D2D] rounded-full animate-spin mx-auto" />
+          <p className="text-[#BDDBDB] mt-4">Loading staking pools...</p>
+        </div>
+      ) : error ? (
+        <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4">
+          <p className="text-[#FF2D2D]">{error}</p>
+        </div>
+      ) : pools.length === 0 ? (
+        <div className="bg-[#0D0D0D] rounded-xl p-12 border border-[#1a1a1a] text-center">
+          <Coins className="h-12 w-12 text-[#BDDBDB] opacity-30 mx-auto mb-4" />
+          <p className="text-[#BDDBDB] text-lg">No staking pools available yet.</p>
+          <p className="text-[#BDDBDB] text-sm mt-2">Check back soon for new staking opportunities.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {pools.map((pool) => {
+            const userPosition = positions.find(p => p.pool_id === pool.id);
+            const isStaked = userPosition && userPosition.amount > 0;
+
+            return (
+              <motion.div
+                key={pool.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold text-white">{pool.token_name || pool.token_symbol}</h3>
+                    <p className="text-[#BDDBDB] text-xs font-mono">{pool.token_mint.slice(0, 8)}...</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <span className="text-[#FF2D2D] font-bold text-lg">{pool.apy}% APY</span>
+                      {pool.lock_duration > 0 && (
+                        <span className="text-[#BDDBDB] text-xs opacity-50">🔒 {pool.lock_duration / 86400}d lock</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[#BDDBDB] text-sm">Staked</p>
+                    <p className="text-white font-medium">{pool.total_staked.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 text-sm text-[#BDDBDB]">
+                  <span>Min: {pool.min_stake}</span>
+                  <span>•</span>
+                  <span>Max: {pool.max_stake}</span>
+                </div>
+
+                {isStaked && userPosition && (
+                  <div className="mt-4 bg-[#050505] rounded-lg p-3 border border-[#1a1a1a]">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[#BDDBDB]">Your Stake</span>
+                      <span className="text-white font-medium">{userPosition.amount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mt-1">
+                      <span className="text-[#BDDBDB]">Rewards</span>
+                      <span className="text-[#FF2D2D] font-medium">
+                        {(userPosition.reward_earned - userPosition.reward_claimed).toFixed(4)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-4 flex gap-3">
+                  <Link
+                    href={`/staking/${pool.token_mint}`}
+                    className="flex-1 text-center px-4 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition text-sm font-medium"
+                  >
+                    {isStaked ? 'Manage Stake' : 'Stake Now'}
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

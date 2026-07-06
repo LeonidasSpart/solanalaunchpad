@@ -8,7 +8,7 @@ import { ArrowLeft, Lock, Unlock, AlertCircle, CheckCircle, Loader2 } from 'luci
 import Link from 'next/link';
 import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token';
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { getDecimals } from '@/lib/solana'; // ← dynamic decimals
+import { getDecimals } from '@/lib/solana';
 
 interface StakingPool {
   id: number;
@@ -49,6 +49,7 @@ export default function StakePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // ─── fetchData ────────────────────────────────────────────────────
   const fetchData = async () => {
     if (!connected || !publicKey || !mintAddress) {
       setLoading(false);
@@ -67,7 +68,16 @@ export default function StakePage() {
         return;
       }
       const poolData = await poolRes.json();
-      setPool(poolData);
+
+      // Parse numeric fields
+      setPool({
+        ...poolData,
+        apy: parseFloat(poolData.apy),
+        lock_duration: parseInt(poolData.lock_duration, 10),
+        min_stake: parseFloat(poolData.min_stake),
+        max_stake: parseFloat(poolData.max_stake),
+        total_staked: parseFloat(poolData.total_staked),
+      });
 
       // 2. Fetch user position
       const posRes = await fetch(
@@ -75,7 +85,16 @@ export default function StakePage() {
       );
       if (posRes.ok) {
         const posData = await posRes.json();
-        setPosition(posData); // may be null
+        if (posData) {
+          setPosition({
+            ...posData,
+            amount: parseFloat(posData.amount),
+            reward_earned: parseFloat(posData.reward_earned),
+            reward_claimed: parseFloat(posData.reward_claimed),
+          });
+        } else {
+          setPosition(null);
+        }
       }
 
       // 3. Fetch token balance (with dynamic decimals)
@@ -84,8 +103,7 @@ export default function StakePage() {
         const ata = await getAssociatedTokenAddress(mintPubkey, publicKey);
         const accountInfo = await getAccount(connection, ata);
         const decimals = await getDecimals(mintPubkey);
-        const balance = Number(accountInfo.amount) / Math.pow(10, decimals);
-        setBalance(balance);
+        setBalance(Number(accountInfo.amount) / Math.pow(10, decimals));
       } catch {
         setBalance(0);
       }
@@ -164,7 +182,7 @@ export default function StakePage() {
             poolId: pool.id,
             userWallet: publicKey.toBase58(),
             signature,
-            amount: amountNum, // ← critical
+            amount: amountNum,
           }),
         });
 
@@ -252,6 +270,8 @@ export default function StakePage() {
       setStaking(false);
     }
   };
+
+  // ─── Render ──────────────────────────────────────────────────────
 
   if (!connected) {
     return (

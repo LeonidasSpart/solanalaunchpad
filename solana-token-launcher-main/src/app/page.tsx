@@ -12,6 +12,7 @@ import PricingTable from '@/components/Home/pricing-table';
 import TokenFeed from '@/components/Home/token-feed';
 import WelcomePopup from '@/components/Home/welcome-popup';
 import CookieBanner from '@/components/cookie-banner';
+import AffiliateCTA from '@/components/Home/affiliate-cta'; 
 
 export default function Home() {
   return (
@@ -28,6 +29,7 @@ export default function Home() {
       <PricingTable />
       <FeaturedTokens />
       <TokenFeed />
+      <AffiliateCTA />  
       <FAQ />
       <CtaSection />
     </div>

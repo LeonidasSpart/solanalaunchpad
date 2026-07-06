@@ -33,7 +33,7 @@ export async function GET(request: Request) {
       [wallet]
     );
 
-    // 3. 📊 Get Analytics from referral_events
+    // 3. Get analytics
     const analyticsRes = await query(
       `SELECT 
         COUNT(*) FILTER (WHERE event_type = 'click') as total_clicks,
@@ -50,11 +50,6 @@ export async function GET(request: Request) {
       total_conversions: 0,
     };
 
-    // Calculate conversion rate (unique signups -> conversions)
-    const conversionRate = analytics.unique_signups > 0
-      ? (analytics.total_conversions / analytics.unique_signups) * 100
-      : 0;
-
     // 4. Get leaderboard
     const leaderboardRes = await query(
       `SELECT wallet, total_referrals, total_commission
@@ -64,33 +59,52 @@ export async function GET(request: Request) {
        LIMIT 50`
     );
 
-    // 5. Get referral link
-    const referralLink = `https://zrp.one/ref/${wallet}`;
+    // 5. Calculate conversion rate
+    const uniqueSignups = Number(analytics.unique_signups) || 0;
+    const conversions = Number(analytics.total_conversions) || 0;
+    const conversionRate = uniqueSignups > 0 ? (conversions / uniqueSignups) * 100 : 0;
 
     // 6. Milestones
+    const totalReferrals = Number(stats.total_referrals) || 0;
     const milestones = [
-      { target: 5, label: '🚀 5 referrals', unlocked: stats.total_referrals >= 5, bonus: '0.05 SOL' },
-      { target: 10, label: '⭐ 10 referrals', unlocked: stats.total_referrals >= 10, bonus: '0.10 SOL' },
-      { target: 25, label: '🏆 25 referrals', unlocked: stats.total_referrals >= 25, bonus: '0.25 SOL' },
-      { target: 50, label: '👑 50 referrals', unlocked: stats.total_referrals >= 50, bonus: '0.50 SOL' },
-      { target: 100, label: '💎 100 referrals', unlocked: stats.total_referrals >= 100, bonus: '1.00 SOL' },
+      { target: 5, label: '🚀 5 referrals', unlocked: totalReferrals >= 5, bonus: '0.05 SOL' },
+      { target: 10, label: '⭐ 10 referrals', unlocked: totalReferrals >= 10, bonus: '0.10 SOL' },
+      { target: 25, label: '🏆 25 referrals', unlocked: totalReferrals >= 25, bonus: '0.25 SOL' },
+      { target: 50, label: '👑 50 referrals', unlocked: totalReferrals >= 50, bonus: '0.50 SOL' },
+      { target: 100, label: '💎 100 referrals', unlocked: totalReferrals >= 100, bonus: '1.00 SOL' },
     ];
 
-    return NextResponse.json({
-      stats,
-      recentReferrals: referralsRes.rows,
-      leaderboard: leaderboardRes.rows,
-      referralLink,
+    // 7. ✅ CONVERT EVERYTHING TO NUMBERS
+    const response = {
+      stats: {
+        total_referrals: Number(stats.total_referrals) || 0,
+        total_commission: Number(stats.total_commission) || 0,
+        claimed_commission: Number(stats.claimed_commission) || 0,
+      },
+      recentReferrals: referralsRes.rows.map((row: any) => ({
+        referred_wallet: row.referred_wallet,
+        status: row.status,
+        commission_earned: Number(row.commission_earned) || 0,
+        created_at: row.created_at,
+        completed_at: row.completed_at,
+      })),
+      leaderboard: leaderboardRes.rows.map((row: any) => ({
+        wallet: row.wallet,
+        total_referrals: Number(row.total_referrals) || 0,
+        total_commission: Number(row.total_commission) || 0,
+      })),
+      referrallink: `https://zrp.one/ref/${wallet}`,
       milestones,
       rank: leaderboardRes.rows.findIndex((r: any) => r.wallet === wallet) + 1 || 0,
-      // 📊 New Analytics Field
       analytics: {
-        totalClicks: parseInt(analytics.total_clicks) || 0,
-        uniqueSignups: parseInt(analytics.unique_signups) || 0,
-        conversions: parseInt(analytics.total_conversions) || 0,
-        conversionRate: conversionRate,
+        totalclicks: Number(analytics.total_clicks) || 0,
+        uniqueSignups,
+        conversions,
+        conversionRate: Number(conversionRate.toFixed(1)),
       },
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Affiliate stats error:', error);
     return NextResponse.json(

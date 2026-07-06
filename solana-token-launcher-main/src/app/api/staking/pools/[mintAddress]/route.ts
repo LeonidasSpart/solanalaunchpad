@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { mintAddress } = await params;
     const res = await query(
-      'SELECT * FROM staking_pools WHERE token_mint = $1 AND is_active = true',
+      'SELECT * FROM staking_pools WHERE token_mint = $1',  // ← removed is_active filter
       [mintAddress]
     );
     if (res.rows.length === 0) {

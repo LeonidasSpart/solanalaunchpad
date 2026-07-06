@@ -29,6 +29,12 @@ interface AffiliateData {
   referralLink: string;
   milestones: any[];
   rank: number;
+  analytics: {
+    totalClicks: number;
+    uniqueSignups: number;
+    conversions: number;
+    conversionRate: number;
+  };
 }
 
 export default function AffiliatePage() {
@@ -169,27 +175,52 @@ export default function AffiliatePage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+        className="space-y-6 mb-8"
       >
-        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
-          <Users className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
-          <p className="text-2xl font-bold text-white">{data.stats.total_referrals}</p>
-          <p className="text-[#BDDBDB] text-sm">Total Referrals</p>
+        {/* Row 1: Core Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+            <Users className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{data.stats.total_referrals}</p>
+            <p className="text-[#BDDBDB] text-sm">Total Referrals</p>
+          </div>
+          <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+            <Coins className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{data.stats.total_commission.toFixed(4)} SOL</p>
+            <p className="text-[#BDDBDB] text-sm">Total Earned</p>
+          </div>
+          <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+            <Gift className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{unclaimed.toFixed(4)} SOL</p>
+            <p className="text-[#BDDBDB] text-sm">Unclaimed</p>
+          </div>
+          <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
+            <TrendingUp className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">#{data.rank || '—'}</p>
+            <p className="text-[#BDDBDB] text-sm">Leaderboard Rank</p>
+          </div>
         </div>
-        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
-          <Coins className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
-          <p className="text-2xl font-bold text-white">{data.stats.total_commission.toFixed(4)} SOL</p>
-          <p className="text-[#BDDBDB] text-sm">Total Earned</p>
-        </div>
-        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
-          <Gift className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
-          <p className="text-2xl font-bold text-white">{unclaimed.toFixed(4)} SOL</p>
-          <p className="text-[#BDDBDB] text-sm">Unclaimed</p>
-        </div>
-        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] text-center">
-          <TrendingUp className="h-6 w-6 text-[#FF2D2D] mx-auto mb-2" />
-          <p className="text-2xl font-bold text-white">#{data.rank || '—'}</p>
-          <p className="text-[#BDDBDB] text-sm">Leaderboard Rank</p>
+
+        {/* 📊 Row 2: Analytics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
+            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.totalClicks}</p>
+            <p className="text-[#BDDBDB] text-xs opacity-70">Link Clicks</p>
+          </div>
+          <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
+            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.uniqueSignups}</p>
+            <p className="text-[#BDDBDB] text-xs opacity-70">Unique Sign-ups</p>
+          </div>
+          <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
+            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.conversions}</p>
+            <p className="text-[#BDDBDB] text-xs opacity-70">Token Created</p>
+          </div>
+          <div className="bg-[#FF2D2D]/5 border border-[#FF2D2D]/20 rounded-xl p-5 text-center">
+            <p className="text-2xl font-bold text-[#FF2D2D]">
+              {data.analytics.conversionRate.toFixed(1)}%
+            </p>
+            <p className="text-[#BDDBDB] text-xs opacity-70">Conversion Rate</p>
+          </div>
         </div>
       </motion.div>
 

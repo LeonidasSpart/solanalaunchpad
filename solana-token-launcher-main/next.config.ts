@@ -53,6 +53,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // ✅ Redirect /affiliates → /affiliate
+  async redirects() {
+    return [
+      {
+        source: '/affiliates',
+        destination: '/affiliate',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

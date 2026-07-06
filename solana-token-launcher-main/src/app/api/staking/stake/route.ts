@@ -3,7 +3,7 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { query } from '@/lib/db';
 import { getStakingPool, getStakingPosition } from '@/lib/staking';
-import { getDecimals, getPlatformKeypair } from '@/lib/solana';
+import { getDecimals, getPlatformKeypair, getConnection } from '@/lib/solana'; // ← added getConnection
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     const userATA = await getAssociatedTokenAddress(mint, new PublicKey(userWallet));
     const platformATA = await getAssociatedTokenAddress(mint, new PublicKey(process.env.PLATFORM_PUBLIC_KEY!));
 
-    const connection = new Connection(process.env.RPC_URL_DEVNET!);
+    const connection = getConnection(); // ← uses env NEXT_PUBLIC_SOLANA_NETWORK
     const { blockhash } = await connection.getLatestBlockhash();
 
     const transferIx = createTransferInstruction(
@@ -46,9 +46,6 @@ export async function POST(request: NextRequest) {
 
     // 4. Return serialized transaction for frontend to sign
     const serialized = tx.serialize({ requireAllSignatures: false }).toString('base64');
-
-    // 5. (Optional) Store temporary data in session or just return tx + poolId + amount
-    // We'll let the frontend call `/confirm` after signing.
 
     return NextResponse.json({
       transaction: serialized,

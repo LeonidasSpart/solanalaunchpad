@@ -26,11 +26,11 @@ interface AffiliateData {
   };
   recentReferrals: any[];
   leaderboard: any[];
-  referralLink: string;
+  referrallink: string;           // ✅ lowercase "l"
   milestones: any[];
   rank: number;
   analytics: {
-    totalClicks: number;
+    totalclicks: number;          // ✅ lowercase "c"
     uniqueSignups: number;
     conversions: number;
     conversionRate: number;
@@ -71,8 +71,8 @@ export default function AffiliatePage() {
   };
 
   const handleCopy = async () => {
-    if (data?.referralLink) {
-      await navigator.clipboard.writeText(data.referralLink);
+    if (data?.referrallink) {
+      await navigator.clipboard.writeText(data.referrallink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -101,13 +101,13 @@ export default function AffiliatePage() {
   };
 
   const shareOnTwitter = () => {
-    const text = `🚀 Create your own Solana token in 60 seconds with @ZRP_AI!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referralLink}\n\n#Solana #SPLToken #Crypto`;
+    const text = `🚀 Create your own Solana token in 60 seconds with @ZRP_AI!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referrallink}\n\n#Solana #SPLToken #Crypto`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const shareOnTelegram = () => {
-    const text = `🚀 Create your own Solana token in 60 seconds with ZRP!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referralLink}`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(data?.referralLink || '')}&text=${encodeURIComponent(text)}`, '_blank');
+    const text = `🚀 Create your own Solana token in 60 seconds with ZRP!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referrallink}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(data?.referrallink || '')}&text=${encodeURIComponent(text)}`, '_blank');
   };
 
   if (!connected) {
@@ -204,7 +204,7 @@ export default function AffiliatePage() {
         {/* 📊 Row 2: Analytics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
-            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.totalClicks}</p>
+            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.totalclicks}</p>
             <p className="text-[#BDDBDB] text-xs opacity-70">Link Clicks</p>
           </div>
           <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
@@ -235,7 +235,7 @@ export default function AffiliatePage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 bg-[#050505] rounded-xl px-4 py-3 border border-[#1a1a1a] flex items-center">
             <LinkIcon className="h-4 w-4 text-[#BDDBDB] mr-2 flex-shrink-0" />
-            <span className="text-[#BDDBDB] text-sm truncate">{data.referralLink}</span>
+            <span className="text-[#BDDBDB] text-sm truncate">{data.referrallink}</span>
           </div>
           <button
             onClick={handleCopy}
@@ -263,8 +263,8 @@ export default function AffiliatePage() {
           </button>
           <button
             onClick={() => {
-              if (data?.referralLink) {
-                navigator.share?.({ title: 'Create Tokens on ZRP', url: data.referralLink });
+              if (data?.referrallink) {
+                navigator.share?.({ title: 'Create Tokens on ZRP', url: data.referrallink });
               }
             }}
             className="flex-1 sm:flex-none px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-lg transition flex items-center justify-center gap-2"

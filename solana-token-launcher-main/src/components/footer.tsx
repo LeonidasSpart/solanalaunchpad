@@ -120,7 +120,7 @@ const Footer = () => {
               <li><Link href="/airdrop" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Tool</Link></li>
               <li><Link href="/revoke" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
               <li><Link href="/burn-lp" className="text-[#BDDBDB] hover:text-white text-sm transition">Burn LP</Link></li>
-              <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Pricing</Link></li>
+              <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
               <li><Link href="/dashboard" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
             </ul>
           </div>
@@ -157,8 +157,9 @@ const Footer = () => {
             <ul className="space-y-2.5">
               <li><Link href="/blog" className="text-[#BDDBDB] hover:text-white text-sm transition">Blog</Link></li>
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
+              <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Pricing</Link></li>
               <li><Link href="/why-zrp" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
-              <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
+              <li><Link href="/affiliate-info" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliate</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
               <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>

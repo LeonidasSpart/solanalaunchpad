@@ -53,12 +53,12 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // ✅ Redirect /affiliates → /affiliate
+  // ✅ Redirect /affiliate → /affiliates
   async redirects() {
     return [
       {
-        source: '/affiliates',
-        destination: '/affiliate',
+        source: '/affiliate',
+        destination: '/affiliates',
         permanent: true,
       },
     ];

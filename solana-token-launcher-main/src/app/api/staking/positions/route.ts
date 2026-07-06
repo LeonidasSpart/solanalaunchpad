@@ -4,22 +4,35 @@ import { query } from '@/lib/db';
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const wallet = searchParams.get('wallet');
+  const mint = searchParams.get('mint');
 
-  if (!wallet) {
-    return NextResponse.json({ error: 'Wallet address required' }, { status: 400 });
+  if (!wallet || !mint) {
+    return NextResponse.json({ error: 'Wallet and mint are required' }, { status: 400 });
   }
 
   try {
-    const res = await query(
-      `SELECT sp.*, p.token_symbol, p.token_name, p.apy, p.lock_duration
-       FROM staking_positions sp
-       JOIN staking_pools p ON sp.pool_id = p.id
-       WHERE sp.user_wallet = $1 AND sp.status = 'active'`,
-      [wallet]
+    // 1. Find the pool by mint
+    const poolRes = await query(
+      'SELECT id FROM staking_pools WHERE token_mint = $1',
+      [mint]
     );
-    return NextResponse.json(res.rows);
+    if (poolRes.rows.length === 0) {
+      return NextResponse.json(null); // no pool → no position
+    }
+    const poolId = poolRes.rows[0].id;
+
+    // 2. Get the user's active position (should be only one)
+    const posRes = await query(
+      `SELECT *
+       FROM staking_positions
+       WHERE pool_id = $1 AND user_wallet = $2 AND status = 'active'`,
+      [poolId, wallet]
+    );
+
+    // Return the first (and only) position, or null
+    return NextResponse.json(posRes.rows[0] || null);
   } catch (error) {
-    console.error('Error fetching positions:', error);
-    return NextResponse.json({ error: 'Failed to fetch positions' }, { status: 500 });
+    console.error('Error fetching position:', error);
+    return NextResponse.json({ error: 'Failed to fetch position' }, { status: 500 });
   }
 }

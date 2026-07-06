@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Get user's stats
+    // 1. Get user's stats
     const statsRes = await query(
       `SELECT * FROM referral_stats WHERE wallet = $1`,
       [wallet]
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       claimed_commission: 0,
     };
 
-    // Get recent referrals
+    // 2. Get recent referrals
     const referralsRes = await query(
       `SELECT referred_wallet, status, commission_earned, created_at, completed_at
        FROM referrals
@@ -33,7 +33,29 @@ export async function GET(request: Request) {
       [wallet]
     );
 
-    // Get leaderboard (top 50)
+    // 3. 📊 Get Analytics from referral_events
+    const analyticsRes = await query(
+      `SELECT 
+        COUNT(*) FILTER (WHERE event_type = 'click') as total_clicks,
+        COUNT(DISTINCT metadata->>'referred') FILTER (WHERE event_type = 'signup') as unique_signups,
+        COUNT(*) FILTER (WHERE event_type = 'token_created') as total_conversions
+       FROM referral_events
+       WHERE wallet = $1`,
+      [wallet]
+    );
+
+    const analytics = analyticsRes.rows[0] || {
+      total_clicks: 0,
+      unique_signups: 0,
+      total_conversions: 0,
+    };
+
+    // Calculate conversion rate (unique signups -> conversions)
+    const conversionRate = analytics.unique_signups > 0
+      ? (analytics.total_conversions / analytics.unique_signups) * 100
+      : 0;
+
+    // 4. Get leaderboard
     const leaderboardRes = await query(
       `SELECT wallet, total_referrals, total_commission
        FROM referral_stats
@@ -42,10 +64,10 @@ export async function GET(request: Request) {
        LIMIT 50`
     );
 
-    // Get referral link
+    // 5. Get referral link
     const referralLink = `https://zrp.one/ref/${wallet}`;
 
-    // Calculate milestones
+    // 6. Milestones
     const milestones = [
       { target: 5, label: '🚀 5 referrals', unlocked: stats.total_referrals >= 5, bonus: '0.05 SOL' },
       { target: 10, label: '⭐ 10 referrals', unlocked: stats.total_referrals >= 10, bonus: '0.10 SOL' },
@@ -61,6 +83,13 @@ export async function GET(request: Request) {
       referralLink,
       milestones,
       rank: leaderboardRes.rows.findIndex((r: any) => r.wallet === wallet) + 1 || 0,
+      // 📊 New Analytics Field
+      analytics: {
+        totalClicks: parseInt(analytics.total_clicks) || 0,
+        uniqueSignups: parseInt(analytics.unique_signups) || 0,
+        conversions: parseInt(analytics.total_conversions) || 0,
+        conversionRate: conversionRate,
+      },
     });
   } catch (error) {
     console.error('Affiliate stats error:', error);

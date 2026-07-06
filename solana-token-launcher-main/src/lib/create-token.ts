@@ -29,7 +29,6 @@ import {
   NETWORKS,
   RPC_URLS,
 } from "./constants";
-import { trackTokenCreation } from "./referral"; // ✅ Affiliate tracking
 
 const BURN_ADDRESS = new PublicKey(
   "1nc1nerator11111111111111111111111111111111"
@@ -62,8 +61,8 @@ interface CreateTokenParams {
   twitter?: string;
   telegram?: string;
   discord?: string;
-  referrer?: string;   // ✅ Optional – affiliate referrer
-  fee?: number;        // ✅ Optional – fee paid (0 on devnet)
+  referrer?: string;   // optional – affiliate referrer
+  fee?: number;        // optional – fee paid (0 on devnet)
 }
 
 export async function createToken({
@@ -84,7 +83,7 @@ export async function createToken({
   telegram,
   discord,
   referrer,
-  fee = 0, // default to 0 (devnet or if not passed)
+  fee = 0,
 }: CreateTokenParams): Promise<{ txId: string; mintAddress: string }> {
   const net = network === 'mainnet' ? 'mainnet' : 'devnet';
   const connection = getDirectConnection(net);
@@ -290,7 +289,7 @@ export async function createToken({
     );
   }
 
-  // ─── 5. Sign and send via DIRECT connection (not proxy) ─────────────────
+  // ─── 5. Sign and send via DIRECT connection ─────────────────
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('finalized');
   transaction.recentBlockhash = blockhash;
   transaction.partialSign(mintKeypair);
@@ -313,24 +312,25 @@ export async function createToken({
     throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
   }
 
-  // ─── 6. Track referral (if any) ─────────────────
-  // Only track if referrer exists and fee > 0 (mainnet)
+  // ─── 6. Track referral (if any) via API ─────────────────
   if (referrer && fee > 0) {
     try {
-      const commission = fee * 0.15; // 15% commission
-      await trackTokenCreation(
-        referrer,
-        wallet.toBase58(),
-        commission,
-        mint.toString()
-      );
+      const commission = fee * 0.15;
+      await fetch('/api/affiliate/track-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referrer,
+          referred: wallet.toBase58(),
+          commission,
+          mintAddress: mint.toString(),
+        }),
+      });
     } catch (err) {
-      // Log error but don't fail token creation
       console.error('Failed to track referral:', err);
     }
   }
 
-  // Return both txId AND mintAddress
   return {
     txId: txId,
     mintAddress: mint.toString(),

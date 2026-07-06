@@ -261,7 +261,7 @@ Environment Variables
 DATABASE_URL=postgresql://user:password@host:5432/database
 
 # Admin
-ADMIN_EMAIL=admin@zrp.one
+ADMIN_EMAIL=admin@yourpage.com
 ADMIN_PASSWORD_HASH=bcrypt_hash_here
 JWT_SECRET=your_jwt_secret_key
 

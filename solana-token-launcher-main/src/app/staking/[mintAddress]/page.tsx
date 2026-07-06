@@ -91,6 +91,7 @@ export default function StakePage() {
     fetchData();
   }, [connected, publicKey, mintAddress]);
 
+  // ─── Stake ──────────────────────────────────────────────────────────
   const handleStake = async () => {
     if (!publicKey || !signTransaction || !pool) {
       setError('Please connect your wallet');
@@ -137,9 +138,8 @@ export default function StakePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Stake failed');
 
-      // Check if we need to sign a transaction
+      // If the API returns a transaction to sign
       if (data.transaction) {
-        // Decode transaction and sign
         const txBuffer = Buffer.from(data.transaction, 'base64');
         const tx = Transaction.from(txBuffer);
         const signed = await signTransaction(tx);
@@ -165,6 +165,78 @@ export default function StakePage() {
       await fetchData();
     } catch (err: any) {
       setError(err.message || 'Stake failed');
+    } finally {
+      setStaking(false);
+    }
+  };
+
+  // ─── Unstake ──────────────────────────────────────────────────────
+  const handleUnstake = async () => {
+    if (!publicKey || !pool || !position) {
+      setError('No active position to unstake');
+      return;
+    }
+
+    setStaking(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch('/api/staking/unstake', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          poolId: pool.id,
+          userWallet: publicKey.toBase58(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Unstake failed');
+
+      setSuccess(`✅ Successfully unstaked all tokens! Tx: ${data.signature.slice(0, 8)}...`);
+      await fetchData();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setStaking(false);
+    }
+  };
+
+  // ─── Claim Rewards ────────────────────────────────────────────────
+  const handleClaimRewards = async () => {
+    if (!publicKey || !pool || !position) {
+      setError('No active position to claim rewards from');
+      return;
+    }
+
+    const rewards = position.reward_earned - position.reward_claimed;
+    if (rewards <= 0) {
+      setError('No rewards available to claim');
+      return;
+    }
+
+    setStaking(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch('/api/staking/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          poolId: pool.id,
+          userWallet: publicKey.toBase58(),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Claim failed');
+
+      setSuccess(`✅ Successfully claimed ${data.amount.toFixed(4)} rewards! Tx: ${data.signature.slice(0, 8)}...`);
+      await fetchData();
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setStaking(false);
     }
@@ -254,6 +326,7 @@ export default function StakePage() {
           </div>
         </div>
 
+        {/* ─── Claim Rewards ─────────────────────────────────────────── */}
         {isStaked && rewards > 0 && (
           <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 mb-6 flex items-center justify-between">
             <div>
@@ -261,14 +334,16 @@ export default function StakePage() {
               <p className="text-[#FF2D2D] font-bold text-lg">{rewards.toFixed(4)} {pool.token_symbol}</p>
             </div>
             <button
-              onClick={() => alert('Claim rewards functionality coming soon!')}
-              className="px-4 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition text-sm font-medium"
+              onClick={handleClaimRewards}
+              disabled={staking}
+              className="px-4 py-2 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white rounded-xl transition text-sm font-medium"
             >
-              Claim Rewards
+              {staking ? 'Claiming...' : 'Claim Rewards'}
             </button>
           </div>
         )}
 
+        {/* ─── Stake Form ────────────────────────────────────────────── */}
         <div className="space-y-4">
           <div>
             <label className="text-white font-medium block mb-1.5">Amount to Stake</label>
@@ -312,15 +387,22 @@ export default function StakePage() {
           </button>
         </div>
 
+        {/* ─── Unstake ─────────────────────────────────────────────────── */}
         {isStaked && (
           <div className="mt-4 pt-4 border-t border-[#1a1a1a]">
             <button
-              onClick={() => alert('Unstake functionality coming soon!')}
-              className="w-full py-3 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-xl transition border border-[#1a1a1a] flex items-center justify-center gap-2"
+              onClick={handleUnstake}
+              disabled={staking}
+              className="w-full py-3 bg-[#1a1a1a] hover:bg-[#2a2a2a] disabled:opacity-50 text-[#BDDBDB] rounded-xl transition border border-[#1a1a1a] flex items-center justify-center gap-2"
             >
               <Unlock className="h-5 w-5" />
-              Unstake All
+              {staking ? 'Processing...' : 'Unstake All'}
             </button>
+            {position?.unlocked_at && new Date(position.unlocked_at) > new Date() && (
+              <p className="text-[#BDDBDB] text-xs text-center mt-2">
+                🔒 Tokens locked until {new Date(position.unlocked_at).toLocaleDateString()}
+              </p>
+            )}
           </div>
         )}
       </div>

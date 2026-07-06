@@ -49,22 +49,45 @@ export default function StakingPage() {
     setLoading(true);
     setError(null);
     try {
-      // Fetch pools
+      // 1. Fetch pools
       const poolsRes = await fetch('/api/staking/pools');
       if (!poolsRes.ok) throw new Error('Failed to fetch pools');
       const poolsData = await poolsRes.json();
-      setPools(poolsData);
 
-      // Fetch user positions
+      // Parse numeric fields for pools
+      const parsedPools = poolsData.map((pool: any) => ({
+        ...pool,
+        apy: parseFloat(pool.apy),
+        lock_duration: parseInt(pool.lock_duration, 10),
+        min_stake: parseFloat(pool.min_stake),
+        max_stake: parseFloat(pool.max_stake),
+        total_staked: parseFloat(pool.total_staked),
+        total_rewards_paid: parseFloat(pool.total_rewards_paid),
+      }));
+      setPools(parsedPools);
+
+      // 2. Fetch user positions (only if connected)
       if (connected && publicKey) {
         const posRes = await fetch(`/api/staking/positions?wallet=${publicKey.toBase58()}`);
         if (posRes.ok) {
           const posData = await posRes.json();
-          setPositions(posData);
+          // Parse numeric fields for positions
+          const parsedPositions = posData.map((pos: any) => ({
+            ...pos,
+            amount: parseFloat(pos.amount),
+            reward_earned: parseFloat(pos.reward_earned),
+            reward_claimed: parseFloat(pos.reward_claimed),
+          }));
+          setPositions(parsedPositions);
+        } else {
+          // If the endpoint returns 404 or 500, treat as empty
+          setPositions([]);
         }
+      } else {
+        setPositions([]);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to load staking data');
     } finally {
       setLoading(false);
     }

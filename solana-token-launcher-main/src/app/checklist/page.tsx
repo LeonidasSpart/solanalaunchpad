@@ -1,7 +1,422 @@
-// src/app/checklist/page.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { 
+  CheckCircle, 
+  Circle, 
+  Clock, 
+  AlertCircle, 
+  Info, 
+  Share2, 
+  Calendar,
+  TrendingUp,
+  Users,
+  Shield,
+  Zap,
+  Rocket,
+} from 'lucide-react';
+
+// ─── Types ──────────────────────────────────────────────────────────
+
+interface ChecklistItem {
+  id: string;
+  label: string;
+  description: string;
+  priority: 'critical' | 'important' | 'nice';
+  link?: string;
+  linkText?: string;
+}
+
+interface Phase {
+  id: string;
+  title: string;
+  description: string;
+  estimatedTime: string;
+  icon: React.ReactNode;
+  items: ChecklistItem[];
+}
+
+// ─── Data ──────────────────────────────────────────────────────────
+
+const phases: Phase[] = [
+  {
+    id: 'fundamentals',
+    title: 'Token Fundamentals',
+    description: 'Define your token\'s foundation before creation.',
+    estimatedTime: '2–3 days',
+    icon: <Rocket className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'purpose',
+        label: 'Define token purpose and value proposition',
+        description: 'What problem does your token solve? Write this in one clear sentence.',
+        priority: 'critical',
+      },
+      {
+        id: 'audience',
+        label: 'Research target audience',
+        description: 'Who will use your token? Understand their needs and preferences.',
+        priority: 'important',
+      },
+      {
+        id: 'name',
+        label: 'Choose token name and symbol',
+        description: 'Make it memorable, available, and not trademarked.',
+        priority: 'critical',
+      },
+      {
+        id: 'tokenomics',
+        label: 'Design tokenomics',
+        description: 'Plan total supply, distribution, and allocation.',
+        priority: 'critical',
+        link: '/tokenomics',
+        linkText: 'Tokenomics Guide',
+      },
+      {
+        id: 'authorities',
+        label: 'Decide on authority settings',
+        description: 'Will you revoke mint, freeze, or update authority?',
+        priority: 'critical',
+        link: '/revoke',
+        linkText: 'Revoke Authority Guide',
+      },
+      {
+        id: 'budget',
+        label: 'Budget for creation and launch costs',
+        description: 'Plan for token creation (0.15 SOL minimum), liquidity (10–50+ SOL), and marketing.',
+        priority: 'important',
+      },
+    ],
+  },
+  {
+    id: 'branding',
+    title: 'Branding & Assets',
+    description: 'Create your visual identity and marketing assets.',
+    estimatedTime: '3–5 days',
+    icon: <Zap className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'logo',
+        label: 'Design logo (multiple sizes)',
+        description: 'Create logo in 512×512, 256×256, and 128×128 pixels. Test on dark and light backgrounds.',
+        priority: 'critical',
+      },
+      {
+        id: 'social-graphics',
+        label: 'Create social media graphics',
+        description: 'Banner images for Twitter, Telegram, and Discord. Keep branding consistent.',
+        priority: 'important',
+      },
+      {
+        id: 'description',
+        label: 'Write token description',
+        description: 'Clear, compelling description explaining your token\'s purpose. Keep it under 500 characters for metadata.',
+        priority: 'critical',
+      },
+      {
+        id: 'website',
+        label: 'Prepare website/landing page',
+        description: 'At minimum, create a simple page with token info, social links, and contact.',
+        priority: 'important',
+      },
+      {
+        id: 'social-accounts',
+        label: 'Create social media accounts',
+        description: 'Secure Twitter, Telegram, and Discord accounts before launch. Use consistent usernames.',
+        priority: 'critical',
+      },
+    ],
+  },
+  {
+    id: 'technical',
+    title: 'Technical Preparation',
+    description: 'Set up your technical infrastructure.',
+    estimatedTime: '1–2 days',
+    icon: <Zap className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'wallet',
+        label: 'Set up Solana wallet',
+        description: 'Install a reputable Solana wallet (Phantom, Solflare, Backpack).',
+        priority: 'critical',
+      },
+      {
+        id: 'fund-wallet',
+        label: 'Fund wallet with SOL',
+        description: 'Ensure you have enough SOL for creation, liquidity, and transaction fees.',
+        priority: 'critical',
+      },
+      {
+        id: 'test-wallet',
+        label: 'Test wallet functionality',
+        description: 'Send a small test transaction to verify everything works correctly.',
+        priority: 'important',
+      },
+      {
+        id: 'metadata',
+        label: 'Prepare token metadata',
+        description: 'Have name, symbol, description, logo URL, and social links ready. Double-check all details.',
+        priority: 'critical',
+      },
+      {
+        id: 'platform',
+        label: 'Choose creation platform',
+        description: 'Select a reliable platform like ZRP. Test the interface beforehand.',
+        priority: 'important',
+      },
+    ],
+  },
+  {
+    id: 'community',
+    title: 'Community Building',
+    description: 'Build your community foundation before launch.',
+    estimatedTime: '2–4 weeks',
+    icon: <Users className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'telegram-discord',
+        label: 'Create Telegram/Discord',
+        description: 'Set up community channels with clear rules and moderation. Start building before launch.',
+        priority: 'critical',
+      },
+      {
+        id: 'twitter',
+        label: 'Set up Twitter account',
+        description: 'Twitter is essential for crypto launches. Start posting teasers and building followers.',
+        priority: 'critical',
+      },
+      {
+        id: 'initial-community',
+        label: 'Build initial community',
+        description: 'Engage with crypto communities, share your vision, and attract early supporters.',
+        priority: 'important',
+      },
+      {
+        id: 'announcements',
+        label: 'Prepare launch announcements',
+        description: 'Write Twitter threads, Telegram announcements, and press releases. Have them ready to go.',
+        priority: 'important',
+      },
+    ],
+  },
+  {
+    id: 'legal',
+    title: 'Legal & Compliance',
+    description: 'Ensure legal compliance for your launch.',
+    estimatedTime: '1–2 days',
+    icon: <Shield className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'legal-review',
+        label: 'Review legal requirements',
+        description: 'Understand regulations in your jurisdiction. Tokens are not securities, but clarify this clearly.',
+        priority: 'critical',
+      },
+      {
+        id: 'terms',
+        label: 'Prepare terms of service',
+        description: 'Create clear terms for your website/platform. Include disclaimers about token risks.',
+        priority: 'important',
+      },
+      {
+        id: 'privacy',
+        label: 'Create privacy policy',
+        description: 'Required if collecting any user data. Be transparent about data usage.',
+        priority: 'important',
+      },
+    ],
+  },
+  {
+    id: 'marketing',
+    title: 'Marketing Preparation',
+    description: 'Plan your marketing strategy.',
+    estimatedTime: '1–2 weeks',
+    icon: <TrendingUp className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'strategy',
+        label: 'Create marketing strategy',
+        description: 'Plan your approach across all channels.',
+        priority: 'critical',
+        link: '/marketing',
+        linkText: 'Marketing Guide',
+      },
+      {
+        id: 'content',
+        label: 'Prepare launch day content',
+        description: 'Create Twitter threads, graphics, videos, and announcements. Have everything ready.',
+        priority: 'important',
+      },
+      {
+        id: 'schedule',
+        label: 'Schedule social media posts',
+        description: 'Use scheduling tools to maintain consistent posting. Plan content for launch week.',
+        priority: 'important',
+      },
+      {
+        id: 'budget-marketing',
+        label: 'Budget for marketing spend',
+        description: 'Allocate funds for paid promotion, influencer partnerships, and advertising if needed.',
+        priority: 'nice',
+      },
+    ],
+  },
+  {
+    id: 'launch-day',
+    title: 'Launch Day Preparation',
+    description: 'Final checks for launch day.',
+    estimatedTime: '1 day',
+    icon: <Rocket className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'final-review',
+        label: 'Final token details review',
+        description: 'Double-check name, symbol, supply, and all metadata. These are permanent.',
+        priority: 'critical',
+      },
+      {
+        id: 'test-process',
+        label: 'Test creation process',
+        description: 'If possible, do a test run on devnet. Familiarize yourself with the platform.',
+        priority: 'important',
+      },
+      {
+        id: 'launch-announcement',
+        label: 'Prepare launch announcement',
+        description: 'Have your announcement ready to post immediately after creation. Include mint address and key info.',
+        priority: 'critical',
+      },
+      {
+        id: 'schedule-launch',
+        label: 'Schedule launch time',
+        description: 'Choose a time when your community is most active. Consider time zones.',
+        priority: 'important',
+      },
+    ],
+  },
+  {
+    id: 'post-launch',
+    title: 'Post-Launch Planning',
+    description: 'Plan beyond launch day.',
+    estimatedTime: '1 day',
+    icon: <AlertCircle className="h-5 w-5 text-[#FF2D2D]" />,
+    items: [
+      {
+        id: 'liquidity',
+        label: 'Plan liquidity addition',
+        description: 'Decide when and how much liquidity to add.',
+        priority: 'critical',
+        link: '/add-liquidity',
+        linkText: 'Liquidity Guide',
+      },
+      {
+        id: 'community-engagement',
+        label: 'Plan community engagement',
+        description: 'Schedule regular updates, AMAs, and engagement activities.',
+        priority: 'important',
+      },
+      {
+        id: 'ongoing-marketing',
+        label: 'Prepare ongoing marketing',
+        description: 'Plan content for weeks after launch. Maintain momentum with regular updates.',
+        priority: 'important',
+      },
+      {
+        id: 'tracking',
+        label: 'Set up tracking systems',
+        description: 'Monitor token metrics, holder growth, and community engagement.',
+        priority: 'nice',
+      },
+    ],
+  },
+];
+
+// ─── Helper ─────────────────────────────────────────────────────────
+
+const priorityLabels = {
+  critical: { label: 'Critical', color: 'bg-[#FF2D2D]/20 text-[#FF2D2D] border-[#FF2D2D]/30' },
+  important: { label: 'Important', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
+  nice: { label: 'Nice-to-have', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+};
+
+// ─── Component ─────────────────────────────────────────────────────
 
 export default function ChecklistPage() {
+  // ─── State ────────────────────────────────────────────────────────
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+  const [launchDate, setLaunchDate] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number } | null>(null);
+
+  // ─── Load from localStorage ──────────────────────────────────────
+  useEffect(() => {
+    const saved = localStorage.getItem('checklist-progress');
+    if (saved) {
+      try {
+        setCheckedItems(JSON.parse(saved));
+      } catch {}
+    }
+    const savedDate = localStorage.getItem('launch-date');
+    if (savedDate) {
+      setLaunchDate(savedDate);
+    }
+  }, []);
+
+  // ─── Save to localStorage ────────────────────────────────────────
+  useEffect(() => {
+    localStorage.setItem('checklist-progress', JSON.stringify(checkedItems));
+  }, [checkedItems]);
+
+  useEffect(() => {
+    if (launchDate) {
+      localStorage.setItem('launch-date', launchDate);
+    }
+  }, [launchDate]);
+
+  // ─── Countdown timer ─────────────────────────────────────────────
+  useEffect(() => {
+    if (!launchDate) return;
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const target = new Date(launchDate).getTime();
+      const diff = target - now;
+      if (diff <= 0) {
+        setTimeLeft(null);
+        clearInterval(interval);
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      setTimeLeft({ days, hours, minutes });
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [launchDate]);
+
+  // ─── Calculate progress ──────────────────────────────────────────
+  const totalItems = phases.reduce((acc, p) => acc + p.items.length, 0);
+  const completedItems = Object.values(checkedItems).filter(v => v).length;
+  const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+  // ─── Handlers ────────────────────────────────────────────────────
+  const toggleItem = (id: string) => {
+    setCheckedItems(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const shareProgress = () => {
+    const text = `🚀 I'm ${progress}% ready to launch my Solana token!\n\n📋 ${completedItems}/${totalItems} checklist items done.\n\nCreate yours at zrp.one/checklist`;
+    navigator.clipboard.writeText(text);
+    alert('Progress copied to clipboard! Share it with your community.');
+  };
+
+  const getPriorityIcon = (priority: string) => {
+    switch (priority) {
+      case 'critical': return <AlertCircle className="h-4 w-4 text-[#FF2D2D]" />;
+      case 'important': return <Clock className="h-4 w-4 text-yellow-400" />;
+      default: return <Info className="h-4 w-4 text-blue-400" />;
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
       {/* Hero Section */}
@@ -34,6 +449,52 @@ export default function ChecklistPage() {
         </div>
       </div>
 
+      {/* Progress Bar & Share */}
+      <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1 w-full">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-[#BDDBDB]">Progress</span>
+              <span className="text-white font-medium">{progress}%</span>
+            </div>
+            <div className="w-full bg-[#1a1a1a] rounded-full h-2.5">
+              <div className="bg-[#FF2D2D] h-2.5 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+          <button
+            onClick={shareProgress}
+            className="flex items-center gap-2 px-4 py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-[#BDDBDB] rounded-lg transition whitespace-nowrap"
+          >
+            <Share2 className="h-4 w-4" />
+            Share Progress
+          </button>
+        </div>
+
+        {/* Launch Countdown */}
+        <div className="mt-4 border-t border-[#1a1a1a] pt-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Calendar className="h-5 w-5 text-[#FF2D2D]" />
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[#BDDBDB] text-sm">Launch Date:</span>
+              <input
+                type="datetime-local"
+                value={launchDate || ''}
+                onChange={(e) => setLaunchDate(e.target.value)}
+                className="bg-[#050505] border border-[#1a1a1a] rounded-lg px-3 py-1.5 text-white text-sm focus:outline-none focus:border-[#FF2D2D]"
+              />
+              {timeLeft && (
+                <span className="text-sm text-[#BDDBDB]">
+                  ⏳ {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+                </span>
+              )}
+              {launchDate && !timeLeft && (
+                <span className="text-sm text-[#FF2D2D]">🚀 Launch day is here!</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-[#0D0D0D] rounded-xl p-6 md:p-8 border border-[#1a1a1a] space-y-12 text-[#BDDBDB] text-sm leading-relaxed">
         {/* Introduction */}
         <section>
@@ -48,341 +509,84 @@ export default function ChecklistPage() {
           </div>
         </section>
 
-        {/* Phase 1: Token Fundamentals */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">1</span>
-            Token Fundamentals
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Define your token's foundation before creation.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Define token purpose and value proposition</p>
-                <p className="text-[#BDDBDB] text-sm">What problem does your token solve? Write this in one clear sentence.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Research target audience</p>
-                <p className="text-[#BDDBDB] text-sm">Who will use your token? Understand their needs and preferences.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Choose token name and symbol</p>
-                <p className="text-[#BDDBDB] text-sm">Make it memorable, available, and not trademarked.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Design tokenomics</p>
-                <p className="text-[#BDDBDB] text-sm">Plan total supply, distribution, and allocation. See our <Link href="/tokenomics" className="text-[#FF2D2D] hover:text-[#B10000] transition">Tokenomics Guide</Link>.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Decide on authority settings</p>
-                <p className="text-[#BDDBDB] text-sm">Will you revoke mint, freeze, or update authority? Learn more in our <Link href="/revoke" className="text-[#FF2D2D] hover:text-[#B10000] transition">Revoke Authority Guide</Link>.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Budget for creation and launch costs</p>
-                <p className="text-[#BDDBDB] text-sm">Plan for token creation (0.15 SOL minimum), liquidity (10–50+ SOL), and marketing.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
+        {/* Phases */}
+        {phases.map((phase) => {
+          const phaseItems = phase.items.length;
+          const phaseDone = phase.items.filter(item => checkedItems[item.id]).length;
+          const phaseProgress = phaseItems > 0 ? Math.round((phaseDone / phaseItems) * 100) : 0;
 
-        {/* Phase 2: Branding & Assets */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">2</span>
-            Branding &amp; Assets
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Create your visual identity and marketing assets.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Design logo (multiple sizes)</p>
-                <p className="text-[#BDDBDB] text-sm">Create logo in 512×512, 256×256, and 128×128 pixels. Test on dark and light backgrounds.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Create social media graphics</p>
-                <p className="text-[#BDDBDB] text-sm">Banner images for Twitter, Telegram, and Discord. Keep branding consistent.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Write token description</p>
-                <p className="text-[#BDDBDB] text-sm">Clear, compelling description explaining your token's purpose. Keep it under 500 characters for metadata.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare website/landing page</p>
-                <p className="text-[#BDDBDB] text-sm">At minimum, create a simple page with token info, social links, and contact.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Create social media accounts</p>
-                <p className="text-[#BDDBDB] text-sm">Secure Twitter, Telegram, and Discord accounts before launch. Use consistent usernames.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
+          return (
+            <section key={phase.id} className="border-t border-[#1a1a1a] pt-8 first:border-t-0 first:pt-0">
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
+                <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                  {phases.indexOf(phase) + 1}
+                </span>
+                {phase.icon}
+                {phase.title}
+                <span className="ml-auto text-xs font-normal text-[#BDDBDB] opacity-60 flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  {phase.estimatedTime}
+                </span>
+              </h2>
+              <p className="text-[#BDDBDB] text-sm mb-4">{phase.description}</p>
 
-        {/* Phase 3: Technical Preparation */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">3</span>
-            Technical Preparation
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Set up your technical infrastructure.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Set up Solana wallet</p>
-                <p className="text-[#BDDBDB] text-sm">Install a reputable Solana wallet (Phantom, Solflare, Backpack).</p>
+              {/* Phase progress */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-1.5 bg-[#1a1a1a] rounded-full">
+                  <div className="bg-[#FF2D2D] h-1.5 rounded-full transition-all duration-500" style={{ width: `${phaseProgress}%` }} />
+                </div>
+                <span className="text-xs text-[#BDDBDB] opacity-50">{phaseDone}/{phaseItems}</span>
               </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Fund wallet with SOL</p>
-                <p className="text-[#BDDBDB] text-sm">Ensure you have enough SOL for creation, liquidity, and transaction fees.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Test wallet functionality</p>
-                <p className="text-[#BDDBDB] text-sm">Send a small test transaction to verify everything works correctly.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare token metadata</p>
-                <p className="text-[#BDDBDB] text-sm">Have name, symbol, description, logo URL, and social links ready. Double-check all details.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Choose creation platform</p>
-                <p className="text-[#BDDBDB] text-sm">Select a reliable platform like ZRP. Test the interface beforehand.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
 
-        {/* Phase 4: Community Building */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">4</span>
-            Community Building
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Build your community foundation before launch.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Create Telegram/Discord</p>
-                <p className="text-[#BDDBDB] text-sm">Set up community channels with clear rules and moderation. Start building before launch.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Set up Twitter account</p>
-                <p className="text-[#BDDBDB] text-sm">Twitter is essential for crypto launches. Start posting teasers and building followers.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Build initial community</p>
-                <p className="text-[#BDDBDB] text-sm">Engage with crypto communities, share your vision, and attract early supporters.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare launch announcements</p>
-                <p className="text-[#BDDBDB] text-sm">Write Twitter threads, Telegram announcements, and press releases. Have them ready to go.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
-
-        {/* Phase 5: Legal & Compliance */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">5</span>
-            Legal &amp; Compliance
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Ensure legal compliance for your launch.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Review legal requirements</p>
-                <p className="text-[#BDDBDB] text-sm">Understand regulations in your jurisdiction. Tokens are not securities, but clarify this clearly.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare terms of service</p>
-                <p className="text-[#BDDBDB] text-sm">Create clear terms for your website/platform. Include disclaimers about token risks.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Create privacy policy</p>
-                <p className="text-[#BDDBDB] text-sm">Required if collecting any user data. Be transparent about data usage.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
-
-        {/* Phase 6: Marketing Preparation */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">6</span>
-            Marketing Preparation
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Plan your marketing strategy.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Create marketing strategy</p>
-                <p className="text-[#BDDBDB] text-sm">Plan your approach across all channels. See our <Link href="/marketing" className="text-[#FF2D2D] hover:text-[#B10000] transition">Marketing Guide</Link>.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare launch day content</p>
-                <p className="text-[#BDDBDB] text-sm">Create Twitter threads, graphics, videos, and announcements. Have everything ready.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Schedule social media posts</p>
-                <p className="text-[#BDDBDB] text-sm">Use scheduling tools to maintain consistent posting. Plan content for launch week.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Budget for marketing spend</p>
-                <p className="text-[#BDDBDB] text-sm">Allocate funds for paid promotion, influencer partnerships, and advertising if needed.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
-
-        {/* Phase 7: Launch Day Preparation */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">7</span>
-            Launch Day Preparation
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Final checks for launch day.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Final token details review</p>
-                <p className="text-[#BDDBDB] text-sm">Double-check name, symbol, supply, and all metadata. These are permanent.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Test creation process</p>
-                <p className="text-[#BDDBDB] text-sm">If possible, do a test run on devnet. Familiarize yourself with the platform.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare launch announcement</p>
-                <p className="text-[#BDDBDB] text-sm">Have your announcement ready to post immediately after creation. Include mint address and key info.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Schedule launch time</p>
-                <p className="text-[#BDDBDB] text-sm">Choose a time when your community is most active. Consider time zones.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
-
-        {/* Phase 8: Post-Launch Planning */}
-        <section>
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
-            <span className="bg-[#FF2D2D] text-white text-sm font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">8</span>
-            Post-Launch Planning
-          </h2>
-          <p className="text-[#BDDBDB] text-sm mb-4">Plan beyond launch day.</p>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Plan liquidity addition</p>
-                <p className="text-[#BDDBDB] text-sm">Decide when and how much liquidity to add. See our <Link href="/add-liquidity" className="text-[#FF2D2D] hover:text-[#B10000] transition">Liquidity Guide</Link>.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Plan community engagement</p>
-                <p className="text-[#BDDBDB] text-sm">Schedule regular updates, AMAs, and engagement activities.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Prepare ongoing marketing</p>
-                <p className="text-[#BDDBDB] text-sm">Plan content for weeks after launch. Maintain momentum with regular updates.</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-              <span className="text-[#FF2D2D] text-lg mt-0.5">☐</span>
-              <div>
-                <p className="text-white font-medium">Set up tracking systems</p>
-                <p className="text-[#BDDBDB] text-sm">Monitor token metrics, holder growth, and community engagement.</p>
-              </div>
-            </li>
-          </ul>
-        </section>
+              <ul className="space-y-3">
+                {phase.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className={`flex items-start gap-3 bg-[#050505]/40 rounded-xl p-4 border transition ${
+                      checkedItems[item.id]
+                        ? 'border-[#FF2D2D]/40 bg-[#FF2D2D]/5'
+                        : 'border-[#1a1a1a] hover:border-[#FF2D2D]/20'
+                    }`}
+                  >
+                    <button
+                      onClick={() => toggleItem(item.id)}
+                      className="mt-0.5 flex-shrink-0 text-[#FF2D2D] focus:outline-none"
+                    >
+                      {checkedItems[item.id] ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : (
+                        <Circle className="h-5 w-5 opacity-50" />
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center flex-wrap gap-2">
+                        <p className={`text-white font-medium ${checkedItems[item.id] ? 'line-through opacity-60' : ''}`}>
+                          {item.label}
+                        </p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${priorityLabels[item.priority].color}`}>
+                          {getPriorityIcon(item.priority)}
+                          {priorityLabels[item.priority].label}
+                        </span>
+                      </div>
+                      <p className="text-[#BDDBDB] text-sm mt-1">{item.description}</p>
+                      {item.link && (
+                        <Link
+                          href={item.link}
+                          className="text-[#FF2D2D] hover:text-[#B10000] text-sm font-medium inline-flex items-center gap-1 mt-1 transition"
+                        >
+                          {item.linkText || 'Learn more'} →
+                        </Link>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
 
         {/* FAQ */}
-        <section>
+        <section className="border-t border-[#1a1a1a] pt-8">
           <h2 className="text-2xl font-bold text-white mb-4">Frequently Asked Questions</h2>
           <div className="space-y-4">
             <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">

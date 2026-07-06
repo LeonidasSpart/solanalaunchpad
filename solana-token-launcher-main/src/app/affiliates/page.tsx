@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Component, ReactNode } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { motion } from 'framer-motion';
@@ -18,6 +18,50 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 
+// ─── Error Boundary ────────────────────────────────────────────────
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('Affiliate page error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+          <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-6">
+            <p className="text-[#FF2D2D] font-bold text-lg">⚠️ Affiliate Page Error</p>
+            <pre className="text-[#BDDBDB] text-sm mt-2 whitespace-pre-wrap bg-[#050505] p-4 rounded-lg border border-[#1a1a1a] text-left">
+              {this.state.error?.message || 'Unknown error'}
+            </pre>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition"
+            >
+              Reload Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── AffiliateData Interface ──────────────────────────────────────
 interface AffiliateData {
   stats: {
     total_referrals: number;
@@ -37,7 +81,8 @@ interface AffiliateData {
   };
 }
 
-export default function AffiliatePage() {
+// ─── Main Component ────────────────────────────────────────────────
+function AffiliatePageContent() {
   const { publicKey, connected } = useWallet();
   const [data, setData] = useState<AffiliateData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +111,6 @@ export default function AffiliatePage() {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
       const json = await res.json();
-      // Ensure we have the expected structure, provide fallbacks
       setData({
         stats: {
           total_referrals: json.stats?.total_referrals ?? 0,
@@ -168,7 +212,6 @@ export default function AffiliatePage() {
     );
   }
 
-  // If still no data after loading, show a fallback
   if (!data) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
@@ -477,5 +520,14 @@ export default function AffiliatePage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+// ─── Wrapped Component ─────────────────────────────────────────────
+export default function AffiliatePage() {
+  return (
+    <ErrorBoundary>
+      <AffiliatePageContent />
+    </ErrorBoundary>
   );
 }

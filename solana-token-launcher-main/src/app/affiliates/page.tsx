@@ -26,11 +26,11 @@ interface AffiliateData {
   };
   recentReferrals: any[];
   leaderboard: any[];
-  referrallink: string;           // ✅ lowercase "l"
+  referrallink: string;
   milestones: any[];
   rank: number;
   analytics: {
-    totalclicks: number;          // ✅ lowercase "c"
+    totalclicks: number;
     uniqueSignups: number;
     conversions: number;
     conversionRate: number;
@@ -58,13 +58,36 @@ export default function AffiliatePage() {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/affiliate/stats?wallet=${walletAddress}`);
-      if (!res.ok) throw new Error('Failed to load affiliate data');
-      const data = await res.json();
-      setData(data);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      const json = await res.json();
+      // Ensure we have the expected structure, provide fallbacks
+      setData({
+        stats: {
+          total_referrals: json.stats?.total_referrals ?? 0,
+          total_commission: json.stats?.total_commission ?? 0,
+          claimed_commission: json.stats?.claimed_commission ?? 0,
+        },
+        recentReferrals: json.recentReferrals ?? [],
+        leaderboard: json.leaderboard ?? [],
+        referrallink: json.referrallink || '',
+        milestones: json.milestones ?? [],
+        rank: json.rank ?? 0,
+        analytics: {
+          totalclicks: json.analytics?.totalclicks ?? 0,
+          uniqueSignups: json.analytics?.uniqueSignups ?? 0,
+          conversions: json.analytics?.conversions ?? 0,
+          conversionRate: json.analytics?.conversionRate ?? 0,
+        },
+      });
     } catch (err: any) {
-      setError(err.message);
+      console.error('Fetch error:', err);
+      setError(err.message || 'Failed to load affiliate data');
     } finally {
       setLoading(false);
     }
@@ -101,13 +124,15 @@ export default function AffiliatePage() {
   };
 
   const shareOnTwitter = () => {
-    const text = `🚀 Create your own Solana token in 60 seconds with @ZRP_AI!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referrallink}\n\n#Solana #SPLToken #Crypto`;
+    const link = data?.referrallink || 'https://zrp.one';
+    const text = `🚀 Create your own Solana token in 60 seconds with @ZRP_AI!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${link}\n\n#Solana #SPLToken #Crypto`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   const shareOnTelegram = () => {
-    const text = `🚀 Create your own Solana token in 60 seconds with ZRP!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${data?.referrallink}`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(data?.referrallink || '')}&text=${encodeURIComponent(text)}`, '_blank');
+    const link = data?.referrallink || 'https://zrp.one';
+    const text = `🚀 Create your own Solana token in 60 seconds with ZRP!\n\nNo code needed. Launch on mainnet or test for free on devnet.\n\nStart creating today: ${link}`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`, '_blank');
   };
 
   if (!connected) {
@@ -143,15 +168,23 @@ export default function AffiliatePage() {
     );
   }
 
+  // If still no data after loading, show a fallback
   if (!data) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <p className="text-[#BDDBDB]">No affiliate data found.</p>
+        <button onClick={fetchData} className="mt-4 text-[#FF2D2D] hover:text-[#B10000] transition">
+          Refresh
+        </button>
       </div>
     );
   }
 
   const unclaimed = data.stats.total_commission - data.stats.claimed_commission;
+  const totalClicks = data.analytics?.totalclicks ?? 0;
+  const uniqueSignups = data.analytics?.uniqueSignups ?? 0;
+  const conversions = data.analytics?.conversions ?? 0;
+  const conversionRate = data.analytics?.conversionRate ?? 0;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-20">
@@ -204,20 +237,20 @@ export default function AffiliatePage() {
         {/* 📊 Row 2: Analytics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
-            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.totalclicks}</p>
+            <p className="text-2xl font-bold text-[#BDDBDB]">{totalClicks}</p>
             <p className="text-[#BDDBDB] text-xs opacity-70">Link Clicks</p>
           </div>
           <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
-            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.uniqueSignups}</p>
+            <p className="text-2xl font-bold text-[#BDDBDB]">{uniqueSignups}</p>
             <p className="text-[#BDDBDB] text-xs opacity-70">Unique Sign-ups</p>
           </div>
           <div className="bg-[#0D0D0D]/50 rounded-xl p-5 border border-[#1a1a1a] text-center">
-            <p className="text-2xl font-bold text-[#BDDBDB]">{data.analytics.conversions}</p>
+            <p className="text-2xl font-bold text-[#BDDBDB]">{conversions}</p>
             <p className="text-[#BDDBDB] text-xs opacity-70">Token Created</p>
           </div>
           <div className="bg-[#FF2D2D]/5 border border-[#FF2D2D]/20 rounded-xl p-5 text-center">
             <p className="text-2xl font-bold text-[#FF2D2D]">
-              {data.analytics.conversionRate.toFixed(1)}%
+              {conversionRate.toFixed(1)}%
             </p>
             <p className="text-[#BDDBDB] text-xs opacity-70">Conversion Rate</p>
           </div>
@@ -235,7 +268,7 @@ export default function AffiliatePage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 bg-[#050505] rounded-xl px-4 py-3 border border-[#1a1a1a] flex items-center">
             <LinkIcon className="h-4 w-4 text-[#BDDBDB] mr-2 flex-shrink-0" />
-            <span className="text-[#BDDBDB] text-sm truncate">{data.referrallink}</span>
+            <span className="text-[#BDDBDB] text-sm truncate">{data.referrallink || 'No link available'}</span>
           </div>
           <button
             onClick={handleCopy}
@@ -285,7 +318,7 @@ export default function AffiliatePage() {
         >
           <h3 className="text-white font-semibold mb-4">Milestones</h3>
           <div className="space-y-3">
-            {data.milestones.map((milestone, index) => (
+            {(data.milestones || []).map((milestone, index) => (
               <div
                 key={index}
                 className={`flex items-center justify-between p-3 rounded-xl border ${
@@ -294,7 +327,7 @@ export default function AffiliatePage() {
                     : 'bg-[#050505] border-[#1a1a1a] opacity-50'
                 }`}
               >
-                <span className="text-[#BDDBDB] text-sm">{milestone.label}</span>
+                <span className="text-[#BDDBDB] text-sm">{milestone.label || 'Milestone'}</span>
                 <span className="text-sm font-medium text-[#FF2D2D]">
                   {milestone.unlocked ? '✅ Unlocked' : `${milestone.target - data.stats.total_referrals} left`}
                 </span>
@@ -348,7 +381,7 @@ export default function AffiliatePage() {
               </tr>
             </thead>
             <tbody>
-              {data.leaderboard.map((item, index) => {
+              {(data.leaderboard || []).map((item, index) => {
                 const isUser = item.wallet === walletAddress;
                 return (
                   <tr
@@ -385,7 +418,7 @@ export default function AffiliatePage() {
       </motion.div>
 
       {/* Recent Referrals */}
-      {data.recentReferrals.length > 0 && (
+      {data.recentReferrals && data.recentReferrals.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

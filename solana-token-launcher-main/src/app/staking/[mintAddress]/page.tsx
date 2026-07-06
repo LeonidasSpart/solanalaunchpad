@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Lock, Unlock, Coins, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Lock, Unlock, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { getAssociatedTokenAddress, getAccount } from '@solana/spl-token';
 import { PublicKey, Transaction } from '@solana/web3.js';
+import { getDecimals } from '@/lib/solana'; // ← dynamic decimals
 
 interface StakingPool {
   id: number;
@@ -50,38 +50,48 @@ export default function StakePage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!connected || !publicKey) {
+    if (!connected || !publicKey || !mintAddress) {
       setLoading(false);
       return;
     }
 
-    try {
-      // Fetch pool
-      const poolRes = await fetch(`/api/staking/pools/${mintAddress}`);
-      if (poolRes.ok) {
-        const poolData = await poolRes.json();
-        setPool(poolData);
-      }
+    setLoading(true);
+    setError(null);
 
-      // Fetch user position
-      const posRes = await fetch(`/api/staking/positions?wallet=${publicKey.toBase58()}&mint=${mintAddress}`);
+    try {
+      // 1. Fetch pool
+      const poolRes = await fetch(`/api/staking/pools/${mintAddress}`);
+      if (!poolRes.ok) {
+        setError('Pool not found');
+        setLoading(false);
+        return;
+      }
+      const poolData = await poolRes.json();
+      setPool(poolData);
+
+      // 2. Fetch user position
+      const posRes = await fetch(
+        `/api/staking/positions?wallet=${publicKey.toBase58()}&mint=${mintAddress}`
+      );
       if (posRes.ok) {
         const posData = await posRes.json();
-        setPosition(posData);
+        setPosition(posData); // may be null
       }
 
-      // Fetch token balance
+      // 3. Fetch token balance (with dynamic decimals)
       try {
         const mintPubkey = new PublicKey(mintAddress);
         const ata = await getAssociatedTokenAddress(mintPubkey, publicKey);
         const accountInfo = await getAccount(connection, ata);
-        const balance = Number(accountInfo.amount) / Math.pow(10, 9); // Assuming 9 decimals
+        const decimals = await getDecimals(mintPubkey);
+        const balance = Number(accountInfo.amount) / Math.pow(10, decimals);
         setBalance(balance);
       } catch {
         setBalance(0);
       }
-    } catch (err) {
-      console.error('Error fetching data:', err);
+    } catch (err: any) {
+      console.error('Fetch error:', err);
+      setError(err.message || 'Failed to load staking data');
     } finally {
       setLoading(false);
     }
@@ -146,7 +156,7 @@ export default function StakePage() {
         const signature = await connection.sendRawTransaction(signed.serialize());
         await connection.confirmTransaction(signature);
 
-        // Confirm stake on backend
+        // Confirm stake on backend (MUST include amount)
         const confirmRes = await fetch('/api/staking/stake/confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -154,6 +164,7 @@ export default function StakePage() {
             poolId: pool.id,
             userWallet: publicKey.toBase58(),
             signature,
+            amount: amountNum, // ← critical
           }),
         });
 

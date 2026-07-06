@@ -142,7 +142,7 @@ const Footer = () => {
               <li><Link href="/airdrop-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Guide</Link></li>
               <li><Link href="/burn" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Burning</Link></li>
               <li><Link href="/revoke-authority" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority Guide</Link></li>
-              <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
+              <li><Link href="/staking-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking Guide</Link></li>
               <li><Link href="/vesting-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting Guide</Link></li>
               <li><Link href="/meme-vs-utility" className="text-[#BDDBDB] hover:text-white text-sm transition">Meme vs Utility</Link></li>
               <li><Link href="/community" className="text-[#BDDBDB] hover:text-white text-sm transition">Community Building</Link></li>

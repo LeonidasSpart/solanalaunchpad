@@ -121,6 +121,7 @@ const Footer = () => {
               <li><Link href="/revoke" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
               <li><Link href="/burn-lp" className="text-[#BDDBDB] hover:text-white text-sm transition">Burn LP</Link></li>
               <li><Link href="/vesting" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting</Link></li>
+              <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
               <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
               <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
             </ul>
@@ -142,7 +143,7 @@ const Footer = () => {
               <li><Link href="/burn" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Burning</Link></li>
               <li><Link href="/revoke-authority" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority Guide</Link></li>
               <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
-<li><Link href="/vesting-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting Guide</Link></li>
+              <li><Link href="/vesting-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting Guide</Link></li>
               <li><Link href="/meme-vs-utility" className="text-[#BDDBDB] hover:text-white text-sm transition">Meme vs Utility</Link></li>
               <li><Link href="/community" className="text-[#BDDBDB] hover:text-white text-sm transition">Community Building</Link></li>
               <li><Link href="/marketing" className="text-[#BDDBDB] hover:text-white text-sm transition">Marketing</Link></li>

@@ -456,7 +456,7 @@ export default function NoCodeCreatorPage() {
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Related Guides</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Link href="/create-token-guide" className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition group">
+            <Link href="/guide" className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition group">
               <h3 className="text-white font-semibold group-hover:text-[#FF2D2D] transition">How to Create a Token →</h3>
               <p className="text-[#888] text-xs mt-1">Step-by-step walkthrough</p>
             </Link>

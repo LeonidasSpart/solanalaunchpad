@@ -468,7 +468,7 @@ export default function NoCodeCreatorPage() {
               <h3 className="text-white font-semibold group-hover:text-[#FF2D2D] transition">Tokenomics Calculator →</h3>
               <p className="text-[#888] text-xs mt-1">Plan supply, price, allocations</p>
             </Link>
-            <Link href="/security-checklist" className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition group">
+            <Link href="/security" className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition group">
               <h3 className="text-white font-semibold group-hover:text-[#FF2D2D] transition">Security Checklist →</h3>
               <p className="text-[#888] text-xs mt-1">Protect your token and community</p>
             </Link>

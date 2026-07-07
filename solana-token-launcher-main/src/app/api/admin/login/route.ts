@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-// Environment variables – NO FALLBACKS!
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Simple in-memory rate limiter (5 attempts per 15 minutes)
+// Rate limiter (5 attempts per 15 minutes)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(ip: string): { allowed: boolean; resetTime?: Date } {
@@ -34,7 +33,6 @@ function checkRateLimit(ip: string): { allowed: boolean; resetTime?: Date } {
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Check required environment variables
     if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH || !JWT_SECRET) {
       console.error('❌ Admin login: Missing environment variables');
       return NextResponse.json(
@@ -43,7 +41,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Rate limiting
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     const rateResult = checkRateLimit(ip);
     if (!rateResult.allowed) {
@@ -54,7 +51,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Parse request
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -64,7 +60,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Check email
     if (email !== ADMIN_EMAIL) {
       console.warn(`❌ Admin login failed (wrong email) from ${ip}`);
       return NextResponse.json(
@@ -73,7 +68,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Verify password using bcrypt
     const isValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
     if (!isValid) {
       console.warn(`❌ Admin login failed (wrong password) from ${ip}`);
@@ -83,24 +77,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Generate JWT with explicit algorithm and claims
     const token = jwt.sign(
       { 
         email: ADMIN_EMAIL,
         role: 'admin',
         iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7, // 7 days
+        exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 7,
       },
       JWT_SECRET,
       { algorithm: 'HS256' }
     );
 
-    // 7. Set secure HTTP‑only cookie
+    // ─── Return token in the body (for localStorage) ───
     const response = NextResponse.json(
-      { success: true, message: 'Login successful' },
+      { 
+        success: true, 
+        message: 'Login successful',
+        token: token,  // ← frontend will store this
+      },
       { status: 200 }
     );
 
+    // Also set cookie as a backup (optional)
     response.cookies.set('admin_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

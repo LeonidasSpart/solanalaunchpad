@@ -1,20 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import jwt from 'jsonwebtoken';
+
+// ─── JWT Verification Helper ──────────────────────────────────────
+async function verifyAdminToken(req: NextRequest): Promise<boolean> {
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.split(' ')[1];
+  if (!token) return false;
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return false;
+
+  try {
+    jwt.verify(token, secret);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    // 1. Verify JWT
+    const isAdmin = await verifyAdminToken(req);
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 2. Get project ID
     const { id } = await context.params;
     const projectId = parseInt(id);
     if (isNaN(projectId)) {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
-    // Admin authorization (simple token)
-    const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.ADMIN_TOKEN}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
+    // 3. Approve the project (only if pending)
     const result = await query(
       `UPDATE launchpad_projects 
        SET status = 'active', updated_at = NOW() 
@@ -29,7 +49,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     return NextResponse.json(result.rows[0]);
   } catch (error) {
-    console.error(error);
+    console.error('Approve error:', error);
     return NextResponse.json({ error: 'Failed to approve project' }, { status: 500 });
   }
 }

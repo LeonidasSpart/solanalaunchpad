@@ -1,47 +1,45 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-const JWT_SECRET = process.env.JWT_SECRET || '';
-
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    // 1. Verify admin token
-    const cookieStore = await cookies();
-    const token = cookieStore.get('admin_token')?.value;
-    if (!token) {
+    // Verify admin token
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.ADMIN_TOKEN}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    try {
-      jwt.verify(token, JWT_SECRET);
-    } catch {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
+    // 1. Total tokens
+    const tokenCountRes = await query('SELECT COUNT(*) as count FROM tokens');
+    const totalTokens = parseInt(tokenCountRes.rows[0]?.count || '0');
 
-    // 2. Fetch REAL data from PostgreSQL
-    const [
-      totalTokensResult,
-      recentTokensResult,
-    ] = await Promise.all([
-      query('SELECT COUNT(*) FROM tokens'),
-      query('SELECT name, symbol, created_at FROM tokens ORDER BY created_at DESC LIMIT 10'),
-    ]);
+    // 2. Total users (distinct creator_wallet from tokens)
+    const userCountRes = await query('SELECT COUNT(DISTINCT creator_wallet) as count FROM tokens');
+    const totalUsers = parseInt(userCountRes.rows[0]?.count || '0');
 
-    const totalTokens = parseInt(totalTokensResult.rows[0].count, 10);
+    // 3. Total revenue – you can add a 'platform_fees' table later
+    const totalRevenue = 0;
 
-    // Note: Your tokens table doesn't have creator/fee/network yet.
-    // These will show as 0 until you add the columns.
-    const totalUsers = 0;      // Add a 'creator' column to tokens
-    const totalRevenue = 0;    // Add a 'fee' column to tokens
-    const activeUsers = 0;     // Add a 'creator' column and track activity
+    // 4. Active users (created a token in last 30 days)
+    const activeRes = await query(
+      `SELECT COUNT(DISTINCT creator_wallet) as count 
+       FROM tokens 
+       WHERE created_at > NOW() - INTERVAL '30 days'`
+    );
+    const activeUsers = parseInt(activeRes.rows[0]?.count || '0');
 
-    const recentTokens = recentTokensResult.rows.map((row: any) => ({
-      name: row.name,
-      symbol: row.symbol,
-      network: 'Unknown',      // You can add a 'network' column later
-      created: row.created_at ? new Date(row.created_at).toISOString().split('T')[0] : 'N/A',
+    // 5. Recent tokens (last 10)
+    const recentRes = await query(
+      `SELECT name, symbol, network, created_at 
+       FROM tokens 
+       ORDER BY created_at DESC 
+       LIMIT 10`
+    );
+    const recentTokens = recentRes.rows.map((row: any) => ({
+      name: row.name || 'Unnamed',
+      symbol: row.symbol || 'N/A',
+      network: row.network || 'devnet',
+      created: new Date(row.created_at).toLocaleDateString(),
     }));
 
     return NextResponse.json({
@@ -52,10 +50,7 @@ export async function GET() {
       recentTokens,
     });
   } catch (error) {
-    console.error('Stats API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Stats error:', error);
+    return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
   }
 }

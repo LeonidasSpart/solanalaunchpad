@@ -116,13 +116,14 @@ const Footer = () => {
             <ul className="space-y-2.5">
             <li><Link href="/" className="text-[#BDDBDB] hover:text-white text-sm transition">Home</Link></li>
             <li><Link href="/create-mint" className="text-[#BDDBDB] hover:text-white text-sm transition">Create Token</Link></li>
+            <li><Link href="/launchpad" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad</Link></li>
             <li><Link href="/add-liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">Add Liquidity</Link></li>
             <li><Link href="/airdrop" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Tool</Link></li>
             <li><Link href="/revoke" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
             <li><Link href="/burn-lp" className="text-[#BDDBDB] hover:text-white text-sm transition">Burn LP</Link></li>
             <li><Link href="/vesting" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting</Link></li>
             <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
-            <li><Link href="/launchpad" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad</Link></li>
+            <li><Link href="/dao" className="text-[#BDDBDB] hover:text-white text-sm transition">DAO</Link></li>
             <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
             <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
             </ul>

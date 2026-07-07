@@ -7,8 +7,8 @@ interface Project {
   id: number;
   token_name: string;
   token_symbol: string;
-  hard_cap: number;
-  raised_so_far: number;
+  hard_cap: string;
+  raised_so_far: string;
   start_time: string;
   end_time: string;
   status: string;
@@ -46,8 +46,8 @@ export default function LaunchpadPage() {
       ) : (
         <div className="grid gap-4">
           {projects.map(p => {
-            const raised = parseFloat(p.raised_so_far || '0');
-            const cap = parseFloat(p.hard_cap);
+            const raised = parseFloat(p.raised_so_far) || 0;
+            const cap = parseFloat(p.hard_cap) || 0;
             const progress = cap > 0 ? (raised / cap) * 100 : 0;
             return (
               <Link key={p.id} href={`/launchpad/${p.id}`} className="block bg-[#0D0D0D] p-5 rounded-xl border border-[#1a1a1a] hover:border-[#FF2D2D]/50 transition">

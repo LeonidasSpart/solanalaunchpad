@@ -5,10 +5,10 @@ import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID 
 import { query } from '@/lib/db';
 import { getDecimals, getConnection, getPlatformKeypair } from '@/lib/solana';
 
-// Fee percentage (0.05 = 5%, 0.15 = 15%)
+// Fee percentage (0.05 = 5%)
 const FEE_PERCENT = parseFloat(process.env.STAKING_FEE_PERCENT || '0.15');
-// Fee wallet – defaults to platform wallet if not set
-const FEE_WALLET_PUBKEY = process.env.PLATFORM_FEE_WALLET || process.env.PLATFORM_PUBLIC_KEY;
+// Fee wallet: use NEXT_PUBLIC_FEE_REC if set, otherwise platform wallet
+const FEE_WALLET_PUBKEY = process.env.NEXT_PUBLIC_FEE_REC || process.env.PLATFORM_PUBLIC_KEY;
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
 
     const tx = new Transaction({ feePayer: platformKeypair.publicKey, recentBlockhash: blockhash });
 
-    // 1. Transfer user's reward (if > 0)
+    // 1. Transfer user's reward
     if (rawUserReward > 0) {
       const userIx = createTransferInstruction(
         platformATA,
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       tx.add(userIx);
     }
 
-    // 2. Transfer platform fee (if fee > 0 and fee wallet is not the same as platform)
+    // 2. Transfer platform fee to NEXT_PUBLIC_FEE_REC
     if (rawFee > 0) {
       const feeIx = createTransferInstruction(
         platformATA,
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
     const signature = await connection.sendRawTransaction(tx.serialize());
     await connection.confirmTransaction(signature, 'confirmed');
 
-    // Update position (only the user reward, not the fee)
+    // Update position (user reward only)
     await query(
       `UPDATE staking_positions
        SET reward_earned = reward_earned + $1,

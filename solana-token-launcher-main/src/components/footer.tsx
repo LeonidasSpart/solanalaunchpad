@@ -136,6 +136,7 @@ const Footer = () => {
               <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">How to Create Token</Link></li>
               <li><Link href="/checklist" className="text-[#BDDBDB] hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
               <li><Link href="/launch" className="text-[#BDDBDB] hover:text-white text-sm transition">Launch Strategy</Link></li>
+              <li><Link href="/launchpad/info" className="text-[#BDDBDB] hover:text-white text-sm transition">About Launchpad</Link></li>
               <li><Link href="/liquidity-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Liquidity Guide</Link></li>
               <li><Link href="/list-token-dex" className="text-[#BDDBDB] hover:text-white text-sm transition">DEX Listing</Link></li>
               <li><Link href="/dex-comparison" className="text-[#BDDBDB] hover:text-white text-sm transition">DEX Comparison</Link></li>

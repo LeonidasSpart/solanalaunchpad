@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
@@ -44,6 +44,7 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [contributing, setContributing] = useState(false);
+  const [refunding, setRefunding] = useState(false);
   const [contributionAmount, setContributionAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -131,11 +132,43 @@ export default function ProjectDetailPage() {
 
       setSuccess(`✅ Contributed ${amount} SOL successfully!`);
       setContributionAmount('');
-      await fetchProject(); // refresh
+      await fetchProject();
     } catch (err: any) {
       setError(err.message || 'Contribution failed');
     } finally {
       setContributing(false);
+    }
+  };
+
+  // ─── Refund ──────────────────────────────────────────────────────────
+  const handleRefund = async () => {
+    if (!connected || !publicKey) {
+      setError('Please connect your wallet');
+      return;
+    }
+    if (!project) return;
+
+    setRefunding(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const res = await fetch(`/api/launchpad/projects/${id}/refund`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ investorWallet: publicKey.toBase58() }),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Refund failed');
+      }
+      const data = await res.json();
+      setSuccess(`✅ Refunded successfully! Tx: ${data.signature.slice(0, 8)}...`);
+      await fetchProject();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setRefunding(false);
     }
   };
 
@@ -180,10 +213,11 @@ export default function ProjectDetailPage() {
           <div className="text-right">
             <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
               isActive ? 'bg-green-600 text-white' :
+              project.status === 'failed' ? 'bg-red-600 text-white' :
               isEnded ? 'bg-gray-700 text-gray-300' :
               'bg-yellow-600 text-white'
             }`}>
-              {isActive ? 'Active' : isEnded ? 'Ended' : project.status}
+              {project.status === 'failed' ? 'Failed' : isActive ? 'Active' : isEnded ? 'Ended' : project.status}
             </span>
           </div>
         </div>
@@ -211,7 +245,6 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Progress bar */}
         <div className="mt-4">
           <div className="flex justify-between text-sm text-[#BDDBDB] mb-1">
             <span>{progress.toFixed(1)}% funded</span>
@@ -222,7 +255,7 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* Contribution section */}
+        {/* ─── Contribution section ─── */}
         {isActive && (
           <div className="mt-6 bg-[#050505] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-medium mb-3">Contribute</h3>
@@ -257,24 +290,50 @@ export default function ProjectDetailPage() {
             ) : (
               <WalletMultiButton className="!bg-[#FF2D2D] hover:!bg-[#B10000] !rounded-xl !px-6 !py-3 !font-semibold !text-white" />
             )}
-            {error && (
-              <div className="mt-3 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 text-[#FF2D2D] text-sm flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                {error}
-              </div>
-            )}
-            {success && (
-              <div className="mt-3 bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-green-400 text-sm flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                {success}
-              </div>
-            )}
           </div>
         )}
 
-        {isEnded && (
+        {/* ─── Refund section ─── */}
+        {project.status === 'failed' && (
+          <div className="mt-6 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4">
+            <p className="text-[#FF2D2D] font-medium">This sale did not reach the soft cap.</p>
+            <p className="text-[#BDDBDB] text-sm mt-1">You can claim a refund of your contribution.</p>
+            <button
+              onClick={handleRefund}
+              disabled={refunding}
+              className="mt-3 px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white rounded-xl transition flex items-center justify-center gap-2"
+            >
+              {refunding ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Refunding...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-4 w-4" />
+                  Claim Refund
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {isEnded && project.status !== 'failed' && (
           <div className="mt-6 text-center text-[#BDDBDB]">
             This sale has ended.
+          </div>
+        )}
+
+        {error && (
+          <div className="mt-4 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 text-[#FF2D2D] text-sm flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mt-4 bg-green-500/10 border border-green-500/30 rounded-xl p-3 text-green-400 text-sm flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            {success}
           </div>
         )}
 

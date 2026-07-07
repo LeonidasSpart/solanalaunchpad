@@ -9,15 +9,10 @@ import {
   Users, 
   Coins, 
   CheckCircle, 
-  XCircle, 
   Clock, 
-  ArrowRight,
-  Plus,
-  Trash2,
-  ShieldCheck,
-  UserCheck,
   TrendingUp,
-  LogOut
+  ShieldCheck,
+  UserCheck
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -386,7 +381,235 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
   );
 }
 
-// ─── Launchpad Management Component (unchanged from previous) ──────
-// (We’ll keep it simple – you can copy the LaunchpadManagement from the earlier code.)
-// To keep this answer concise, we assume it’s already implemented.
-// If you need the full code again, let me know.
+// ─── Launchpad Management Component ──────────────────────────────────
+function LaunchpadManagement({ 
+  projects, 
+  adminToken, 
+  actionLoading, 
+  onApprove, 
+  onReject, 
+  onDistribute,
+  fetchData 
+}: any) {
+  const [whitelistWallet, setWhitelistWallet] = useState('');
+  const [kycWallet, setKycWallet] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+
+  const pending = projects.filter((p: any) => p.status === 'pending');
+  const all = projects;
+
+  const addWhitelist = async (projectId: number) => {
+    if (!whitelistWallet) return;
+    try {
+      const res = await fetch(`/api/launchpad/admin/projects/${projectId}/whitelist`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ wallet: whitelistWallet }),
+      });
+      if (!res.ok) throw new Error('Failed to add to whitelist');
+      setWhitelistWallet('');
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const verifyKyc = async (projectId: number) => {
+    if (!kycWallet) return;
+    try {
+      const res = await fetch(`/api/launchpad/admin/projects/${projectId}/kyc`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ wallet: kycWallet }),
+      });
+      if (!res.ok) throw new Error('Failed to verify KYC');
+      setKycWallet('');
+      await fetchData();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Pending Projects */}
+      <section>
+        <h2 className="text-xl font-semibold text-white mb-4">Pending Approval</h2>
+        {pending.length === 0 ? (
+          <p className="text-[#BDDBDB]">No pending projects.</p>
+        ) : (
+          <div className="grid gap-4">
+            {pending.map((p: any) => (
+              <div key={p.id} className="bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-white font-bold">{p.token_name} ({p.token_symbol})</h3>
+                    <p className="text-[#BDDBDB] text-sm">Creator: {p.creator_wallet.slice(0, 8)}...</p>
+                    <p className="text-[#BDDBDB] text-sm">Hard Cap: {p.hard_cap} SOL</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => onApprove(p.id)}
+                      disabled={actionLoading === p.id}
+                      className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition disabled:opacity-50"
+                    >
+                      {actionLoading === p.id ? '...' : 'Approve'}
+                    </button>
+                    <button
+                      onClick={() => onReject(p.id)}
+                      disabled={actionLoading === p.id}
+                      className="px-4 py-1 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* All Projects */}
+      <section>
+        <h2 className="text-xl font-semibold text-white mb-4">All Projects</h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[#BDDBDB] border-b border-[#1a1a1a]">
+                <th className="pb-2 pr-4">ID</th>
+                <th className="pb-2 pr-4">Name</th>
+                <th className="pb-2 pr-4">Symbol</th>
+                <th className="pb-2 pr-4">Raised</th>
+                <th className="pb-2 pr-4">Cap</th>
+                <th className="pb-2 pr-4">Status</th>
+                <th className="pb-2 pr-4">Whitelist</th>
+                <th className="pb-2 pr-4">KYC</th>
+                <th className="pb-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {all.map((p: any) => {
+                const now = new Date();
+                const endTime = new Date(p.end_time);
+                const canDistribute = p.status === 'active' && endTime < now;
+                return (
+                  <tr key={p.id} className="border-b border-[#1a1a1a]">
+                    <td className="py-2 pr-4 text-white">{p.id}</td>
+                    <td className="py-2 pr-4 text-white">{p.token_name}</td>
+                    <td className="py-2 pr-4 text-white">{p.token_symbol}</td>
+                    <td className="py-2 pr-4 text-white">{(p.raised_so_far || 0).toFixed(2)}</td>
+                    <td className="py-2 pr-4 text-white">{p.hard_cap}</td>
+                    <td className="py-2 pr-4">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        p.status === 'active' ? 'bg-green-600 text-white' :
+                        p.status === 'pending' ? 'bg-yellow-600 text-white' :
+                        p.status === 'distributed' ? 'bg-blue-600 text-white' :
+                        p.status === 'rejected' ? 'bg-red-600 text-white' :
+                        'bg-gray-600 text-white'
+                      }`}>
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-4 text-white">
+                      {p.whitelist_enabled ? '✅' : '❌'}
+                    </td>
+                    <td className="py-2 pr-4 text-white">
+                      {p.kyc_enabled ? '✅' : '❌'}
+                    </td>
+                    <td className="py-2">
+                      <div className="flex flex-wrap gap-2">
+                        <Link href={`/launchpad/${p.id}`} target="_blank" className="text-[#FF2D2D] hover:text-[#B10000] text-xs">
+                          View
+                        </Link>
+                        {canDistribute && (
+                          <button
+                            onClick={() => onDistribute(p.id)}
+                            disabled={actionLoading === p.id}
+                            className="px-2 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs disabled:opacity-50"
+                          >
+                            {actionLoading === p.id ? '...' : 'Distribute'}
+                          </button>
+                        )}
+                        {(p.whitelist_enabled || p.kyc_enabled) && (
+                          <button
+                            onClick={() => setSelectedProjectId(p.id)}
+                            className="px-2 py-0.5 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white rounded text-xs"
+                          >
+                            Manage
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* ─── Whitelist / KYC Management Modal ──────────────────────── */}
+      {selectedProjectId !== null && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-white font-bold text-lg mb-4">Manage Project #{selectedProjectId}</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-white text-sm block mb-1">Add to Whitelist</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={whitelistWallet}
+                    onChange={(e) => setWhitelistWallet(e.target.value)}
+                    placeholder="Wallet address"
+                    className="flex-1 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] text-sm focus:outline-none focus:border-[#FF2D2D]"
+                  />
+                  <button
+                    onClick={() => addWhitelist(selectedProjectId)}
+                    className="px-4 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-lg text-sm transition"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-white text-sm block mb-1">Verify KYC</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={kycWallet}
+                    onChange={(e) => setKycWallet(e.target.value)}
+                    placeholder="Wallet address"
+                    className="flex-1 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] text-sm focus:outline-none focus:border-[#FF2D2D]"
+                  />
+                  <button
+                    onClick={() => verifyKyc(selectedProjectId)}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition"
+                  >
+                    Verify
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSelectedProjectId(null)}
+                className="w-full py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white rounded-lg text-sm transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

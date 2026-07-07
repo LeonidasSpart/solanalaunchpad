@@ -18,13 +18,15 @@ const Header = () => {
     return false;
   };
 
+  // ─── Main links (including Launchpad) ──────────────────────────────
   const mainLinks = [
     { href: '/', label: 'Home' },
     { href: '/create-mint', label: 'Create Token', highlight: true },
     { href: '/tokens', label: 'Tokens' },
+    { href: '/launchpad', label: 'Launchpad', highlight: true },  // ← NEW
   ];
 
-  // ─── New: Feature links ──────────────────────────────────────────
+  // ─── Feature links (Staking & Vesting) ────────────────────────────
   const featureLinks = [
     { href: '/staking', label: 'Staking', icon: <Coins className="h-4 w-4" /> },
     { href: '/vesting', label: 'Vesting', icon: <Clock className="h-4 w-4" /> },
@@ -45,7 +47,7 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-b border-[#FF2D2D]/10">
-      {/* Top Banner (unchanged) */}
+      {/* Top Banner */}
       <div className="bg-gradient-to-r from-[#FF2D2D]/10 via-[#FF2D2D]/5 to-[#FF2D2D]/10 border-b border-[#FF2D2D]/10">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm">
           <Zap className="h-3.5 w-3.5 text-[#FF2D2D]" />
@@ -95,7 +97,7 @@ const Header = () => {
               </Link>
             ))}
 
-            {/* ─── NEW: Feature Links (Staking & Vesting) ─── */}
+            {/* Feature Links (Staking & Vesting) */}
             {featureLinks.map((link) => (
               <Link
                 key={link.href}
@@ -197,15 +199,15 @@ const Header = () => {
                 Tokens
               </Link>
               <Link
-                href="/pricing"
+                href="/launchpad"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-center px-4 py-2.5 text-sm text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50 rounded-xl transition"
+                className="text-center px-4 py-2.5 text-sm text-[#FF2D2D] hover:text-white hover:bg-[#FF2D2D]/20 rounded-xl transition"
               >
-                Pricing
+                Launchpad
               </Link>
             </div>
 
-            {/* ─── NEW: Mobile Feature Links ─── */}
+            {/* Features (Staking & Vesting) */}
             <div className="border-t border-[#1a1a1a] pt-3 mt-2">
               <p className="px-4 text-xs text-[#BDDBDB] opacity-50 uppercase tracking-wider mb-2">Features</p>
               <div className="space-y-1">
@@ -223,7 +225,7 @@ const Header = () => {
               </div>
             </div>
 
-            {/* Tools Section */}
+            {/* Tools */}
             <div className="border-t border-[#1a1a1a] pt-3">
               <p className="px-4 text-xs text-[#BDDBDB] opacity-50 uppercase tracking-wider mb-2">Tools</p>
               <div className="space-y-1">

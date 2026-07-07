@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { useState } from 'react';
-import { Menu, X, Zap, Rocket, ChevronDown, Droplets, Lock, Gift, Flame } from 'lucide-react';
+import { Menu, X, Zap, Rocket, ChevronDown, Droplets, Lock, Gift, Flame, Coins, Clock } from 'lucide-react';
 
 const Header = () => {
   const pathname = usePathname();
@@ -24,6 +24,12 @@ const Header = () => {
     { href: '/tokens', label: 'Tokens' },
   ];
 
+  // ─── New: Feature links ──────────────────────────────────────────
+  const featureLinks = [
+    { href: '/staking', label: 'Staking', icon: <Coins className="h-4 w-4" /> },
+    { href: '/vesting', label: 'Vesting', icon: <Clock className="h-4 w-4" /> },
+  ];
+
   const toolsLinks = [
     { href: '/add-liquidity', label: 'Add Liquidity', icon: <Droplets className="h-4 w-4" /> },
     { href: '/revoke', label: 'Revoke Authority', icon: <Lock className="h-4 w-4" /> },
@@ -39,7 +45,7 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[#0D0D0D]/95 backdrop-blur-xl border-b border-[#FF2D2D]/10">
-      {/* Top Banner */}
+      {/* Top Banner (unchanged) */}
       <div className="bg-gradient-to-r from-[#FF2D2D]/10 via-[#FF2D2D]/5 to-[#FF2D2D]/10 border-b border-[#FF2D2D]/10">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm">
           <Zap className="h-3.5 w-3.5 text-[#FF2D2D]" />
@@ -53,7 +59,7 @@ const Header = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-20">
-          {/* Logo - 88x88 Image Only */}
+          {/* Logo */}
           <Link href="/" className="flex items-center group flex-shrink-0">
             <div className="relative">
               <Image
@@ -86,6 +92,22 @@ const Header = () => {
                 {link.highlight && (
                   <span className="absolute -top-1 -right-1 h-2 w-2 bg-[#FF2D2D] rounded-full animate-pulse" />
                 )}
+              </Link>
+            ))}
+
+            {/* ─── NEW: Feature Links (Staking & Vesting) ─── */}
+            {featureLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
+                  isActive(link.href)
+                    ? 'text-white bg-[#FF2D2D]/20'
+                    : 'text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50'
+                }`}
+              >
+                <span className="text-[#FF2D2D]">{link.icon}</span>
+                {link.label}
               </Link>
             ))}
 
@@ -136,17 +158,14 @@ const Header = () => {
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            {/* Network Switcher */}
             <div className="hidden sm:block">
               <NetworkSwitcher />
             </div>
 
-            {/* Wallet Button - Red, Black, Silver Gradient */}
             <div className="[&>button]:!bg-gradient-to-r [&>button]:!from-[#FF2D2D] [&>button]:!via-[#1a1a1a] [&>button]:!to-[#BDDBDB] [&>button]:hover:!from-[#B10000] [&>button]:hover:!via-[#0D0D0D] [&>button]:hover:!to-[#9a9a9a] [&>button]:!rounded-xl [&>button]:!px-4 [&>button]:!py-2.5 [&>button]:!font-semibold [&>button]:!text-white [&>button]:!text-sm [&>button]:!transition-all [&>button]:!shadow-lg [&>button]:!shadow-[#FF2D2D]/20">
               <WalletMultiButton />
             </div>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden text-[#BDDBDB] hover:text-white p-2 rounded-lg hover:bg-[#1a1a1a]/50 transition"
@@ -157,7 +176,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* ─── Mobile Menu ─── */}
         {isMobileMenuOpen && (
           <div className="lg:hidden border-t border-[#FF2D2D]/10 py-4 space-y-2">
             <Link
@@ -186,8 +205,26 @@ const Header = () => {
               </Link>
             </div>
 
-            {/* Tools Section Mobile */}
+            {/* ─── NEW: Mobile Feature Links ─── */}
             <div className="border-t border-[#1a1a1a] pt-3 mt-2">
+              <p className="px-4 text-xs text-[#BDDBDB] opacity-50 uppercase tracking-wider mb-2">Features</p>
+              <div className="space-y-1">
+                {featureLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50 rounded-xl transition"
+                  >
+                    <span className="text-[#FF2D2D]">{link.icon}</span>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Tools Section */}
+            <div className="border-t border-[#1a1a1a] pt-3">
               <p className="px-4 text-xs text-[#BDDBDB] opacity-50 uppercase tracking-wider mb-2">Tools</p>
               <div className="space-y-1">
                 {toolsLinks.map((link) => (

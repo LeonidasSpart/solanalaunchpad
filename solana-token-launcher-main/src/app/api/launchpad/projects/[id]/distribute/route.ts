@@ -3,31 +3,27 @@ import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } f
 import { query } from '@/lib/db';
 import { getLaunchpadKeypair, getFeeWalletPubkey } from '@/lib/launchpad';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const projectId = parseInt(params.id);
+    const { id } = await context.params;
+    const projectId = parseInt(id);
 
-    // 1. Get project
     const projectRes = await query('SELECT * FROM launchpad_projects WHERE id = $1', [projectId]);
     const project = projectRes.rows[0];
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    // 2. Check sale ended
     if (project.status !== 'active' || new Date() < new Date(project.end_time)) {
       return NextResponse.json({ error: 'Sale not ended yet' }, { status: 400 });
     }
 
-    // 3. Check soft cap
     const raised = parseFloat(project.raised_so_far || '0');
     const softCap = parseFloat(project.soft_cap || '0');
     if (softCap > 0 && raised < softCap) {
-      // Could trigger refunds here
       return NextResponse.json({ error: 'Soft cap not reached – refunds required' }, { status: 400 });
     }
 
-    // 4. Calculate shares
     const feePercent = parseFloat(project.fee_percentage) / 100;
     const platformFee = raised * feePercent;
     const creatorShare = raised - platformFee;
@@ -61,7 +57,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const signature = await connection.sendRawTransaction(tx.serialize());
     await connection.confirmTransaction(signature);
 
-    // 5. Update project status
     await query(
       `UPDATE launchpad_projects SET status = 'distributed', updated_at = NOW() WHERE id = $1`,
       [projectId]

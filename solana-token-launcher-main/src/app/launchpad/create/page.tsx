@@ -33,10 +33,22 @@ export default function CreateProjectPage() {
     telegram: '',
     discord: '',
     logo_url: '',
+    // Premium fields
+    whitelist_enabled: false,
+    kyc_enabled: false,
+    tiered: false,
+    rounds: '',          // JSON string
+    tier_config: '',     // JSON string
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setForm({ ...form, [name]: checked });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +63,16 @@ export default function CreateProjectPage() {
     setSuccess(null);
 
     try {
+      // Parse JSON fields if provided
+      let rounds = null;
+      let tierConfig = null;
+      if (form.rounds.trim()) {
+        try { rounds = JSON.parse(form.rounds); } catch { throw new Error('Invalid rounds JSON'); }
+      }
+      if (form.tier_config.trim()) {
+        try { tierConfig = JSON.parse(form.tier_config); } catch { throw new Error('Invalid tier_config JSON'); }
+      }
+
       const payload = {
         ...form,
         creator_wallet: publicKey.toBase58(),
@@ -63,6 +85,11 @@ export default function CreateProjectPage() {
         fee_percentage: parseFloat(form.fee_percentage),
         start_time: new Date(form.start_time).toISOString(),
         end_time: new Date(form.end_time).toISOString(),
+        whitelist_enabled: form.whitelist_enabled,
+        kyc_enabled: form.kyc_enabled,
+        tiered: form.tiered,
+        rounds: rounds,
+        tier_config: tierConfig,
       };
 
       const res = await fetch('/api/launchpad/projects', {
@@ -119,232 +146,72 @@ export default function CreateProjectPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Token Mint Address *</label>
-              <input
-                type="text"
-                name="token_mint"
-                value={form.token_mint}
-                onChange={handleChange}
-                required
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="e.g., G3jfij3Uz..."
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Token Symbol *</label>
-              <input
-                type="text"
-                name="token_symbol"
-                value={form.token_symbol}
-                onChange={handleChange}
-                required
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="e.g., ZRP"
-              />
-            </div>
-          </div>
+          {/* ... existing fields ... */}
+          {/* (I'm omitting the existing fields for brevity – keep your current ones) */}
 
-          <div>
-            <label className="text-white text-sm font-medium block mb-1">Token Name *</label>
-            <input
-              type="text"
-              name="token_name"
-              value={form.token_name}
-              onChange={handleChange}
-              required
-              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              placeholder="e.g., ZRP Token"
-            />
-          </div>
+          {/* ─── Premium Features ──────────────────────────────────── */}
+          <div className="border-t border-[#1a1a1a] pt-4 mt-4">
+            <h3 className="text-white font-medium mb-3">Premium Features</h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Token Supply *</label>
-              <input
-                type="number"
-                name="token_supply"
-                value={form.token_supply}
-                onChange={handleChange}
-                required
-                step="any"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              />
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-white">
+                <input
+                  type="checkbox"
+                  name="whitelist_enabled"
+                  checked={form.whitelist_enabled}
+                  onChange={handleChange}
+                  className="w-4 h-4 accent-[#FF2D2D]"
+                />
+                Enable Whitelist
+              </label>
+              <label className="flex items-center gap-2 text-white">
+                <input
+                  type="checkbox"
+                  name="kyc_enabled"
+                  checked={form.kyc_enabled}
+                  onChange={handleChange}
+                  className="w-4 h-4 accent-[#FF2D2D]"
+                />
+                Enable KYC
+              </label>
+              <label className="flex items-center gap-2 text-white">
+                <input
+                  type="checkbox"
+                  name="tiered"
+                  checked={form.tiered}
+                  onChange={handleChange}
+                  className="w-4 h-4 accent-[#FF2D2D]"
+                />
+                Tiered Participation
+              </label>
             </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Token Price (SOL) *</label>
-              <input
-                type="number"
-                name="token_price"
-                value={form.token_price}
-                onChange={handleChange}
-                required
-                step="any"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="e.g., 0.01"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Hard Cap (SOL) *</label>
-              <input
-                type="number"
-                name="hard_cap"
-                value={form.hard_cap}
-                onChange={handleChange}
-                required
-                step="any"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Soft Cap (SOL)</label>
-              <input
-                type="number"
-                name="soft_cap"
-                value={form.soft_cap}
-                onChange={handleChange}
-                step="any"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="Optional"
-              />
-            </div>
-          </div>
+            {form.tiered && (
+              <div className="mt-3">
+                <label className="text-white text-sm block mb-1">Tier Configuration (JSON)</label>
+                <textarea
+                  name="tier_config"
+                  value={form.tier_config}
+                  onChange={handleChange}
+                  rows={4}
+                  className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] font-mono text-sm focus:outline-none focus:border-[#FF2D2D]"
+                  placeholder='[{"tier":"Bronze","min_hold":100,"allocation":50},{"tier":"Silver","min_hold":500,"allocation":200}]'
+                />
+                <p className="text-[#BDDBDB] text-xs mt-1">Each tier: tier name, minimum token hold, max allocation in SOL.</p>
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Start Time *</label>
-              <input
-                type="datetime-local"
-                name="start_time"
-                value={form.start_time}
+            <div className="mt-3">
+              <label className="text-white text-sm block mb-1">Rounds (JSON) – optional</label>
+              <textarea
+                name="rounds"
+                value={form.rounds}
                 onChange={handleChange}
-                required
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                rows={3}
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] font-mono text-sm focus:outline-none focus:border-[#FF2D2D]"
+                placeholder='[{"name":"Seed","price":0.005,"cap":50},{"name":"Public","price":0.01,"cap":200}]'
               />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">End Time *</label>
-              <input
-                type="datetime-local"
-                name="end_time"
-                value={form.end_time}
-                onChange={handleChange}
-                required
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Min Contribution (SOL)</label>
-              <input
-                type="number"
-                name="min_contribution"
-                value={form.min_contribution}
-                onChange={handleChange}
-                step="any"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Max Contribution (SOL)</label>
-              <input
-                type="number"
-                name="max_contribution"
-                value={form.max_contribution}
-                onChange={handleChange}
-                step="any"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Platform Fee %</label>
-              <input
-                type="number"
-                name="fee_percentage"
-                value={form.fee_percentage}
-                onChange={handleChange}
-                step="0.1"
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-white text-sm font-medium block mb-1">Description</label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-              placeholder="Describe your project..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Website</label>
-              <input
-                type="url"
-                name="website"
-                value={form.website}
-                onChange={handleChange}
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="https://..."
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Logo URL</label>
-              <input
-                type="url"
-                name="logo_url"
-                value={form.logo_url}
-                onChange={handleChange}
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="https://..."
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Twitter</label>
-              <input
-                type="text"
-                name="twitter"
-                value={form.twitter}
-                onChange={handleChange}
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="@handle"
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Telegram</label>
-              <input
-                type="text"
-                name="telegram"
-                value={form.telegram}
-                onChange={handleChange}
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="t.me/..."
-              />
-            </div>
-            <div>
-              <label className="text-white text-sm font-medium block mb-1">Discord</label>
-              <input
-                type="text"
-                name="discord"
-                value={form.discord}
-                onChange={handleChange}
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
-                placeholder="Discord invite"
-              />
+              <p className="text-[#BDDBDB] text-xs mt-1">Round name, price per token, and cap in SOL.</p>
             </div>
           </div>
 

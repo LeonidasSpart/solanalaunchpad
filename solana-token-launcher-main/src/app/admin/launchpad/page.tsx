@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 interface Project {
   id: number;
@@ -17,7 +16,6 @@ interface Project {
 }
 
 export default function AdminLaunchpadPage() {
-  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +23,6 @@ export default function AdminLaunchpadPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
-  // ─── Auth ──────────────────────────────────────────────────────────────
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (adminToken.trim()) {
@@ -34,15 +31,12 @@ export default function AdminLaunchpadPage() {
     }
   };
 
-  // ─── Fetch Projects ────────────────────────────────────────────────────
   const fetchProjects = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch('/api/launchpad/projects?status=all', {
-        headers: {
-          'Authorization': `Bearer ${adminToken}`,
-        },
+        headers: { 'Authorization': `Bearer ${adminToken}` },
       });
       if (!res.ok) throw new Error('Failed to fetch projects');
       const data = await res.json();
@@ -54,7 +48,6 @@ export default function AdminLaunchpadPage() {
     }
   };
 
-  // ─── Approve Project ──────────────────────────────────────────────────
   const handleApprove = async (id: number) => {
     setActionLoading(id);
     try {
@@ -66,7 +59,6 @@ export default function AdminLaunchpadPage() {
         },
       });
       if (!res.ok) throw new Error('Approval failed');
-      // Refresh list
       await fetchProjects();
     } catch (err: any) {
       setError(err.message);
@@ -75,7 +67,6 @@ export default function AdminLaunchpadPage() {
     }
   };
 
-  // ─── Reject Project ───────────────────────────────────────────────────
   const handleReject = async (id: number) => {
     setActionLoading(id);
     try {
@@ -87,6 +78,29 @@ export default function AdminLaunchpadPage() {
         },
       });
       if (!res.ok) throw new Error('Rejection failed');
+      await fetchProjects();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // ─── Distribute ──────────────────────────────────────────────────────
+  const handleDistribute = async (id: number) => {
+    setActionLoading(id);
+    try {
+      const res = await fetch(`/api/launchpad/projects/${id}/distribute`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Distribution failed');
+      }
       await fetchProjects();
     } catch (err: any) {
       setError(err.message);
@@ -185,27 +199,30 @@ export default function AdminLaunchpadPage() {
         )}
       </section>
 
-      {/* All Projects */}
+      {/* All Projects with Actions */}
       <section>
         <h2 className="text-xl font-semibold text-white mb-4">All Projects</h2>
-        {projects.length === 0 ? (
-          <p className="text-[#BDDBDB]">No projects found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-[#BDDBDB] border-b border-[#1a1a1a]">
-                  <th className="pb-2 pr-4">ID</th>
-                  <th className="pb-2 pr-4">Name</th>
-                  <th className="pb-2 pr-4">Symbol</th>
-                  <th className="pb-2 pr-4">Raised</th>
-                  <th className="pb-2 pr-4">Cap</th>
-                  <th className="pb-2 pr-4">Status</th>
-                  <th className="pb-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {projects.map((p) => (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-[#BDDBDB] border-b border-[#1a1a1a]">
+                <th className="pb-2 pr-4">ID</th>
+                <th className="pb-2 pr-4">Name</th>
+                <th className="pb-2 pr-4">Symbol</th>
+                <th className="pb-2 pr-4">Raised</th>
+                <th className="pb-2 pr-4">Cap</th>
+                <th className="pb-2 pr-4">Status</th>
+                <th className="pb-2 pr-4">Ends</th>
+                <th className="pb-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((p) => {
+                const now = new Date();
+                const endTime = new Date(p.end_time);
+                const canDistribute = p.status === 'active' && endTime < now;
+
+                return (
                   <tr key={p.id} className="border-b border-[#1a1a1a]">
                     <td className="py-2 pr-4 text-white">{p.id}</td>
                     <td className="py-2 pr-4 text-white">{p.token_name}</td>
@@ -217,27 +234,41 @@ export default function AdminLaunchpadPage() {
                         p.status === 'active' ? 'bg-green-600 text-white' :
                         p.status === 'pending' ? 'bg-yellow-600 text-white' :
                         p.status === 'distributed' ? 'bg-blue-600 text-white' :
-                        p.status === 'failed' ? 'bg-red-600 text-white' :
+                        p.status === 'rejected' ? 'bg-red-600 text-white' :
                         'bg-gray-600 text-white'
                       }`}>
                         {p.status}
                       </span>
                     </td>
+                    <td className="py-2 pr-4 text-[#BDDBDB]">
+                      {new Date(p.end_time).toLocaleDateString()}
+                    </td>
                     <td className="py-2">
-                      <a
-                        href={`/launchpad/${p.id}`}
-                        target="_blank"
-                        className="text-[#FF2D2D] hover:text-[#B10000] transition text-xs"
-                      >
-                        View
-                      </a>
+                      <div className="flex gap-2">
+                        <a
+                          href={`/launchpad/${p.id}`}
+                          target="_blank"
+                          className="text-[#FF2D2D] hover:text-[#B10000] transition text-xs"
+                        >
+                          View
+                        </a>
+                        {canDistribute && (
+                          <button
+                            onClick={() => handleDistribute(p.id)}
+                            disabled={actionLoading === p.id}
+                            className="px-3 py-0.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs transition disabled:opacity-50"
+                          >
+                            {actionLoading === p.id ? '...' : 'Distribute'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   );

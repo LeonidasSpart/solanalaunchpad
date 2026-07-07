@@ -37,8 +37,8 @@ export default function CreateProjectPage() {
     whitelist_enabled: false,
     kyc_enabled: false,
     tiered: false,
-    rounds: '',          // JSON string
-    tier_config: '',     // JSON string
+    rounds: '',
+    tier_config: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -53,26 +53,70 @@ export default function CreateProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ─── Validation ──────────────────────────────────────────────────
     if (!connected || !publicKey) {
       setError('Please connect your wallet first');
       return;
     }
 
+    // 1. Date validation
+    const startDate = new Date(form.start_time);
+    const endDate = new Date(form.end_time);
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      setError('Please select valid start and end dates.');
+      return;
+    }
+    if (endDate <= startDate) {
+      setError('End time must be after start time.');
+      return;
+    }
+
+    // 2. JSON validation for premium fields
+    let rounds = null;
+    let tierConfig = null;
+
+    if (form.rounds.trim()) {
+      try {
+        rounds = JSON.parse(form.rounds);
+        if (!Array.isArray(rounds)) {
+          throw new Error('Rounds must be an array of objects.');
+        }
+        // Optional: validate each round structure
+        for (const round of rounds) {
+          if (!round.name || round.price === undefined || !round.cap) {
+            throw new Error('Each round must have "name", "price", and "cap".');
+          }
+        }
+      } catch (err: any) {
+        setError(`Invalid Rounds JSON: ${err.message}`);
+        return;
+      }
+    }
+
+    if (form.tier_config.trim()) {
+      try {
+        tierConfig = JSON.parse(form.tier_config);
+        if (!Array.isArray(tierConfig)) {
+          throw new Error('Tier config must be an array of objects.');
+        }
+        for (const tier of tierConfig) {
+          if (!tier.tier || tier.min_hold === undefined || tier.allocation === undefined) {
+            throw new Error('Each tier must have "tier", "min_hold", and "allocation".');
+          }
+        }
+      } catch (err: any) {
+        setError(`Invalid Tier Configuration JSON: ${err.message}`);
+        return;
+      }
+    }
+
+    // ─── Build payload ──────────────────────────────────────────────
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      // Parse JSON fields if provided
-      let rounds = null;
-      let tierConfig = null;
-      if (form.rounds.trim()) {
-        try { rounds = JSON.parse(form.rounds); } catch { throw new Error('Invalid rounds JSON'); }
-      }
-      if (form.tier_config.trim()) {
-        try { tierConfig = JSON.parse(form.tier_config); } catch { throw new Error('Invalid tier_config JSON'); }
-      }
-
       const payload = {
         ...form,
         creator_wallet: publicKey.toBase58(),
@@ -83,8 +127,8 @@ export default function CreateProjectPage() {
         min_contribution: parseFloat(form.min_contribution),
         max_contribution: parseFloat(form.max_contribution),
         fee_percentage: parseFloat(form.fee_percentage),
-        start_time: new Date(form.start_time).toISOString(),
-        end_time: new Date(form.end_time).toISOString(),
+        start_time: startDate.toISOString(),
+        end_time: endDate.toISOString(),
         whitelist_enabled: form.whitelist_enabled,
         kyc_enabled: form.kyc_enabled,
         tiered: form.tiered,
@@ -146,8 +190,235 @@ export default function CreateProjectPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ... existing fields ... */}
-          {/* (I'm omitting the existing fields for brevity – keep your current ones) */}
+          {/* ─── Existing fields (keep as is) ─── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Token Mint Address *</label>
+              <input
+                type="text"
+                name="token_mint"
+                value={form.token_mint}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="e.g., G3jfij3Uz..."
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Token Symbol *</label>
+              <input
+                type="text"
+                name="token_symbol"
+                value={form.token_symbol}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="e.g., ZRP"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-white text-sm font-medium block mb-1">Token Name *</label>
+            <input
+              type="text"
+              name="token_name"
+              value={form.token_name}
+              onChange={handleChange}
+              required
+              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              placeholder="e.g., ZRP Token"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Token Supply *</label>
+              <input
+                type="number"
+                name="token_supply"
+                value={form.token_supply}
+                onChange={handleChange}
+                required
+                step="any"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Token Price (SOL) *</label>
+              <input
+                type="number"
+                name="token_price"
+                value={form.token_price}
+                onChange={handleChange}
+                required
+                step="any"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="e.g., 0.01"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Hard Cap (SOL) *</label>
+              <input
+                type="number"
+                name="hard_cap"
+                value={form.hard_cap}
+                onChange={handleChange}
+                required
+                step="any"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Soft Cap (SOL)</label>
+              <input
+                type="number"
+                name="soft_cap"
+                value={form.soft_cap}
+                onChange={handleChange}
+                step="any"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="Optional"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Start Time *</label>
+              <input
+                type="datetime-local"
+                name="start_time"
+                value={form.start_time}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">End Time *</label>
+              <input
+                type="datetime-local"
+                name="end_time"
+                value={form.end_time}
+                onChange={handleChange}
+                required
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Min Contribution (SOL)</label>
+              <input
+                type="number"
+                name="min_contribution"
+                value={form.min_contribution}
+                onChange={handleChange}
+                step="any"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Max Contribution (SOL)</label>
+              <input
+                type="number"
+                name="max_contribution"
+                value={form.max_contribution}
+                onChange={handleChange}
+                step="any"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Platform Fee %</label>
+              <input
+                type="number"
+                name="fee_percentage"
+                value={form.fee_percentage}
+                onChange={handleChange}
+                step="0.1"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-white text-sm font-medium block mb-1">Description</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+              placeholder="Describe your project..."
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Website</label>
+              <input
+                type="url"
+                name="website"
+                value={form.website}
+                onChange={handleChange}
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="https://..."
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Logo URL</label>
+              <input
+                type="url"
+                name="logo_url"
+                value={form.logo_url}
+                onChange={handleChange}
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Twitter</label>
+              <input
+                type="text"
+                name="twitter"
+                value={form.twitter}
+                onChange={handleChange}
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="@handle"
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Telegram</label>
+              <input
+                type="text"
+                name="telegram"
+                value={form.telegram}
+                onChange={handleChange}
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="t.me/..."
+              />
+            </div>
+            <div>
+              <label className="text-white text-sm font-medium block mb-1">Discord</label>
+              <input
+                type="text"
+                name="discord"
+                value={form.discord}
+                onChange={handleChange}
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="Discord invite"
+              />
+            </div>
+          </div>
 
           {/* ─── Premium Features ──────────────────────────────────── */}
           <div className="border-t border-[#1a1a1a] pt-4 mt-4">
@@ -197,7 +468,9 @@ export default function CreateProjectPage() {
                   className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] font-mono text-sm focus:outline-none focus:border-[#FF2D2D]"
                   placeholder='[{"tier":"Bronze","min_hold":100,"allocation":50},{"tier":"Silver","min_hold":500,"allocation":200}]'
                 />
-                <p className="text-[#BDDBDB] text-xs mt-1">Each tier: tier name, minimum token hold, max allocation in SOL.</p>
+                <p className="text-[#BDDBDB] text-xs mt-1">
+                  Each tier must have <span className="text-white font-mono">"tier"</span>, <span className="text-white font-mono">"min_hold"</span>, and <span className="text-white font-mono">"allocation"</span>.
+                </p>
               </div>
             )}
 
@@ -211,7 +484,9 @@ export default function CreateProjectPage() {
                 className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] font-mono text-sm focus:outline-none focus:border-[#FF2D2D]"
                 placeholder='[{"name":"Seed","price":0.005,"cap":50},{"name":"Public","price":0.01,"cap":200}]'
               />
-              <p className="text-[#BDDBDB] text-xs mt-1">Round name, price per token, and cap in SOL.</p>
+              <p className="text-[#BDDBDB] text-xs mt-1">
+                Each round must have <span className="text-white font-mono">"name"</span>, <span className="text-white font-mono">"price"</span>, and <span className="text-white font-mono">"cap"</span>.
+              </p>
             </div>
           </div>
 

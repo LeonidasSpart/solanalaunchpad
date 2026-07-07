@@ -33,7 +33,6 @@ export default function CreateProjectPage() {
     telegram: '',
     discord: '',
     logo_url: '',
-    // Premium fields
     whitelist_enabled: false,
     kyc_enabled: false,
     tiered: false,
@@ -41,7 +40,9 @@ export default function CreateProjectPage() {
     tier_config: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
@@ -54,13 +55,12 @@ export default function CreateProjectPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // ─── Validation ──────────────────────────────────────────────────
     if (!connected || !publicKey) {
       setError('Please connect your wallet first');
       return;
     }
 
-    // 1. Date validation
+    // Date validation
     const startDate = new Date(form.start_time);
     const endDate = new Date(form.end_time);
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
@@ -72,7 +72,7 @@ export default function CreateProjectPage() {
       return;
     }
 
-    // 2. JSON validation for premium fields
+    // JSON validation for premium fields
     let rounds = null;
     let tierConfig = null;
 
@@ -82,7 +82,6 @@ export default function CreateProjectPage() {
         if (!Array.isArray(rounds)) {
           throw new Error('Rounds must be an array of objects.');
         }
-        // Optional: validate each round structure
         for (const round of rounds) {
           if (!round.name || round.price === undefined || !round.cap) {
             throw new Error('Each round must have "name", "price", and "cap".');
@@ -111,7 +110,6 @@ export default function CreateProjectPage() {
       }
     }
 
-    // ─── Build payload ──────────────────────────────────────────────
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -169,14 +167,19 @@ export default function CreateProjectPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
-      <Link href="/launchpad" className="text-[#BDDBDB] hover:text-white transition inline-flex items-center gap-2 mb-6">
+      <Link
+        href="/launchpad"
+        className="text-[#BDDBDB] hover:text-white transition inline-flex items-center gap-2 mb-6"
+      >
         <ArrowLeft className="h-4 w-4" />
         Back to Launchpad
       </Link>
 
       <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a]">
         <h1 className="text-2xl font-bold text-white mb-2">Create Launchpad Project</h1>
-        <p className="text-[#BDDBDB] text-sm mb-6">Fill in the details below. Your project will be reviewed by admins.</p>
+        <p className="text-[#BDDBDB] text-sm mb-6">
+          Fill in the details below. Your project will be reviewed by admins.
+        </p>
 
         {error && (
           <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 mb-4 text-[#FF2D2D] text-sm">
@@ -190,10 +193,12 @@ export default function CreateProjectPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* ─── Existing fields (keep as is) ─── */}
+          {/* Token Mint & Symbol */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-white text-sm font-medium block mb-1">Token Mint Address *</label>
+              <label className="text-white text-sm font-medium block mb-1">
+                Token Mint Address *
+              </label>
               <input
                 type="text"
                 name="token_mint"
@@ -205,7 +210,9 @@ export default function CreateProjectPage() {
               />
             </div>
             <div>
-              <label className="text-white text-sm font-medium block mb-1">Token Symbol *</label>
+              <label className="text-white text-sm font-medium block mb-1">
+                Token Symbol *
+              </label>
               <input
                 type="text"
                 name="token_symbol"
@@ -218,6 +225,7 @@ export default function CreateProjectPage() {
             </div>
           </div>
 
+          {/* Token Name */}
           <div>
             <label className="text-white text-sm font-medium block mb-1">Token Name *</label>
             <input
@@ -231,6 +239,7 @@ export default function CreateProjectPage() {
             />
           </div>
 
+          {/* Supply & Price */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-white text-sm font-medium block mb-1">Token Supply *</label>
@@ -259,6 +268,7 @@ export default function CreateProjectPage() {
             </div>
           </div>
 
+          {/* Hard & Soft Cap */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-white text-sm font-medium block mb-1">Hard Cap (SOL) *</label>
@@ -286,7 +296,8 @@ export default function CreateProjectPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* ─── Dates ────────────────────────────────────────────── */}
+          <div className="space-y-4">
             <div>
               <label className="text-white text-sm font-medium block mb-1">Start Time *</label>
               <input
@@ -295,10 +306,10 @@ export default function CreateProjectPage() {
                 value={form.start_time}
                 onChange={handleChange}
                 required
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
               />
             </div>
-            <div>
+            <div className="border-t border-[#1a1a1a] pt-4">
               <label className="text-white text-sm font-medium block mb-1">End Time *</label>
               <input
                 type="datetime-local"
@@ -306,14 +317,17 @@ export default function CreateProjectPage() {
                 value={form.end_time}
                 onChange={handleChange}
                 required
-                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
               />
             </div>
           </div>
 
+          {/* Min / Max / Fee */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-white text-sm font-medium block mb-1">Min Contribution (SOL)</label>
+              <label className="text-white text-sm font-medium block mb-1">
+                Min Contribution (SOL)
+              </label>
               <input
                 type="number"
                 name="min_contribution"
@@ -324,7 +338,9 @@ export default function CreateProjectPage() {
               />
             </div>
             <div>
-              <label className="text-white text-sm font-medium block mb-1">Max Contribution (SOL)</label>
+              <label className="text-white text-sm font-medium block mb-1">
+                Max Contribution (SOL)
+              </label>
               <input
                 type="number"
                 name="max_contribution"
@@ -347,6 +363,7 @@ export default function CreateProjectPage() {
             </div>
           </div>
 
+          {/* Description */}
           <div>
             <label className="text-white text-sm font-medium block mb-1">Description</label>
             <textarea
@@ -359,6 +376,7 @@ export default function CreateProjectPage() {
             />
           </div>
 
+          {/* Website & Logo */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-white text-sm font-medium block mb-1">Website</label>
@@ -384,6 +402,7 @@ export default function CreateProjectPage() {
             </div>
           </div>
 
+          {/* Socials */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-white text-sm font-medium block mb-1">Twitter</label>
@@ -459,7 +478,9 @@ export default function CreateProjectPage() {
 
             {form.tiered && (
               <div className="mt-3">
-                <label className="text-white text-sm block mb-1">Tier Configuration (JSON)</label>
+                <label className="text-white text-sm block mb-1">
+                  Tier Configuration (JSON)
+                </label>
                 <textarea
                   name="tier_config"
                   value={form.tier_config}
@@ -469,7 +490,9 @@ export default function CreateProjectPage() {
                   placeholder='[{"tier":"Bronze","min_hold":100,"allocation":50},{"tier":"Silver","min_hold":500,"allocation":200}]'
                 />
                 <p className="text-[#BDDBDB] text-xs mt-1">
-                  Each tier must have <span className="text-white font-mono">"tier"</span>, <span className="text-white font-mono">"min_hold"</span>, and <span className="text-white font-mono">"allocation"</span>.
+                  Each tier must have <span className="text-white font-mono">"tier"</span>,{' '}
+                  <span className="text-white font-mono">"min_hold"</span>, and{' '}
+                  <span className="text-white font-mono">"allocation"</span>.
                 </p>
               </div>
             )}
@@ -485,7 +508,9 @@ export default function CreateProjectPage() {
                 placeholder='[{"name":"Seed","price":0.005,"cap":50},{"name":"Public","price":0.01,"cap":200}]'
               />
               <p className="text-[#BDDBDB] text-xs mt-1">
-                Each round must have <span className="text-white font-mono">"name"</span>, <span className="text-white font-mono">"price"</span>, and <span className="text-white font-mono">"cap"</span>.
+                Each round must have <span className="text-white font-mono">"name"</span>,{' '}
+                <span className="text-white font-mono">"price"</span>, and{' '}
+                <span className="text-white font-mono">"cap"</span>.
               </p>
             </div>
           </div>

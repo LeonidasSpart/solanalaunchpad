@@ -1,17 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import jwt from 'jsonwebtoken';
 
-// GET → list projects (public: only active; admin: all)
+// ─── JWT Verification Helper ──────────────────────────────────────
+async function verifyAdminToken(req: NextRequest): Promise<boolean> {
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.split(' ')[1];
+  if (!token) return false;
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return false;
+
+  try {
+    jwt.verify(token, secret);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ─── GET ──────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const status = searchParams.get('status') || 'active';
-  const authHeader = req.headers.get('authorization');
-  const isAdmin = authHeader === `Bearer ${process.env.ADMIN_TOKEN}`;
 
   try {
     let res;
-    if (status === 'all' && isAdmin) {
-      // Admin: return all projects
+    if (status === 'all') {
+      // Admin: return all projects (requires JWT)
+      const isAdmin = await verifyAdminToken(req);
+      if (!isAdmin) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       res = await query('SELECT * FROM launchpad_projects ORDER BY id DESC');
     } else {
       // Public: filter by status
@@ -24,12 +44,12 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json(res.rows);
   } catch (error) {
-    console.error(error);
+    console.error('Projects fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
 }
 
-// POST → create a new project (requires creator wallet)
+// ─── POST ─────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -53,6 +73,11 @@ export async function POST(req: NextRequest) {
       telegram,
       discord,
       logo_url,
+      whitelist_enabled,
+      kyc_enabled,
+      tiered,
+      rounds,
+      tier_config,
     } = body;
 
     // Basic validation
@@ -66,19 +91,22 @@ export async function POST(req: NextRequest) {
         token_supply, token_price, hard_cap, soft_cap,
         start_time, end_time, min_contribution, max_contribution,
         fee_percentage, description, website, twitter, telegram, discord, logo_url,
+        whitelist_enabled, kyc_enabled, tiered, rounds, tier_config,
         status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, 'pending')
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, 'pending')
       RETURNING *`,
       [
         creator_wallet, token_mint, token_symbol, token_name,
         token_supply, token_price, hard_cap, soft_cap,
         start_time, end_time, min_contribution, max_contribution,
-        fee_percentage, description, website, twitter, telegram, discord, logo_url
+        fee_percentage, description, website, twitter, telegram, discord, logo_url,
+        whitelist_enabled ?? false, kyc_enabled ?? false, tiered ?? false,
+        rounds ?? null, tier_config ?? null
       ]
     );
     return NextResponse.json(result.rows[0], { status: 201 });
   } catch (error) {
-    console.error(error);
+    console.error('Project creation error:', error);
     return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
   }
 }

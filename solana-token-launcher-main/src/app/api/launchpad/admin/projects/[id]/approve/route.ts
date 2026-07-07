@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await context.params;
+    const projectId = parseInt(id);
+    if (isNaN(projectId)) {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
     }
 
-    // Check admin authorization (simple: require admin token in header)
+    // Admin authorization (simple token)
     const authHeader = req.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.ADMIN_TOKEN}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -19,7 +20,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
        SET status = 'active', updated_at = NOW() 
        WHERE id = $1 AND status = 'pending'
        RETURNING *`,
-      [id]
+      [projectId]
     );
 
     if (result.rows.length === 0) {

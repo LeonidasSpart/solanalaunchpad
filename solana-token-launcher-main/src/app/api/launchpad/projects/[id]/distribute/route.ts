@@ -2,13 +2,37 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { query } from '@/lib/db';
 import { getLaunchpadKeypair, getFeeWalletPubkey } from '@/lib/launchpad';
+import jwt from 'jsonwebtoken';
+
+// ─── JWT Verification Helper ──────────────────────────────────────
+async function verifyAdminToken(req: NextRequest): Promise<boolean> {
+  const authHeader = req.headers.get('authorization');
+  const token = authHeader?.split(' ')[1];
+  if (!token) return false;
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return false;
+
+  try {
+    jwt.verify(token, secret);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    // ─── 1. Verify JWT ────────────────────────────────────────────
+    const isAdmin = await verifyAdminToken(req);
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // ─── 2. Get project ───────────────────────────────────────────
     const { id } = await context.params;
     const projectId = parseInt(id);
 
-    // 1. Get project
     const projectRes = await query('SELECT * FROM launchpad_projects WHERE id = $1', [projectId]);
     const project = projectRes.rows[0];
     if (!project) {
@@ -25,7 +49,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Soft cap not reached – refunds required' }, { status: 400 });
     }
 
-    // 2. Distribute SOL
+    // ─── 3. Distribute SOL ────────────────────────────────────────
     const feePercent = parseFloat(project.fee_percentage) / 100;
     const platformFee = raised * feePercent;
     const creatorShare = raised - platformFee;
@@ -59,15 +83,13 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     const signature = await connection.sendRawTransaction(tx.serialize());
     await connection.confirmTransaction(signature);
 
-    // 3. Update project status
+    // ─── 4. Update project status ────────────────────────────────
     await query(
       `UPDATE launchpad_projects SET status = 'distributed', updated_at = NOW() WHERE id = $1`,
       [projectId]
     );
 
-    // ──────────────────────────────────────────────────────────────
-    // 4. Create vesting schedules (reuse existing vesting API)
-    // ──────────────────────────────────────────────────────────────
+    // ─── 5. Create vesting schedules ──────────────────────────────
     const vestingRes = await query(
       `SELECT * FROM launchpad_vesting WHERE project_id = $1 AND status = 'pending'`,
       [projectId]
@@ -128,7 +150,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       vesting: vestingResults,
     });
   } catch (error) {
-    console.error(error);
+    console.error('Distribution error:', error);
     return NextResponse.json({ error: 'Distribution failed' }, { status: 500 });
   }
 }

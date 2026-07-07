@@ -1,17 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import jwt from 'jsonwebtoken';
 
 export async function GET(req: NextRequest) {
   try {
-    // 1. Verify admin token
+    // 1. Get token from Authorization header
     const authHeader = req.headers.get('authorization');
-    const expectedToken = process.env.ADMIN_TOKEN;
-    if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
-      console.error('Auth failed: expected token', expectedToken, 'received', authHeader);
+    const token = authHeader?.split(' ')[1];
+
+    if (!token) {
+      console.error('No token provided');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 2. Fetch stats
+    // 2. Verify JWT
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      console.error('JWT_SECRET not set');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    try {
+      jwt.verify(token, secret);
+    } catch (err) {
+      console.error('Invalid token:', err);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 3. Fetch stats
     const tokenCountRes = await query('SELECT COUNT(*) as count FROM tokens');
     const totalTokens = parseInt(tokenCountRes.rows[0]?.count || '0');
 

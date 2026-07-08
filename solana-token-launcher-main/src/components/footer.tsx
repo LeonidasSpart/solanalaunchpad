@@ -124,6 +124,8 @@ const Footer = () => {
             <li><Link href="/vesting" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting</Link></li>
             <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
             <li><Link href="/dao" className="text-[#BDDBDB] hover:text-white text-sm transition">DAO</Link></li>
+            <li><Link href="/nft" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT</Link></li>
+            <li><Link href="/nft-staking" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking</Link></li>
             <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
             <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
             </ul>

@@ -1,4 +1,4 @@
-import { Metaplex, keypairIdentity, bundlrStorage } from '@metaplex-foundation/js';
+import { Metaplex, keypairIdentity } from '@metaplex-foundation/js';
 import { PublicKey } from '@solana/web3.js';
 import { getConnection, getPlatformKeypair } from './solana';
 
@@ -6,8 +6,7 @@ export function getMetaplexInstance() {
   const connection = getConnection();
   const platformKeypair = getPlatformKeypair();
   const metaplex = Metaplex.make(connection)
-    .use(keypairIdentity(platformKeypair))
-    .use(bundlrStorage());
+    .use(keypairIdentity(platformKeypair));
   return metaplex;
 }
 

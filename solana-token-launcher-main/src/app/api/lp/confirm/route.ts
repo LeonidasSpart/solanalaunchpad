@@ -1,3 +1,4 @@
+// src/app/api/lp/confirm/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConnection } from '@/lib/solana';
@@ -5,7 +6,18 @@ import jwt from 'jsonwebtoken';
 
 export async function POST(req: NextRequest) {
   try {
-    const { txSignature, poolAddress, lpMint, tokenMint, solAmount, tokenAmount, lockDuration } = await req.json();
+    const body = await req.json(); // ← FIX: await the promise
+
+    const {
+      txSignature,
+      poolAddress,
+      lpMint,
+      tokenMint,
+      solAmount,
+      tokenAmount,
+      lockDuration,
+      creatorWallet,
+    } = body;
 
     // Verify transaction
     const connection = getConnection();
@@ -14,37 +26,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });
     }
 
-    // Get creator wallet from JWT (or from body)
-    const auth = req.headers.get('authorization');
-    const token = auth?.split(' ')[1];
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    let creatorWallet: string;
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { email: string };
-      // We don't have email in the DB, we need to get it from the user. For now, we'll pass it from frontend.
-      // Let's expect the frontend to send creatorWallet.
-      // We'll just trust the frontend for now.
-    } catch {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Optional: verify JWT (but we'll rely on the frontend sending creatorWallet)
+    // We'll trust the frontend for now.
 
-    // Extract creator wallet from request (sent from frontend)
-    const { creatorWallet: wallet } = req.json();
-    if (!wallet) {
+    if (!creatorWallet) {
       return NextResponse.json({ error: 'Missing creator wallet' }, { status: 400 });
     }
 
     const lockStart = new Date();
-    const lockEnd = lockDuration ? new Date(lockStart.getTime() + lockDuration * 1000) : null;
+    const lockEnd = lockDuration
+      ? new Date(lockStart.getTime() + lockDuration * 1000)
+      : null;
 
     await query(
       `INSERT INTO lp_pools 
        (creator_wallet, token_mint, pool_address, lp_mint, sol_amount, token_amount, lock_start, lock_end, locked)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [
-        wallet,
+        creatorWallet,
         tokenMint,
         poolAddress,
         lpMint,

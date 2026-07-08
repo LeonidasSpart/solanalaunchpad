@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { createNftCollection } from '@/lib/metaplex';
 import { uploadMetadata } from '@/lib/ipfs';
-import { Connection, PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey } from '@solana/web3.js';
 
 const CREATION_FEE_SOL = 0.15; // fixed fee in SOL
 const FEE_WALLET = process.env.NEXT_PUBLIC_FEE_REC;
@@ -38,10 +38,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee transaction not found' }, { status: 400 });
     }
 
-    // Check that the fee wallet is involved (so we know the user sent SOL)
+    // Check that the fee wallet is one of the accounts involved
     const feeWalletPubkey = new PublicKey(FEE_WALLET!);
     const accountKeys = tx.transaction.message.getAccountKeys();
-    const accountPubkeys = accountKeys.map(key => key.toBase58());
+    const accountPubkeys = accountKeys.toArray().map(key => key.toBase58());
     if (!accountPubkeys.includes(FEE_WALLET!)) {
       return NextResponse.json({ error: 'Fee wallet not involved in transaction' }, { status: 400 });
     }

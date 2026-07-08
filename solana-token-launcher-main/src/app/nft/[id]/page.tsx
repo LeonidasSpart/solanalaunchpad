@@ -23,6 +23,7 @@ interface NFT {
   metadata_uri: string;
   owner_wallet: string;
   minted_at: string;
+  image_url?: string | null;
 }
 
 export default function NFTCollectionDetail() {
@@ -46,7 +47,7 @@ export default function NFTCollectionDetail() {
       const collData = await collRes.json();
       setCollection(collData);
 
-      // Fetch NFTs in this collection
+      // Fetch NFTs in this collection (API now returns image_url)
       const nftRes = await fetch(`/api/nft/collections/${id}/tokens`);
       if (nftRes.ok) {
         const nftData = await nftRes.json();
@@ -91,7 +92,6 @@ export default function NFTCollectionDetail() {
       }
       const data = await res.json();
       setSuccess(`✅ Minted! Address: ${data.mint_address.slice(0, 8)}...`);
-      // Refresh NFTs
       await fetchData();
     } catch (err: any) {
       setError(err.message);
@@ -155,15 +155,19 @@ export default function NFTCollectionDetail() {
         {success && <div className="mt-4 text-green-400 text-sm">{success}</div>}
       </div>
 
-      {/* ─── NFT Gallery ────────────────────────────────────────────── */}
+      {/* ─── NFT Gallery with Images ────────────────────────────────── */}
       {nfts.length > 0 && (
         <div className="mt-8">
           <h2 className="text-xl font-bold text-white mb-4">Minted NFTs</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {nfts.map((nft) => (
               <div key={nft.id} className="bg-[#1a1a1a] rounded-xl p-3 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition">
-                <div className="aspect-square bg-[#050505] rounded-lg mb-2 flex items-center justify-center">
-                  <ImageOff className="h-8 w-8 text-[#BDDBDB] opacity-30" />
+                <div className="aspect-square bg-[#050505] rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                  {nft.image_url ? (
+                    <img src={nft.image_url} alt={`NFT #${nft.id}`} className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageOff className="h-8 w-8 text-[#BDDBDB] opacity-30" />
+                  )}
                 </div>
                 <p className="text-white text-sm truncate font-mono">{nft.mint_address.slice(0, 8)}...</p>
                 <p className="text-[#BDDBDB] text-xs">Owner: {nft.owner_wallet.slice(0, 6)}...</p>

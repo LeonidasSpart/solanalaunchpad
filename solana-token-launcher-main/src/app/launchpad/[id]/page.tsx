@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
@@ -31,6 +31,10 @@ interface Project {
   telegram: string;
   discord: string;
   logo_url: string;
+  lp_created?: boolean;
+  lp_pool_address?: string;
+  lp_lock_end?: string;
+  lp_locked?: boolean;
 }
 
 export default function ProjectDetailPage() {
@@ -324,6 +328,47 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
+        {/* ─── LP Status section ────────────────────────────────────── */}
+        {project.lp_created && (
+          <div className="mt-6 bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
+            <h3 className="text-white font-semibold mb-3">🌊 Liquidity Pool</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[#BDDBDB]">Status</span>
+                <span className="text-green-400 font-semibold">✅ Created</span>
+              </div>
+              {project.lp_pool_address && (
+                <div className="flex justify-between">
+                  <span className="text-[#BDDBDB]">Pool Address</span>
+                  <a
+                    href={`https://solscan.io/address/${project.lp_pool_address}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#FF2D2D] hover:text-[#B10000] transition inline-flex items-center gap-1"
+                  >
+                    {project.lp_pool_address.slice(0, 8)}...
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
+              {project.lp_lock_end ? (
+                <div className="flex justify-between">
+                  <span className="text-[#BDDBDB]">Locked until</span>
+                  <span className="text-white">
+                    {new Date(project.lp_lock_end).toLocaleDateString()}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex justify-between">
+                  <span className="text-[#BDDBDB]">Locked</span>
+                  <span className="text-[#BDDBDB]">No lock</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ─── Error / Success messages ──────────────────────────────── */}
         {error && (
           <div className="mt-4 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 text-[#FF2D2D] text-sm flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />

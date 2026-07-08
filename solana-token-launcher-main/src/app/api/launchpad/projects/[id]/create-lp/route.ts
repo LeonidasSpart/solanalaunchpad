@@ -1,8 +1,6 @@
 // src/app/api/launchpad/projects/[id]/create-lp/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { buildCreatePoolAndLockTransaction } from '@/lib/raydium';
-import { getConnection } from '@/lib/solana';
 import jwt from 'jsonwebtoken';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -41,30 +39,32 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'LP already created' }, { status: 400 });
     }
 
-    // 3. Prepare
-    const connection = getConnection();
-    const creator = new PublicKey(project.creator_wallet);
-    const tokenMint = new PublicKey(project.token_mint);
-    const lockWallet = new PublicKey(process.env.PLATFORM_PUBLIC_KEY!); // platform wallet as lock wallet
+    // 3. Call the internal Raydium API
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080';
+    const raydiumRes = await fetch(`${baseUrl}/api/raydium/create-pool`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tokenMint: project.token_mint,
+        solAmount,
+        tokenAmount,
+        creator: project.creator_wallet,
+        lockWallet: process.env.PLATFORM_PUBLIC_KEY,
+      }),
+    });
 
-    // 4. Build transaction (Raydium SDK + lock transfer)
-    const { transaction, poolAddress, lpMint } = await buildCreatePoolAndLockTransaction(
-      tokenMint,
-      solAmount,
-      tokenAmount,
-      creator,
-      lockWallet,
-      connection
-    );
+    if (!raydiumRes.ok) {
+      const err = await raydiumRes.json();
+      throw new Error(err.error || 'Raydium API failed');
+    }
 
-    // 5. Serialize transaction for frontend signing
-    const serialized = transaction.serialize({ requireAllSignatures: false }).toString('base64');
+    const data = await raydiumRes.json();
 
-    // 6. Return transaction + pool/lp metadata
+    // 4. Return the transaction to the frontend
     return NextResponse.json({
-      transaction: serialized,
-      poolAddress: poolAddress.toBase58(),
-      lpMint: lpMint.toBase58(),
+      transaction: data.transaction,
+      poolAddress: data.poolAddress,
+      lpMint: data.lpMint,
     });
   } catch (error) {
     console.error('LP creation error:', error);

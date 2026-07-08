@@ -13,9 +13,11 @@ import {
   TrendingUp,
   ShieldCheck,
   UserCheck,
-  BarChart3          // ← added
+  BarChart3,
+  Wallet          // ← added for NFT Staking
 } from 'lucide-react';
-import AdminAnalytics from '@/components/AdminAnalytics';  // ← added
+import AdminAnalytics from '@/components/AdminAnalytics';
+import AdminNFTStaking from '@/components/AdminNFTStaking';  // ← new import
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface Project {
@@ -50,7 +52,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'launchpad' | 'analytics'>('overview'); // ← added 'analytics'
+  const [activeTab, setActiveTab] = useState<'overview' | 'launchpad' | 'analytics' | 'nftstaking'>('overview'); // ← added 'nftstaking'
   const [token, setToken] = useState<string | null>(null);
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -311,7 +313,6 @@ export default function AdminPage() {
           <Rocket className="h-4 w-4 inline mr-2" />
           Launchpad Management
         </button>
-        {/* ─── NEW Analytics tab ─── */}
         <button
           onClick={() => setActiveTab('analytics')}
           className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
@@ -322,6 +323,18 @@ export default function AdminPage() {
         >
           <BarChart3 className="h-4 w-4 inline mr-2" />
           Analytics
+        </button>
+        {/* ─── NEW NFT Staking tab ─── */}
+        <button
+          onClick={() => setActiveTab('nftstaking')}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
+            activeTab === 'nftstaking'
+              ? 'text-white bg-[#FF2D2D]/20 border-b-2 border-[#FF2D2D]'
+              : 'text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50'
+          }`}
+        >
+          <Wallet className="h-4 w-4 inline mr-2" />
+          NFT Staking
         </button>
       </div>
 
@@ -352,6 +365,9 @@ export default function AdminPage() {
           )}
           {activeTab === 'analytics' && (
             <AdminAnalytics token={token} />
+          )}
+          {activeTab === 'nftstaking' && (
+            <AdminNFTStaking token={token} />
           )}
         </>
       )}

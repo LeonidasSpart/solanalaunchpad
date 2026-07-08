@@ -1,37 +1,35 @@
 'use client';
 
 import { useState, useContext, useEffect } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { Connection, PublicKey, LAMPORTS_PER_SOL, Transaction } from '@solana/web3.js';
 import { NetworkContext } from '@/providers/providers';
 import { motion } from 'framer-motion';
 import { Coins, Wallet, Loader2, CheckCircle, AlertCircle, Info, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { getTokenDecimals, getTokenBalance, getRaydiumUrl } from '@/lib/token-helpers'; // ← updated import
+import { getTokenDecimals, getTokenBalance } from '@/lib/token-helpers';
 
 export default function AddLiquidityPage() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connection } = useConnection();
   const { network } = useContext(NetworkContext);
   const [tokenMint, setTokenMint] = useState('');
   const [solAmount, setSolAmount] = useState('');
   const [tokenAmount, setTokenAmount] = useState('');
+  const [lockDuration, setLockDuration] = useState(180 * 24 * 60 * 60); // 6 months default
   const [loading, setLoading] = useState(false);
   const [tokenDecimals, setTokenDecimals] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
   const [solBalance, setSolBalance] = useState<number | null>(null);
-  const [txId, setTxId] = useState('');
+  const [poolAddress, setPoolAddress] = useState('');
+  const [lpMint, setLpMint] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error' | 'info' | null; message: string }>({
     type: null,
     message: '',
   });
 
-  const connection = new Connection(
-    process.env.NEXT_PUBLIC_RPC_URL || 'https://api.devnet.solana.com',
-    'confirmed'
-  );
-
-  // Fetch token info when mint address changes
+  // Fetch token info when mint changes
   useEffect(() => {
     const fetchTokenInfo = async () => {
       if (!tokenMint || tokenMint.length < 32) {
@@ -72,7 +70,7 @@ export default function AddLiquidityPage() {
     fetchSolBalance();
   }, [publicKey, connection]);
 
-  const handleAddLiquidity = async () => {
+  const handleCreateLP = async () => {
     if (!connected || !publicKey) {
       setStatus({ type: 'error', message: 'Please connect your wallet first' });
       return;
@@ -95,7 +93,6 @@ export default function AddLiquidityPage() {
       return;
     }
 
-    // Check balances
     if (solBalance !== null && solBalance < sol + 0.005) {
       setStatus({ type: 'error', message: `Insufficient SOL balance. You have ${solBalance.toFixed(4)} SOL` });
       return;
@@ -107,22 +104,62 @@ export default function AddLiquidityPage() {
     }
 
     setLoading(true);
-    setTxId('');
-    setStatus({ type: 'info', message: 'Opening Raydium to create liquidity pool...' });
+    setStatus({ type: 'info', message: 'Building transaction...' });
+    setPoolAddress('');
+    setLpMint('');
 
     try {
-      const url = getRaydiumUrl(tokenMint);
-      window.open(url, '_blank');
+      // 1. Get transaction from backend (Jupiter)
+      const res = await fetch('/api/raydium/create-pool', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tokenMint,
+          solAmount: sol,
+          tokenAmount: tokens,
+          creator: publicKey.toBase58(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create LP');
 
+      // 2. Sign and send
+      const txBuffer = Buffer.from(data.transaction, 'base64');
+      const tx = Transaction.from(txBuffer);
+      const signature = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(signature);
+
+      // 3. Confirm and store in DB (with lock)
+      const confirmRes = await fetch('/api/lp/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
+        },
+        body: JSON.stringify({
+          txSignature: signature,
+          poolAddress: data.poolAddress,
+          lpMint: data.lpMint,
+          tokenMint,
+          solAmount: sol,
+          tokenAmount: tokens,
+          lockDuration: lockDuration,
+          creatorWallet: publicKey.toBase58(),
+        }),
+      });
+      if (!confirmRes.ok) {
+        const err = await confirmRes.json();
+        throw new Error(err.error || 'Confirmation failed');
+      }
+
+      setPoolAddress(data.poolAddress);
+      setLpMint(data.lpMint);
       setStatus({
         type: 'success',
-        message: '✅ Raydium opened! Follow the steps to complete your pool creation.',
+        message: `✅ Liquidity pool created! Pool address: ${data.poolAddress.slice(0, 8)}...`,
       });
-    } catch (error: any) {
-      setStatus({
-        type: 'error',
-        message: error.message || 'Failed to open Raydium',
-      });
+    } catch (err: any) {
+      setStatus({ type: 'error', message: err.message || 'Failed to create LP' });
     } finally {
       setLoading(false);
     }
@@ -134,7 +171,7 @@ export default function AddLiquidityPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
-      {/* Hero Section */}
+      {/* Hero */}
       <div className="text-center mb-12">
         <span className="text-[#FF2D2D] text-sm font-semibold uppercase tracking-wider">Raydium Liquidity</span>
         <h1 className="text-4xl md:text-5xl font-bold text-white mt-2 mb-4">
@@ -142,7 +179,7 @@ export default function AddLiquidityPage() {
           <span className="text-[#FF2D2D]">Your Solana Token</span>
         </h1>
         <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
-          Create a SOL-pair liquidity pool in minutes. Your token becomes tradeable instantly.
+          Create a SOL-pair liquidity pool directly on ZRP – no redirects, no hassle.
         </p>
         <div className="flex flex-wrap justify-center gap-4 mt-6 text-sm">
           <div className="bg-[#0D0D0D]/50 rounded-xl px-4 py-2 border border-[#1a1a1a]">
@@ -190,14 +227,12 @@ export default function AddLiquidityPage() {
           </div>
         )}
 
-        {/* Pool Details */}
+        {/* Form */}
         <div>
           <h2 className="text-xl font-bold text-white mb-4">1. Pool Details</h2>
           <div className="space-y-4">
             <div>
-              <label className="text-white font-semibold text-sm block mb-2">
-                Token Mint Address
-              </label>
+              <label className="text-white font-semibold text-sm block mb-2">Token Mint Address</label>
               <input
                 type="text"
                 value={tokenMint}
@@ -206,25 +241,17 @@ export default function AddLiquidityPage() {
                 className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm font-mono"
               />
               <div className="flex items-center gap-4 mt-1 text-xs">
-                <span className="text-[#BDDBDB]">
-                  The on-chain address of your token — from Solscan
-                </span>
-                {tokenDecimals !== null && (
-                  <span className="text-[#FF2D2D]">✅ {tokenDecimals} decimals</span>
-                )}
+                <span className="text-[#BDDBDB]">The on-chain address of your token</span>
+                {tokenDecimals !== null && <span className="text-[#FF2D2D]">✅ {tokenDecimals} decimals</span>}
                 {tokenBalance !== null && (
-                  <span className="text-[#BDDBDB]">
-                    Balance: {tokenBalance.toLocaleString()} tokens
-                  </span>
+                  <span className="text-[#BDDBDB]">Balance: {tokenBalance.toLocaleString()} tokens</span>
                 )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-white font-semibold text-sm block mb-2">
-                  SOL Amount
-                </label>
+                <label className="text-white font-semibold text-sm block mb-2">SOL Amount</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#BDDBDB] font-medium">◎</span>
                   <input
@@ -238,9 +265,7 @@ export default function AddLiquidityPage() {
                 <p className="text-[#BDDBDB] text-xs mt-1">Typical launches: 5-20 SOL</p>
               </div>
               <div>
-                <label className="text-white font-semibold text-sm block mb-2">
-                  Token Amount
-                </label>
+                <label className="text-white font-semibold text-sm block mb-2">Token Amount</label>
                 <input
                   type="number"
                   value={tokenAmount}
@@ -249,6 +274,24 @@ export default function AddLiquidityPage() {
                   className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D] text-sm"
                 />
                 <p className="text-[#BDDBDB] text-xs mt-1">Whole numbers only. Paired with SOL above.</p>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-white font-semibold text-sm block mb-2">Lock Duration (optional)</label>
+              <div className="flex items-center gap-4">
+                <select
+                  value={lockDuration}
+                  onChange={(e) => setLockDuration(parseInt(e.target.value))}
+                  className="bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FF2D2D]"
+                >
+                  <option value="0">No lock</option>
+                  <option value="30*24*60*60">1 month</option>
+                  <option value="90*24*60*60">3 months</option>
+                  <option value="180*24*60*60">6 months</option>
+                  <option value="365*24*60*60">1 year</option>
+                </select>
+                <span className="text-[#BDDBDB] text-sm">LP tokens will be locked if you choose a duration.</span>
               </div>
             </div>
 
@@ -263,12 +306,8 @@ export default function AddLiquidityPage() {
                   <Info className="h-4 w-4" />
                   <span>Starting Price</span>
                 </div>
-                <p className="text-white font-mono">
-                  ≈ {price.toFixed(12)} SOL per token
-                </p>
-                <p className="text-[#BDDBDB] text-xs mt-1">
-                  Token Price = SOL Amount ÷ Token Amount
-                </p>
+                <p className="text-white font-mono">≈ {price.toFixed(12)} SOL per token</p>
+                <p className="text-[#BDDBDB] text-xs mt-1">Token Price = SOL Amount ÷ Token Amount</p>
                 {tokenDecimals !== null && (
                   <p className="text-[#BDDBDB] text-xs mt-1">
                     Amount in base units: {(tokenNum * Math.pow(10, tokenDecimals)).toLocaleString()}
@@ -330,36 +369,39 @@ export default function AddLiquidityPage() {
         )}
 
         {/* Result */}
-        {txId && (
+        {poolAddress && (
           <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 text-center">
             <CheckCircle className="h-8 w-8 text-[#FF2D2D] mx-auto mb-2" />
             <p className="text-[#FF2D2D] font-semibold mb-2">Liquidity Pool Created!</p>
             <a
-              href={`https://solscan.io/tx/${txId}`}
+              href={`https://solscan.io/address/${poolAddress}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-[#FF2D2D] hover:text-[#B10000] inline-flex items-center gap-1 transition"
             >
-              View on Solscan <ExternalLink className="h-3 w-3" />
+              View Pool on Solscan <ExternalLink className="h-3 w-3" />
             </a>
+            {lpMint && (
+              <p className="text-[#BDDBDB] text-xs mt-1">LP Mint: {lpMint.slice(0, 8)}...</p>
+            )}
           </div>
         )}
 
         {/* Button */}
         <button
-          onClick={handleAddLiquidity}
+          onClick={handleCreateLP}
           disabled={loading || !connected || !tokenMint || !solAmount || !tokenAmount}
           className="w-full bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl transition flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              Opening Raydium...
+              Creating Liquidity Pool...
             </>
           ) : (
             <>
               <Coins className="h-5 w-5" />
-              Add Liquidity on Raydium
+              Create Liquidity Pool
             </>
           )}
         </button>
@@ -392,9 +434,9 @@ export default function AddLiquidityPage() {
             </p>
           </div>
           <div className="bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
-            <h3 className="text-white font-semibold">Can I remove liquidity later?</h3>
+            <h3 className="text-white font-semibold">What does "lock" mean?</h3>
             <p className="text-[#BDDBDB] text-sm mt-1">
-              Yes. You receive LP tokens when you create the pool. Redeem them on Raydium at any time to withdraw your proportional share.
+              Locking your LP tokens prevents you from removing liquidity for a set period. This builds trust with traders, as it shows commitment to the project.
             </p>
           </div>
         </div>

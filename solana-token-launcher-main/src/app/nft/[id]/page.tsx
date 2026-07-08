@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Send } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, ImageOff } from 'lucide-react';
 
 interface Collection {
   id: number;
@@ -29,6 +29,7 @@ export default function NFTCollectionDetail() {
   const params = useParams();
   const id = params.id as string;
   const { publicKey, connected } = useWallet();
+
   const [collection, setCollection] = useState<Collection | null>(null);
   const [nfts, setNfts] = useState<NFT[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,11 +39,19 @@ export default function NFTCollectionDetail() {
 
   const fetchData = async () => {
     try {
-      const res = await fetch(`/api/nft/collections/${id}`);
-      if (!res.ok) throw new Error('Collection not found');
-      const data = await res.json();
-      setCollection(data);
-      // Optionally fetch NFTs in this collection – you may need another endpoint.
+      setLoading(true);
+      // Fetch collection
+      const collRes = await fetch(`/api/nft/collections/${id}`);
+      if (!collRes.ok) throw new Error('Collection not found');
+      const collData = await collRes.json();
+      setCollection(collData);
+
+      // Fetch NFTs in this collection
+      const nftRes = await fetch(`/api/nft/collections/${id}/tokens`);
+      if (nftRes.ok) {
+        const nftData = await nftRes.json();
+        setNfts(nftData);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -59,6 +68,10 @@ export default function NFTCollectionDetail() {
       setError('Connect your wallet first');
       return;
     }
+    if (collection && nfts.length >= collection.max_supply) {
+      setError('Sold out!');
+      return;
+    }
     setMinting(true);
     setError(null);
     setSuccess(null);
@@ -72,9 +85,13 @@ export default function NFTCollectionDetail() {
           description: collection?.description,
         }),
       });
-      if (!res.ok) throw new Error('Mint failed');
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Mint failed');
+      }
       const data = await res.json();
       setSuccess(`✅ Minted! Address: ${data.mint_address.slice(0, 8)}...`);
+      // Refresh NFTs
       await fetchData();
     } catch (err: any) {
       setError(err.message);
@@ -86,16 +103,20 @@ export default function NFTCollectionDetail() {
   if (loading) return <div className="text-center py-12 text-[#BDDBDB]">Loading...</div>;
   if (!collection) return <div className="text-center py-12 text-[#BDDBDB]">Collection not found</div>;
 
+  const isSoldOut = nfts.length >= collection.max_supply;
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <Link href="/nft" className="text-[#BDDBDB] hover:text-white transition inline-flex items-center gap-2 mb-6">
         <ArrowLeft className="h-4 w-4" />
         Back to Collections
       </Link>
+
       <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a]">
         <h1 className="text-2xl font-bold text-white">{collection.name}</h1>
         <p className="text-[#BDDBDB] text-sm">{collection.symbol}</p>
         <p className="text-[#BDDBDB] mt-2">{collection.description}</p>
+
         <div className="grid grid-cols-3 gap-4 mt-6">
           <div className="bg-[#1a1a1a] rounded-xl p-3 text-center">
             <p className="text-[#BDDBDB] text-xs">Total Supply</p>
@@ -110,16 +131,48 @@ export default function NFTCollectionDetail() {
             <p className="text-white font-bold">{collection.price_sol} SOL</p>
           </div>
         </div>
-        <button
-          onClick={handleMint}
-          disabled={minting}
-          className="mt-6 w-full py-3 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2"
-        >
-          {minting ? <><Loader2 className="h-5 w-5 animate-spin" /> Minting...</> : <><Send className="h-5 w-5" /> Mint NFT</>}
-        </button>
+
+        {isSoldOut ? (
+          <div className="mt-6 text-center py-4 bg-[#1a1a1a] rounded-xl border border-[#FF2D2D]/30">
+            <p className="text-[#FF2D2D] font-bold text-lg">🎉 Sold Out!</p>
+            <p className="text-[#BDDBDB] text-sm">All NFTs have been minted.</p>
+          </div>
+        ) : (
+          <button
+            onClick={handleMint}
+            disabled={minting}
+            className="mt-6 w-full py-3 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2"
+          >
+            {minting ? (
+              <><Loader2 className="h-5 w-5 animate-spin" /> Minting...</>
+            ) : (
+              <><Send className="h-5 w-5" /> Mint NFT</>
+            )}
+          </button>
+        )}
+
         {error && <div className="mt-4 text-[#FF2D2D] text-sm">{error}</div>}
         {success && <div className="mt-4 text-green-400 text-sm">{success}</div>}
       </div>
+
+      {/* ─── NFT Gallery ────────────────────────────────────────────── */}
+      {nfts.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-white mb-4">Minted NFTs</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {nfts.map((nft) => (
+              <div key={nft.id} className="bg-[#1a1a1a] rounded-xl p-3 border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition">
+                <div className="aspect-square bg-[#050505] rounded-lg mb-2 flex items-center justify-center">
+                  <ImageOff className="h-8 w-8 text-[#BDDBDB] opacity-30" />
+                </div>
+                <p className="text-white text-sm truncate font-mono">{nft.mint_address.slice(0, 8)}...</p>
+                <p className="text-[#BDDBDB] text-xs">Owner: {nft.owner_wallet.slice(0, 6)}...</p>
+                <p className="text-[#BDDBDB] text-xs opacity-50">{new Date(nft.minted_at).toLocaleDateString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

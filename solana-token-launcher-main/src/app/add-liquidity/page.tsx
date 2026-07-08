@@ -8,7 +8,7 @@ import { NetworkContext } from '@/providers/providers';
 import { motion } from 'framer-motion';
 import { Coins, Wallet, Loader2, CheckCircle, AlertCircle, Info, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { getTokenDecimals, getTokenBalance, getRaydiumUrl } from '@/lib/raydium';
+import { getTokenDecimals, getTokenBalance, getRaydiumUrl } from '@/lib/token-helpers'; // ← updated import
 
 export default function AddLiquidityPage() {
   const { publicKey, connected } = useWallet();

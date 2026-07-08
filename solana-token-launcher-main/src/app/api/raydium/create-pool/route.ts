@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { tokenMint, solAmount, tokenAmount, creator, lockWallet } = body;
 
-    // Dynamic import of Raydium SDK (only inside this route)
+    // ─── Dynamic import of Raydium SDK (only here) ──────────────
     const { Raydium } = await import('@raydium-io/raydium-sdk-v2');
 
     const connection = getConnection();
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       startTime: Math.floor(Date.now() / 1000),
     });
 
-    // Build lock transfer
+    // Build LP token transfer to lock wallet
     const platformLpAta = await getAssociatedTokenAddress(lpMint, platformKeypair.publicKey);
     const lockLpAta = await getAssociatedTokenAddress(lpMint, new PublicKey(lockWallet));
     const transferIx = createTransferInstruction(

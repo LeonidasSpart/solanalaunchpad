@@ -12,8 +12,10 @@ import {
   Clock, 
   TrendingUp,
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  BarChart3          // ← added
 } from 'lucide-react';
+import AdminAnalytics from '@/components/AdminAnalytics';  // ← added
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface Project {
@@ -48,7 +50,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'launchpad'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'launchpad' | 'analytics'>('overview'); // ← added 'analytics'
   const [token, setToken] = useState<string | null>(null);
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -309,6 +311,18 @@ export default function AdminPage() {
           <Rocket className="h-4 w-4 inline mr-2" />
           Launchpad Management
         </button>
+        {/* ─── NEW Analytics tab ─── */}
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
+            activeTab === 'analytics'
+              ? 'text-white bg-[#FF2D2D]/20 border-b-2 border-[#FF2D2D]'
+              : 'text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50'
+          }`}
+        >
+          <BarChart3 className="h-4 w-4 inline mr-2" />
+          Analytics
+        </button>
       </div>
 
       {/* Content */}
@@ -336,13 +350,16 @@ export default function AdminPage() {
               fetchData={() => token && fetchData(token)}
             />
           )}
+          {activeTab === 'analytics' && (
+            <AdminAnalytics token={token} />
+          )}
         </>
       )}
     </div>
   );
 }
 
-// ─── Overview Tab Component ─────────────────────────────────────────
+// ─── Overview Tab Component (unchanged) ─────────────────────────────
 function OverviewTab({ platformStats, launchpadStats }: any) {
   return (
     <div>
@@ -428,7 +445,7 @@ function StatCard({ label, value, icon }: { label: string; value: string | numbe
   );
 }
 
-// ─── Launchpad Management Component ──────────────────────────────────
+// ─── Launchpad Management Component (unchanged) ─────────────────────
 function LaunchpadManagement({ 
   projects, 
   token, 
@@ -485,7 +502,6 @@ function LaunchpadManagement({
 
   return (
     <div className="space-y-8">
-      {/* Pending Projects */}
       <section>
         <h2 className="text-xl font-semibold text-white mb-4">Pending Approval</h2>
         {pending.length === 0 ? (
@@ -523,7 +539,6 @@ function LaunchpadManagement({
         )}
       </section>
 
-      {/* All Projects */}
       <section>
         <h2 className="text-xl font-semibold text-white mb-4">All Projects</h2>
         <div className="overflow-x-auto">
@@ -602,12 +617,10 @@ function LaunchpadManagement({
         </div>
       </section>
 
-      {/* Whitelist / KYC Modal */}
       {selectedProjectId !== null && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl p-6 max-w-md w-full">
             <h3 className="text-white font-bold text-lg mb-4">Manage Project #{selectedProjectId}</h3>
-            
             <div className="space-y-4">
               <div>
                 <label className="text-white text-sm block mb-1">Add to Whitelist</label>
@@ -627,7 +640,6 @@ function LaunchpadManagement({
                   </button>
                 </div>
               </div>
-
               <div>
                 <label className="text-white text-sm block mb-1">Verify KYC</label>
                 <div className="flex gap-2">
@@ -646,7 +658,6 @@ function LaunchpadManagement({
                   </button>
                 </div>
               </div>
-
               <button
                 onClick={() => setSelectedProjectId(null)}
                 className="w-full py-2 bg-[#1a1a1a] hover:bg-[#2a2a2a] text-white rounded-lg text-sm transition"

@@ -1,17 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useRouter } from 'next/navigation';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import Link from 'next/link';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Loader2 } from 'lucide-react';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+
+const CREATION_FEE_SOL = 0.15;
 
 export default function CreateNFTCollection() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connection } = useConnection();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [feeLoading, setFeeLoading] = useState(false);
   const [form, setForm] = useState({
     name: '',
     symbol: '',
@@ -32,9 +37,30 @@ export default function CreateNFTCollection() {
       setError('Connect wallet first');
       return;
     }
+
     setLoading(true);
     setError(null);
+    setFeeLoading(true);
+
     try {
+      // ─── 1. Send fee transaction ────────────────────────────────────
+      const feeWallet = new PublicKey(process.env.NEXT_PUBLIC_FEE_REC!);
+      const tx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: feeWallet,
+          lamports: CREATION_FEE_SOL * LAMPORTS_PER_SOL,
+        })
+      );
+      const { blockhash } = await connection.getLatestBlockhash();
+      tx.recentBlockhash = blockhash;
+      tx.feePayer = publicKey;
+      const feeSignature = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(feeSignature);
+
+      setFeeLoading(false);
+
+      // ─── 2. Create collection via API ──────────────────────────────
       const res = await fetch('/api/nft/collections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -44,15 +70,20 @@ export default function CreateNFTCollection() {
           royalty_basis_points: parseInt(form.royalty_basis_points),
           max_supply: parseInt(form.max_supply),
           price_sol: parseFloat(form.price_sol),
+          fee_tx_signature: feeSignature,
         }),
       });
-      if (!res.ok) throw new Error('Failed to create collection');
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || 'Failed to create collection');
+      }
       const data = await res.json();
       router.push(`/nft/${data.id}`);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
+      setFeeLoading(false);
     }
   };
 
@@ -75,6 +106,12 @@ export default function CreateNFTCollection() {
       </Link>
       <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a]">
         <h1 className="text-2xl font-bold text-white mb-4">Create NFT Collection</h1>
+        <div className="bg-[#1a1a1a] rounded-xl p-3 mb-4 text-center">
+          <p className="text-[#BDDBDB] text-sm">
+            Creation Fee: <span className="text-white font-bold">{CREATION_FEE_SOL} SOL</span>
+          </p>
+          <p className="text-[#BDDBDB] text-xs opacity-50">Fee goes to the platform</p>
+        </div>
         {error && <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 mb-4 text-[#FF2D2D] text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -156,10 +193,25 @@ export default function CreateNFTCollection() {
           </div>
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white font-semibold rounded-xl transition"
+            disabled={loading || feeLoading}
+            className="w-full py-3 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white font-semibold rounded-xl transition flex items-center justify-center gap-2"
           >
-            {loading ? 'Creating...' : 'Create Collection'}
+            {feeLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Sending fee...
+              </>
+            ) : loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Plus className="h-5 w-5" />
+                Create Collection
+              </>
+            )}
           </button>
         </form>
       </div>

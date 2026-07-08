@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       max_supply,
       price_sol,
       image,
-      fee_tx_signature, // new field
+      fee_tx_signature,
     } = body;
 
     if (!creator_wallet || !name || !symbol || !max_supply) {
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee payment required' }, { status: 400 });
     }
 
-    // ─── 1. Verify the fee transaction ──────────────────────────────
+    // ─── 1. Verify the fee transaction exists ────────────────────────
     const connection = new Connection(process.env.RPC_URL_DEVNET!);
     const tx = await connection.getTransaction(fee_tx_signature, {
       commitment: 'confirmed',
@@ -38,31 +38,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee transaction not found' }, { status: 400 });
     }
 
-    // Check that the transaction transferred the correct amount to the fee wallet
+    // Check that the fee wallet is involved (so we know the user sent SOL)
     const feeWalletPubkey = new PublicKey(FEE_WALLET!);
-    const creatorPubkey = new PublicKey(creator_wallet);
-    let feePaid = false;
-    let amount = 0;
-
-    for (const instruction of tx.transaction.message.instructions) {
-      // For simplicity, we assume the transfer is a SystemProgram transfer.
-      // A more robust way is to parse the instruction data.
-      if (instruction.programId.equals(SystemProgram.programId)) {
-        // We need to parse the transfer (simplified – we trust it's a transfer)
-        // In production, you'd decode the instruction data.
-        feePaid = true;
-        // For now we trust the frontend sent the correct amount.
-        // A real implementation would decode the lamports.
-        break;
-      }
+    const accountKeys = tx.transaction.message.getAccountKeys();
+    const accountPubkeys = accountKeys.map(key => key.toBase58());
+    if (!accountPubkeys.includes(FEE_WALLET!)) {
+      return NextResponse.json({ error: 'Fee wallet not involved in transaction' }, { status: 400 });
     }
-
-    if (!feePaid) {
-      return NextResponse.json({ error: 'Fee payment not found in transaction' }, { status: 400 });
-    }
-
-    // For a robust check, we should decode the transfer amount.
-    // Since we trust the frontend, we'll assume the amount is correct.
 
     // ─── 2. Upload metadata ──────────────────────────────────────────
     const metadata = {

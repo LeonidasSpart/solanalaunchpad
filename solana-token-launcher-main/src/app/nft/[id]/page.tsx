@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Send, ImageOff } from 'lucide-react';
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 
 interface Collection {
   id: number;
@@ -26,10 +27,13 @@ interface NFT {
   image_url?: string | null;
 }
 
+const MINTING_FEE_PERCENT = 3; // 3%
+
 export default function NFTCollectionDetail() {
   const params = useParams();
   const id = params.id as string;
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connection } = useConnection();
 
   const [collection, setCollection] = useState<Collection | null>(null);
   const [nfts, setNfts] = useState<NFT[]>([]);
@@ -37,6 +41,7 @@ export default function NFTCollectionDetail() {
   const [minting, setMinting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [feeAmount, setFeeAmount] = useState<number>(0);
 
   const fetchData = async () => {
     try {
@@ -46,6 +51,10 @@ export default function NFTCollectionDetail() {
       if (!collRes.ok) throw new Error('Collection not found');
       const collData = await collRes.json();
       setCollection(collData);
+      // Calculate fee
+      const mintPrice = parseFloat(collData.price_sol || '0');
+      const fee = mintPrice * (MINTING_FEE_PERCENT / 100);
+      setFeeAmount(fee);
 
       // Fetch NFTs in this collection (API now returns image_url)
       const nftRes = await fetch(`/api/nft/collections/${id}/tokens`);
@@ -73,10 +82,31 @@ export default function NFTCollectionDetail() {
       setError('Sold out!');
       return;
     }
+
     setMinting(true);
     setError(null);
     setSuccess(null);
+
     try {
+      // ─── 1. Send fee transaction (if fee > 0) ──────────────────────
+      let feeSignature = null;
+      if (feeAmount > 0) {
+        const feeWallet = new PublicKey(process.env.NEXT_PUBLIC_FEE_REC!);
+        const tx = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: feeWallet,
+            lamports: feeAmount * LAMPORTS_PER_SOL,
+          })
+        );
+        const { blockhash } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = publicKey;
+        feeSignature = await sendTransaction(tx, connection);
+        await connection.confirmTransaction(feeSignature);
+      }
+
+      // ─── 2. Mint NFT via API ────────────────────────────────────────
       const res = await fetch(`/api/nft/collections/${id}/mint`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,6 +114,7 @@ export default function NFTCollectionDetail() {
           owner_wallet: publicKey.toBase58(),
           name: `${collection?.name} #${nfts.length + 1}`,
           description: collection?.description,
+          fee_tx_signature: feeSignature,
         }),
       });
       if (!res.ok) {
@@ -131,6 +162,15 @@ export default function NFTCollectionDetail() {
             <p className="text-white font-bold">{collection.price_sol} SOL</p>
           </div>
         </div>
+
+        {feeAmount > 0 && (
+          <div className="mt-4 bg-[#1a1a1a] rounded-xl p-3 text-center border border-[#FF2D2D]/20">
+            <p className="text-[#BDDBDB] text-sm">
+              Minting fee: <span className="text-white font-bold">{feeAmount.toFixed(4)} SOL</span>
+            </p>
+            <p className="text-[#BDDBDB] text-xs opacity-50">Fee goes to the platform</p>
+          </div>
+        )}
 
         {isSoldOut ? (
           <div className="mt-6 text-center py-4 bg-[#1a1a1a] rounded-xl border border-[#FF2D2D]/30">

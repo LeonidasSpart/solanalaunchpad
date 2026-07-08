@@ -139,7 +139,7 @@ const Footer = () => {
               <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">How to Create Token</Link></li>
               <li><Link href="/checklist" className="text-[#BDDBDB] hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
               <li><Link href="/launch" className="text-[#BDDBDB] hover:text-white text-sm transition">Launch Strategy</Link></li>
-              <li><Link href="/launchpad/info" className="text-[#BDDBDB] hover:text-white text-sm transition">About Launchpad</Link></li>
+              <li><Link href="/launchpad/info" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad Guide</Link></li>
               <li><Link href="/liquidity-guide" className="text-[#BDDBDB] hover:text-white text-sm transition">Liquidity Guide</Link></li>
               <li><Link href="/list-token-dex" className="text-[#BDDBDB] hover:text-white text-sm transition">DEX Listing</Link></li>
               <li><Link href="/dex-comparison" className="text-[#BDDBDB] hover:text-white text-sm transition">DEX Comparison</Link></li>
@@ -153,10 +153,12 @@ const Footer = () => {
               <li><Link href="/community" className="text-[#BDDBDB] hover:text-white text-sm transition">Community Building</Link></li>
               <li><Link href="/marketing" className="text-[#BDDBDB] hover:text-white text-sm transition">Marketing</Link></li>
               <li><Link href="/security" className="text-[#BDDBDB] hover:text-white text-sm transition">Security</Link></li>
-              <li><Link href="/dao/info" className="text-[#BDDBDB] hover:text-white text-sm transition">About DAO</Link></li>
+              <li><Link href="/dao/info" className="text-[#BDDBDB] hover:text-white text-sm transition">DAO Guide</Link></li>
               <li><Link href="/tokenomics" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics</Link></li>
               <li><Link href="/tokenomics-calculator" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
               <li><Link href="/no-code-creator" className="text-[#BDDBDB] hover:text-white text-sm transition">No-Code Creator</Link></li>
+              <li><Link href="/nft/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFTs Guide</Link></li>
+<li><Link href="/nft-staking/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking Guide</Link></li>
             </ul>
           </div>
 

@@ -17,7 +17,7 @@ export default function AddLiquidityPage() {
   const [tokenMint, setTokenMint] = useState('');
   const [solAmount, setSolAmount] = useState('');
   const [tokenAmount, setTokenAmount] = useState('');
-  const [lockDuration, setLockDuration] = useState(180 * 24 * 60 * 60); // 6 months default
+  const [lockDuration, setLockDuration] = useState(180 * 24 * 60 * 60);
   const [loading, setLoading] = useState(false);
   const [tokenDecimals, setTokenDecimals] = useState<number | null>(null);
   const [tokenBalance, setTokenBalance] = useState<number | null>(null);
@@ -29,7 +29,6 @@ export default function AddLiquidityPage() {
     message: '',
   });
 
-  // Fetch token info when mint changes
   useEffect(() => {
     const fetchTokenInfo = async () => {
       if (!tokenMint || tokenMint.length < 32) {
@@ -37,17 +36,15 @@ export default function AddLiquidityPage() {
         setTokenBalance(null);
         return;
       }
-
       try {
         const mintPubkey = new PublicKey(tokenMint);
         const decimals = await getTokenDecimals(connection, mintPubkey);
         setTokenDecimals(decimals);
-        
         if (publicKey) {
           const balance = await getTokenBalance(connection, publicKey, mintPubkey);
           setTokenBalance(balance);
         }
-      } catch (error) {
+      } catch {
         setTokenDecimals(null);
         setTokenBalance(null);
       }
@@ -55,14 +52,13 @@ export default function AddLiquidityPage() {
     fetchTokenInfo();
   }, [tokenMint, publicKey, connection]);
 
-  // Fetch SOL balance
   useEffect(() => {
     const fetchSolBalance = async () => {
       if (publicKey) {
         try {
           const balance = await connection.getBalance(publicKey);
           setSolBalance(balance / LAMPORTS_PER_SOL);
-        } catch (error) {
+        } catch {
           setSolBalance(null);
         }
       }
@@ -75,29 +71,24 @@ export default function AddLiquidityPage() {
       setStatus({ type: 'error', message: 'Please connect your wallet first' });
       return;
     }
-
     if (!tokenMint) {
       setStatus({ type: 'error', message: 'Please enter your token mint address' });
       return;
     }
-
     const sol = parseFloat(solAmount);
     if (isNaN(sol) || sol <= 0) {
       setStatus({ type: 'error', message: 'Please enter a valid SOL amount' });
       return;
     }
-
     const tokens = parseFloat(tokenAmount);
     if (isNaN(tokens) || tokens <= 0) {
       setStatus({ type: 'error', message: 'Please enter a valid token amount' });
       return;
     }
-
     if (solBalance !== null && solBalance < sol + 0.005) {
       setStatus({ type: 'error', message: `Insufficient SOL balance. You have ${solBalance.toFixed(4)} SOL` });
       return;
     }
-
     if (tokenBalance !== null && tokenBalance < tokens) {
       setStatus({ type: 'error', message: `Insufficient token balance. You have ${tokenBalance} tokens` });
       return;
@@ -109,27 +100,42 @@ export default function AddLiquidityPage() {
     setLpMint('');
 
     try {
-      // 1. Get transaction from backend (Jupiter)
-      const res = await fetch('/api/raydium/create-pool', {
+      // ─── 1. Get token decimals ────────────────────────────────
+      const mintPubkey = new PublicKey(tokenMint);
+      const decimals = await getTokenDecimals(connection, mintPubkey);
+      const tokenAmountRaw = tokens * Math.pow(10, decimals);
+      const solAmountRaw = sol * LAMPORTS_PER_SOL;
+
+      // ─── 2. Call Jupiter API from the frontend ────────────────
+      const jupiterRes = await fetch('https://quote-api.jup.ag/v6/create-pool', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tokenMint,
-          solAmount: sol,
-          tokenAmount: tokens,
-          creator: publicKey.toBase58(),
+          mintA: tokenMint,
+          mintB: 'So11111111111111111111111111111111111111112',
+          amountA: tokenAmountRaw,
+          amountB: solAmountRaw,
+          user: publicKey.toBase58(),
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create LP');
 
-      // 2. Sign and send
+      if (!jupiterRes.ok) {
+        const errorText = await jupiterRes.text();
+        throw new Error(`Jupiter API error: ${jupiterRes.status} ${errorText}`);
+      }
+
+      const data = await jupiterRes.json();
+      if (!data.transaction) {
+        throw new Error('Jupiter did not return a transaction');
+      }
+
+      // ─── 3. Sign and send ──────────────────────────────────────
       const txBuffer = Buffer.from(data.transaction, 'base64');
       const tx = Transaction.from(txBuffer);
       const signature = await sendTransaction(tx, connection);
       await connection.confirmTransaction(signature);
 
-      // 3. Confirm and store in DB (with lock)
+      // ─── 4. Confirm and store in DB ────────────────────────────
       const confirmRes = await fetch('/api/lp/confirm', {
         method: 'POST',
         headers: {
@@ -167,7 +173,7 @@ export default function AddLiquidityPage() {
 
   const solNum = parseFloat(solAmount);
   const tokenNum = parseFloat(tokenAmount);
-  const price = solNum > 0 && tokenNum > 0 ? (solNum / tokenNum) : 0;
+  const price = solNum > 0 && tokenNum > 0 ? solNum / tokenNum : 0;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
@@ -286,10 +292,10 @@ export default function AddLiquidityPage() {
                   className="bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#FF2D2D]"
                 >
                   <option value="0">No lock</option>
-                  <option value="30*24*60*60">1 month</option>
-                  <option value="90*24*60*60">3 months</option>
-                  <option value="180*24*60*60">6 months</option>
-                  <option value="365*24*60*60">1 year</option>
+                  <option value={30*24*60*60}>1 month</option>
+                  <option value={90*24*60*60}>3 months</option>
+                  <option value={180*24*60*60}>6 months</option>
+                  <option value={365*24*60*60}>1 year</option>
                 </select>
                 <span className="text-[#BDDBDB] text-sm">LP tokens will be locked if you choose a duration.</span>
               </div>

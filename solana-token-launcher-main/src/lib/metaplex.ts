@@ -14,7 +14,7 @@ export function getMetaplexInstance() {
 export async function createNftCollection(
   name: string,
   symbol: string,
-  description: string,
+  description: string,          // kept as parameter for DB, but not used in the create call
   royaltyBasisPoints: number,
   maxSupply: number,
   metadataUri: string
@@ -23,11 +23,10 @@ export async function createNftCollection(
   const collectionNft = await metaplex.nfts().create({
     name,
     symbol,
-    description,
+    uri: metadataUri,           // description is inside this JSON
     sellerFeeBasisPoints: royaltyBasisPoints,
     maxSupply: maxSupply,
     isCollection: true,
-    uri: metadataUri,
   });
   return collectionNft;
 }

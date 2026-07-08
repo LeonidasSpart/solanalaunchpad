@@ -14,10 +14,12 @@ import {
   ShieldCheck,
   UserCheck,
   BarChart3,
-  Wallet          // ← added for NFT Staking
+  Wallet,
+  Sprout          // ← added for Farming
 } from 'lucide-react';
 import AdminAnalytics from '@/components/AdminAnalytics';
-import AdminNFTStaking from '@/components/AdminNFTStaking';  // ← new import
+import AdminNFTStaking from '@/components/AdminNFTStaking';
+import AdminFarming from '@/components/AdminFarming';  // ← new import
 
 // ─── Types ───────────────────────────────────────────────────────────
 interface Project {
@@ -52,7 +54,7 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'launchpad' | 'analytics' | 'nftstaking'>('overview'); // ← added 'nftstaking'
+  const [activeTab, setActiveTab] = useState<'overview' | 'launchpad' | 'analytics' | 'nftstaking' | 'farming'>('overview'); // ← added 'farming'
   const [token, setToken] = useState<string | null>(null);
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -324,7 +326,6 @@ export default function AdminPage() {
           <BarChart3 className="h-4 w-4 inline mr-2" />
           Analytics
         </button>
-        {/* ─── NEW NFT Staking tab ─── */}
         <button
           onClick={() => setActiveTab('nftstaking')}
           className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
@@ -335,6 +336,18 @@ export default function AdminPage() {
         >
           <Wallet className="h-4 w-4 inline mr-2" />
           NFT Staking
+        </button>
+        {/* ─── NEW Farming tab ─── */}
+        <button
+          onClick={() => setActiveTab('farming')}
+          className={`px-4 py-2 text-sm font-medium rounded-t-lg transition ${
+            activeTab === 'farming'
+              ? 'text-white bg-[#FF2D2D]/20 border-b-2 border-[#FF2D2D]'
+              : 'text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50'
+          }`}
+        >
+          <Sprout className="h-4 w-4 inline mr-2" />
+          Farming
         </button>
       </div>
 
@@ -368,6 +381,9 @@ export default function AdminPage() {
           )}
           {activeTab === 'nftstaking' && (
             <AdminNFTStaking token={token} />
+          )}
+          {activeTab === 'farming' && (
+            <AdminFarming token={token} />
           )}
         </>
       )}

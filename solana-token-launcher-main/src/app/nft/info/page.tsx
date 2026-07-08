@@ -1,7 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Image, Palette, Coins, TrendingUp, Shield, Zap, Users, Eye } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Image, 
+  Palette, 
+  Coins, 
+  TrendingUp, 
+  Shield, 
+  Zap, 
+  Users, 
+  Eye,
+  Gamepad2,
+  Globe,
+  Store
+} from 'lucide-react';
 
 export default function NFTInfoPage() {
   return (
@@ -77,6 +90,38 @@ export default function NFTInfoPage() {
         </div>
       </div>
 
+      {/* ─── NEW: Trade Your NFTs on Solana ────────────────────────── */}
+      <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl p-8 mb-16">
+        <h2 className="text-2xl font-bold text-white text-center mb-4">Trade Your NFTs on Solana</h2>
+        <p className="text-[#BDDBDB] text-center max-w-2xl mx-auto mb-6">
+          All NFTs minted on ZRP are fully compatible with the entire Solana ecosystem.
+          You can buy and sell them on any major marketplace.
+        </p>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="bg-[#1a1a1a] rounded-xl p-4 text-center border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition">
+            <Store className="h-8 w-8 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-white font-bold text-lg">Tensor</p>
+            <p className="text-[#BDDBDB] text-sm">Solana's leading NFT marketplace.</p>
+          </div>
+          <div className="bg-[#1a1a1a] rounded-xl p-4 text-center border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition">
+            <Store className="h-8 w-8 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-white font-bold text-lg">Magic Eden</p>
+            <p className="text-[#BDDBDB] text-sm">Cross‑chain NFT marketplace.</p>
+          </div>
+          <div className="bg-[#1a1a1a] rounded-xl p-4 text-center border border-[#1a1a1a] hover:border-[#FF2D2D]/30 transition">
+            <Store className="h-8 w-8 text-[#FF2D2D] mx-auto mb-2" />
+            <p className="text-white font-bold text-lg">Solanart</p>
+            <p className="text-[#BDDBDB] text-sm">Discover and trade Solana NFTs.</p>
+          </div>
+        </div>
+        <div className="mt-6 text-center">
+          <p className="text-[#BDDBDB] text-sm">
+            💰 <span className="text-white">Royalties</span> are automatically enforced on all platforms – 
+            you earn a percentage of every secondary sale.
+          </p>
+        </div>
+      </div>
+
       {/* Fees */}
       <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl p-8 mb-16">
         <h2 className="text-2xl font-bold text-white text-center mb-6">Fees</h2>
@@ -95,6 +140,41 @@ export default function NFTInfoPage() {
             <p className="text-[#BDDBDB] text-sm">Royalties</p>
             <p className="text-white text-2xl font-bold">Configurable</p>
             <p className="text-[#BDDBDB] text-xs">Set by creator</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Real‑World Use Cases */}
+      <div className="bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl p-8 mb-16">
+        <h2 className="text-2xl font-bold text-white text-center mb-6">Real‑World Use Cases</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="flex items-start gap-3">
+            <Gamepad2 className="h-5 w-5 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-white font-semibold">Gaming</h4>
+              <p className="text-[#BDDBDB] text-sm">Launch in‑game item collections that players can trade and stake.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Palette className="h-5 w-5 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-white font-semibold">Art</h4>
+              <p className="text-[#BDDBDB] text-sm">Artists can sell digital art with royalties on every resale.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Globe className="h-5 w-5 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-white font-semibold">Metaverse</h4>
+              <p className="text-[#BDDBDB] text-sm">Create virtual land, wearables, or assets for virtual worlds.</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Users className="h-5 w-5 text-[#FF2D2D] flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="text-white font-semibold">Community</h4>
+              <p className="text-[#BDDBDB] text-sm">Membership NFTs that unlock exclusive content and rewards.</p>
+            </div>
           </div>
         </div>
       </div>

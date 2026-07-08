@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 
 const faqData = [
-  // ─── 1. Getting Started (unchanged) ──────────────────────────────
+  // ─── 1. Getting Started ──────────────────────────────────────────
   {
     category: 'Getting Started',
     icon: Rocket,
@@ -52,7 +52,11 @@ const faqData = [
       },
       {
         q: 'How much SOL do I need before I start?',
-        a: 'Devnet testing is FREE. For mainnet, you need at least 0.15 SOL for a basic token. If you plan to revoke authorities, budget 0.5 SOL for full features. Network gas is covered.'
+        a: 'Devnet testing is FREE. For mainnet, the base token creation fee is 0.15 SOL. Each authority revocation (Mint, Freeze, Update) adds 0.15 SOL, so the maximum cost for full security with all three revocations is 0.60 SOL. Network gas is covered. No hidden fees.'
+      },
+      {
+        q: 'What token templates does ZRP offer?',
+        a: 'ZRP provides several templates to get started quickly: Meme Coin, Governance DAO, Utility Token, and Simple Token. Each template comes with pre‑configured supply, decimals, and authority settings (e.g., No Mint, No Freeze, Immutable). You can also choose “Start from Scratch” for full customization.'
       },
       {
         q: 'How long does minting take?',
@@ -60,7 +64,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 2. Token Setup (unchanged) ──────────────────────────────────
+  // ─── 2. Token Setup & Configuration ──────────────────────────────
   {
     category: 'Token Setup & Configuration',
     icon: Settings,
@@ -98,7 +102,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 3. Costs & Fees (unchanged) ─────────────────────────────────
+  // ─── 3. Costs & Fees ──────────────────────────────────────────────
   {
     category: 'Costs & Fees',
     icon: DollarSign,
@@ -108,7 +112,7 @@ const faqData = [
     questions: [
       {
         q: 'How much does it cost to create a Solana token?',
-        a: 'Devnet testing is FREE. Mainnet costs 0.15 SOL for a basic token, or 0.5 SOL for full features including authority revocation and social links. Network gas is covered. No hidden fees.'
+        a: 'Devnet testing is FREE. Mainnet costs 0.15 SOL for a basic token. Each authority revocation (Mint, Freeze, Update) adds 0.15 SOL, so the maximum cost for full security is 0.60 SOL. Network gas is covered. No hidden fees.'
       },
       {
         q: 'What is rent-exemption on Solana?',
@@ -124,7 +128,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 4. After Minting (unchanged) ────────────────────────────────
+  // ─── 4. After Minting - Trading & Listing ────────────────────────
   {
     category: 'After Minting - Trading & Listing',
     icon: TrendingUp,
@@ -166,7 +170,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 5. Security & Trust (unchanged) ─────────────────────────────
+  // ─── 5. Security & Trust ──────────────────────────────────────────
   {
     category: 'Security & Trust',
     icon: Shield,
@@ -192,7 +196,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 6. Tokenomics & Strategy (unchanged) ────────────────────────
+  // ─── 6. Tokenomics & Strategy ─────────────────────────────────────
   {
     category: 'Tokenomics & Strategy',
     icon: BarChart3,
@@ -226,7 +230,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 7. Technical & Advanced (unchanged) ─────────────────────────
+  // ─── 7. Technical & Advanced ──────────────────────────────────────
   {
     category: 'Technical & Advanced',
     icon: Wrench,
@@ -264,8 +268,7 @@ const faqData = [
       }
     ]
   },
-
-  // ─── 8. NEW: Launchpad (IDO) ──────────────────────────────────────
+  // ─── 8. Launchpad (IDO) ───────────────────────────────────────────
   {
     category: 'Launchpad (IDO)',
     icon: Rocket,
@@ -303,7 +306,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 9. NEW: Vesting ──────────────────────────────────────────────
+  // ─── 9. Vesting ────────────────────────────────────────────────────
   {
     category: 'Vesting',
     icon: Clock,
@@ -333,7 +336,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 10. NEW: Staking ─────────────────────────────────────────────
+  // ─── 10. Staking ──────────────────────────────────────────────────
   {
     category: 'Staking',
     icon: Coins,
@@ -363,7 +366,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 11. NEW: DAO Governance ──────────────────────────────────────
+  // ─── 11. DAO Governance ──────────────────────────────────────────
   {
     category: 'DAO Governance',
     icon: Users,
@@ -393,7 +396,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 12. NEW: NFT ──────────────────────────────────────────────────
+  // ─── 12. NFT ──────────────────────────────────────────────────────
   {
     category: 'NFT',
     icon: Image,
@@ -423,7 +426,7 @@ const faqData = [
       }
     ]
   },
-  // ─── 13. NEW: NFT Staking ──────────────────────────────────────────
+  // ─── 13. NFT Staking ─────────────────────────────────────────────
   {
     category: 'NFT Staking',
     icon: Zap,
@@ -455,7 +458,7 @@ const faqData = [
   }
 ];
 
-// ─── Component remains exactly the same ────────────────────────────
+// ─── Component remains unchanged ────────────────────────────────────
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<string | null>(null);
 

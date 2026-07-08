@@ -1,3 +1,6 @@
+import { Connection, PublicKey } from '@solana/web3.js';
+import { getMint } from '@solana/spl-token';
+
 const HELIUS_API_KEY = process.env.NEXT_PUBLIC_HELIUS_API_KEY;
 const HELIUS_RPC_DEVNET = `https://devnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 const HELIUS_RPC_MAINNET = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
@@ -6,7 +9,7 @@ export function getHeliusRpc(network: 'devnet' | 'mainnet' = 'mainnet'): string 
   return network === 'devnet' ? HELIUS_RPC_DEVNET : HELIUS_RPC_MAINNET;
 }
 
-// Helius Enhanced API endpoints
+// ─── Helius Enhanced API endpoints ────────────────────────────────
 const HELIUS_API_BASE = 'https://api.helius.xyz/v0';
 
 export async function heliusRequest<T>(
@@ -33,7 +36,7 @@ export async function heliusRequest<T>(
   return response.json();
 }
 
-// Get token metadata from Helius
+// ─── Get token metadata from Helius ──────────────────────────────
 export interface HeliusTokenMetadata {
   mint: string;
   onChainData?: {
@@ -72,7 +75,7 @@ export async function getTokenMetadata(
   return response.json();
 }
 
-// Get token balances with metadata
+// ─── Get token balances with metadata ─────────────────────────────
 export interface HeliusTokenBalance {
   mint: string;
   amount: number;
@@ -114,7 +117,7 @@ export async function getTokenBalances(
   }));
 }
 
-// Get asset data (NFTs, tokens with full metadata)
+// ─── Get asset data (NFTs, tokens with full metadata) ──────────────
 export async function getAssetsByOwner(
   wallet: string,
   network: 'devnet' | 'mainnet' = 'mainnet'
@@ -134,4 +137,22 @@ export async function getAssetsByOwner(
   
   const data = await response.json();
   return data.result || [];
+}
+
+// ─── NEW: Get token holders ────────────────────────────────────────
+export async function getTokenHolders(
+  mint: string,
+  network: 'devnet' | 'mainnet' = 'mainnet'
+): Promise<{ count: number; topHolders: Array<{ wallet: string; balance: number; percentage: number }> }> {
+  const connection = new Connection(getHeliusRpc(network));
+  const mintPubkey = new PublicKey(mint);
+  const tokenAccounts = await connection.getTokenLargestAccounts(mintPubkey);
+  const totalSupply = (await getMint(connection, mintPubkey)).supply;
+  const top = tokenAccounts.value.slice(0, 20);
+  const topHolders = top.map(account => ({
+    wallet: account.address.toBase58(),
+    balance: Number(account.uiAmount),
+    percentage: (Number(account.uiAmount) / Number(totalSupply)) * 100,
+  }));
+  return { count: tokenAccounts.value.length, topHolders };
 }

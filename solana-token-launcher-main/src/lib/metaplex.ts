@@ -23,7 +23,7 @@ export async function createNftCollection(
   const collectionNft = await metaplex.nfts().create({
     name,
     symbol,
-    uri: metadataUri,           // description is inside this JSON
+    uri: metadataUri,
     sellerFeeBasisPoints: royaltyBasisPoints,
     maxSupply: maxSupply,
     isCollection: true,
@@ -47,7 +47,6 @@ export async function mintNftFromCollection(
     uri: metadataUri,
     sellerFeeBasisPoints: royaltyBasisPoints || 0,
     collection: collectionMintAddress,
-    useExistingCollection: true,
     tokenOwner: owner,
   });
   return nft;

@@ -1,9 +1,20 @@
 // src/lib/raydium.ts
 import { Connection, PublicKey, Keypair, Transaction, SystemProgram } from '@solana/web3.js';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Token, TOKEN_PROGRAM_ID, getAssociatedTokenAddress, createTransferInstruction } from '@solana/spl-token';
 import { Raydium } from '@raydium-io/raydium-sdk-v2';
 import { getConnection, getPlatformKeypair } from './solana';
-import { getTokenDecimals } from './solana'; // we already have this
+
+// Helper: get token decimals
+async function getTokenDecimals(connection: Connection, mint: PublicKey): Promise<number> {
+  const info = await connection.getParsedAccountInfo(mint);
+  if (info.value && info.value.data) {
+    const data = info.value.data as any;
+    if (data.parsed && data.parsed.info) {
+      return data.parsed.info.decimals || 9;
+    }
+  }
+  return 9; // fallback
+}
 
 export async function buildCreatePoolAndLockTransaction(
   tokenMint: PublicKey,
@@ -13,73 +24,65 @@ export async function buildCreatePoolAndLockTransaction(
   lockWallet: PublicKey,
   connection: Connection
 ): Promise<{ transaction: Transaction; poolAddress: PublicKey; lpMint: PublicKey }> {
-  // 1. Initialize Raydium SDK
+  // 1. Initialize platform keypair and Raydium
   const platformKeypair = getPlatformKeypair();
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? 'mainnet' : 'devnet';
   const raydium = await Raydium.load({
     connection,
     owner: platformKeypair,
-    cluster: process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? 'mainnet' : 'devnet',
-    // optionally pass a wallet adapter, but we use keypair
+    cluster: network,
   });
 
-  // 2. Get token decimals
+  // 2. Get decimals
   const decimals = await getTokenDecimals(connection, tokenMint);
   const tokenAmountRaw = tokenAmount * Math.pow(10, decimals);
-  const solAmountRaw = solAmount * 1e9; // lamports
+  const solAmountRaw = solAmount * 1e9; // SOL has 9 decimals
 
-  // 3. Prepare token objects
-  const wsolMint = new PublicKey('So11111111111111111111111111111111111111112'); // WSOL
+  // 3. Prepare token objects for Raydium
+  const wsolMint = new PublicKey('So11111111111111111111111111111111111111112');
   const solToken = new Token(connection, wsolMint, TOKEN_PROGRAM_ID, platformKeypair);
   const token = new Token(connection, tokenMint, TOKEN_PROGRAM_ID, platformKeypair);
 
-  // 4. Create pool using Raydium SDK
-  // Note: The exact method may vary; this is based on typical Raydium usage.
-  const poolInfo = await raydium.pool.create({
+  // 4. Create the pool using Raydium SDK
+  // The SDK returns a transaction with all instructions and the pool info.
+  const { tx: poolTx, poolId, lpMint, lpAmount } = await raydium.pool.create({
     baseToken: solToken,
     quoteToken: token,
     baseAmount: solAmountRaw,
     quoteAmount: tokenAmountRaw,
-    startTime: Math.floor(Date.now() / 1000), // start now
+    startTime: Math.floor(Date.now() / 1000), // start immediately
   });
 
-  // 5. Get pool address and LP mint
-  const poolAddress = poolInfo.poolId;
-  const lpMint = poolInfo.lpMint;
-
-  // 6. Build transfer instruction to lock LP tokens (transfer LP tokens to lock wallet)
-  // We need to get the LP token account of the platform (which will receive the LP tokens)
+  // 5. Build transfer instruction to lock LP tokens
   const platformLpAta = await getAssociatedTokenAddress(lpMint, platformKeypair.publicKey);
   const lockLpAta = await getAssociatedTokenAddress(lpMint, lockWallet);
 
-  // The LP tokens are minted to the platform's LP account; we transfer them to the lock wallet.
+  // The pool creation transaction mints LP tokens to the platform's LP account.
+  // We transfer the entire LP supply (lpAmount) to the lock wallet.
   const transferIx = createTransferInstruction(
     platformLpAta,
     lockLpAta,
     platformKeypair.publicKey,
-    poolInfo.lpAmount, // amount of LP tokens minted
+    lpAmount,                 // amount of LP tokens minted
     [],
     TOKEN_PROGRAM_ID
   );
 
-  // 7. Combine instructions into a transaction
+  // 6. Combine the pool transaction and the transfer instruction
   const tx = new Transaction();
-  // Add the pool creation instructions (they are already included in the SDK's transaction)
-  // The SDK may return a transaction or we need to add the instructions.
-  // Typically, we would add all instructions from the SDK to our transaction.
-  // For simplicity, we'll assume the SDK returns a transaction that we can sign and send.
-  // We'll add the transfer instruction to lock LP tokens.
-  const blockhash = await connection.getLatestBlockhash();
-  tx.recentBlockhash = blockhash.blockhash;
-  tx.feePayer = creator;
-
-  // In practice, you'd combine the SDK's transaction with the transfer instruction.
-  // For now, we'll simulate by returning a transaction with only the transfer instruction.
-  // This is a placeholder; you'll need to replace this with actual SDK transaction building.
+  // Add all instructions from the pool transaction (they are in poolTx.instructions)
+  tx.add(...poolTx.instructions);
+  // Add the transfer instruction
   tx.add(transferIx);
+
+  // Set recent blockhash and fee payer
+  const { blockhash } = await connection.getLatestBlockhash();
+  tx.recentBlockhash = blockhash;
+  tx.feePayer = creator;
 
   return {
     transaction: tx,
-    poolAddress,
-    lpMint,
+    poolAddress: poolId,
+    lpMint: lpMint,
   };
 }

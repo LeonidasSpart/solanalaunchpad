@@ -2,9 +2,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await context.params;
+    const projectId = parseInt(id);
+
     const result = await query(
       `SELECT 
         p.*,
@@ -14,8 +16,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
        FROM launchpad_projects p
        LEFT JOIN lp_pools lp ON lp.pool_address = p.lp_pool_address
        WHERE p.id = $1`,
-      [id]
+      [projectId]
     );
+
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }

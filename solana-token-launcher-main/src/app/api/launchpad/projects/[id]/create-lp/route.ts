@@ -39,7 +39,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'LP already created' }, { status: 400 });
     }
 
-    // 3. Call the internal Raydium API
+    // 3. Call the internal Raydium API (which uses Jupiter)
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:8080';
     const raydiumRes = await fetch(`${baseUrl}/api/raydium/create-pool`, {
       method: 'POST',
@@ -49,7 +49,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         solAmount,
         tokenAmount,
         creator: project.creator_wallet,
-        lockWallet: process.env.PLATFORM_PUBLIC_KEY,
       }),
     });
 

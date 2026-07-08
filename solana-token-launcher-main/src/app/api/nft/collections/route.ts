@@ -40,9 +40,8 @@ export async function POST(req: NextRequest) {
 
     // Check that the fee wallet is one of the accounts involved
     const feeWalletPubkey = new PublicKey(FEE_WALLET!);
-    const accountKeys = tx.transaction.message.getAccountKeys();
-    // Convert the iterable MessageAccountKeys to an array of PublicKey
-    const accountPubkeys = Array.from(accountKeys).map(key => key.toBase58());
+    // accountKeys is an array of PublicKey
+    const accountPubkeys = tx.transaction.message.accountKeys.map(key => key.toBase58());
     if (!accountPubkeys.includes(FEE_WALLET!)) {
       return NextResponse.json({ error: 'Fee wallet not involved in transaction' }, { status: 400 });
     }

@@ -7,6 +7,7 @@ import {
   keypairIdentity,
   publicKey,
 } from '@metaplex-foundation/umi';
+import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
 import { PublicKey } from '@solana/web3.js';
 import { getConnection, getPlatformKeypair } from './solana';
 
@@ -25,8 +26,11 @@ async function getUmiInstance() {
   const platformKeypair = getPlatformKeypair();
   const mpl = await getMpl();
 
+  // Convert web3.js keypair to UMI-compatible keypair
+  const umiKeypair = fromWeb3JsKeypair(platformKeypair);
+
   const umi = createUmi(connection)
-    .use(keypairIdentity(platformKeypair));
+    .use(keypairIdentity(umiKeypair));
 
   // Try to add the token metadata plugin if available
   const plugin = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;

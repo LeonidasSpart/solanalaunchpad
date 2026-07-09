@@ -8,9 +8,9 @@ import {
   publicKey,
   percentAmount,
 } from '@metaplex-foundation/umi';
-import { fromWeb3JsKeypair, fromWeb3JsConnection } from '@metaplex-foundation/umi-web3js-adapters';
+import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
 import { PublicKey } from '@solana/web3.js';
-import { getConnection, getPlatformKeypair } from './solana';
+import { getPlatformKeypair } from './solana';
 
 let mplModule: any = null;
 
@@ -22,13 +22,21 @@ async function getMpl() {
   return mplModule;
 }
 
+function getRpcUrl(): string {
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
+  const url = network === 'mainnet'
+    ? process.env.RPC_URL_MAINNET
+    : process.env.RPC_URL_DEVNET;
+  if (!url) throw new Error(`RPC URL for ${network} not set`);
+  return url;
+}
+
 async function getUmiInstance() {
-  const connection = getConnection();
+  const rpcUrl = getRpcUrl();
   const platformKeypair = getPlatformKeypair();
   const mpl = await getMpl();
 
-  // Convert web3.js Connection to UMI-compatible connection
-  const umi = createUmi(fromWeb3JsConnection(connection))
+  const umi = createUmi(rpcUrl)
     .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)));
 
   const plugin = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;

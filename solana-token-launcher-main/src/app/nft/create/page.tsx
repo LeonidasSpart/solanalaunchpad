@@ -38,6 +38,23 @@ export default function CreateNFTCollection() {
       return;
     }
 
+    // ─── Validate fields ──────────────────────────────────────────
+    const maxSupplyNum = parseInt(form.max_supply);
+    if (isNaN(maxSupplyNum) || maxSupplyNum <= 0) {
+      setError('Max supply must be a positive integer (e.g., 10)');
+      return;
+    }
+    const royalty = parseInt(form.royalty_basis_points);
+    if (isNaN(royalty) || royalty < 0 || royalty > 10000) {
+      setError('Royalty must be between 0 and 10000 (0-100%)');
+      return;
+    }
+    const price = parseFloat(form.price_sol);
+    if (isNaN(price) || price < 0) {
+      setError('Price must be a non-negative number');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setFeeLoading(true);
@@ -67,9 +84,9 @@ export default function CreateNFTCollection() {
         body: JSON.stringify({
           ...form,
           creator_wallet: publicKey.toBase58(),
-          royalty_basis_points: parseInt(form.royalty_basis_points),
-          max_supply: parseInt(form.max_supply),
-          price_sol: parseFloat(form.price_sol),
+          royalty_basis_points: royalty,
+          max_supply: maxSupplyNum,
+          price_sol: price,
           fee_tx_signature: feeSignature,
         }),
       });
@@ -166,6 +183,7 @@ export default function CreateNFTCollection() {
                 onChange={handleChange}
                 required
                 className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white focus:outline-none focus:border-[#FF2D2D]"
+                placeholder="e.g., 10"
               />
             </div>
           </div>

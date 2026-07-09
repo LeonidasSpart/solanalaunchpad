@@ -9,7 +9,7 @@ import {
   percentAmount,
 } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
-import { createCollection, create, mplCore, ruleSet, fetchCollectionV1 } from '@metaplex-foundation/mpl-core';
+import { createCollection, create, mplCore, ruleSet, fetchCollectionV1, addCollectionPlugin } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@solana/web3.js';
 import { getPlatformKeypair } from './solana';
 
@@ -60,19 +60,27 @@ export async function createNftCollection(
   const collection = generateSigner(umi);
 
   try {
+    // Step 1: Create the collection (no plugins at creation)
     await createCollection(umi, {
       collection,
       name,
       uri: metadataUri,
-      plugins: [
-        {
-          type: 'Royalties',
-          basisPoints: sellerFee,
-          creators: [],
-          ruleSet: ruleSet('None'),
-        },
-      ],
     }).sendAndConfirm(umi);
+
+    // Step 2: Add royalties plugin separately
+    if (sellerFee > 0) {
+      await addCollectionPlugin(umi, {
+        collection: collection.publicKey,
+        plugin: {
+          type: 'Royalties',
+          data: {
+            basisPoints: sellerFee,
+            creators: [],
+            ruleSet: ruleSet('None'),
+          },
+        },
+      }).sendAndConfirm(umi);
+    }
 
     console.log('✅ Collection created:', collection.publicKey.toString());
     return {
@@ -98,7 +106,7 @@ export async function mintNftFromCollection(
   const mint = generateSigner(umi);
 
   try {
-    // Fetch the collection object first, converting web3.js PublicKey to UMI PublicKey
+    // Fetch the collection object first
     const collection = await fetchCollectionV1(umi, publicKey(collectionMintAddress.toString()));
 
     await create(umi, {
@@ -106,7 +114,7 @@ export async function mintNftFromCollection(
       collection,
       name,
       uri: metadataUri,
-      owner: publicKey(owner.toString()), // Convert web3.js PublicKey to UMI PublicKey
+      owner: publicKey(owner.toString()),
     }).sendAndConfirm(umi);
 
     console.log('✅ NFT minted:', mint.publicKey.toString());

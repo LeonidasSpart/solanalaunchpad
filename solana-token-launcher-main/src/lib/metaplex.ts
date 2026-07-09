@@ -1,14 +1,28 @@
 // src/lib/metaplex.ts
-import { Metaplex, keypairIdentity } from '@metaplex-foundation/js';
+import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
+import {
+  createNft,
+  mplTokenMetadata,
+} from '@metaplex-foundation/mpl-token-metadata';
+import {
+  generateSigner,
+  keypairIdentity,
+  publicKey,
+  percentAmount,
+} from '@metaplex-foundation/umi';
 import { PublicKey } from '@solana/web3.js';
 import { getConnection, getPlatformKeypair } from './solana';
 
-export function getMetaplexInstance() {
+function getUmiInstance() {
   const connection = getConnection();
   const platformKeypair = getPlatformKeypair();
-  const metaplex = Metaplex.make(connection)
+
+  // Convert web3.js Keypair to UMI signer
+  const umi = createUmi(connection)
+    .use(mplTokenMetadata())
     .use(keypairIdentity(platformKeypair));
-  return metaplex;
+
+  return umi;
 }
 
 // ─── Create NFT Collection ──────────────────────────────────────────
@@ -20,38 +34,48 @@ export async function createNftCollection(
   maxSupply: number,
   metadataUri: string
 ) {
-  console.log('📦 createNftCollection called with:');
+  console.log('📦 createNftCollection (UMI) called with:');
   console.log('  name:', name);
   console.log('  symbol:', symbol);
   console.log('  royaltyBasisPoints:', royaltyBasisPoints, typeof royaltyBasisPoints);
   console.log('  maxSupply:', maxSupply, typeof maxSupply);
   console.log('  metadataUri:', metadataUri);
 
-  // ── Force integers and validate ──
+  // ── Validate and convert ──
   const sellerFee = Number(royaltyBasisPoints);
   const supply = Number(maxSupply);
 
   if (!Number.isInteger(sellerFee) || sellerFee < 0 || sellerFee > 10000) {
     throw new Error(`Invalid sellerFeeBasisPoints: ${sellerFee} (must be integer 0-10000)`);
   }
-  if (!Number.isInteger(supply) || supply <= 0) {
-    throw new Error(`Invalid maxSupply: ${supply} (must be a positive integer)`);
+  // UMI uses `null` for unlimited; allow 0 to mean unlimited
+  if (!Number.isInteger(supply) || supply < 0) {
+    throw new Error(`Invalid maxSupply: ${supply} (must be a non-negative integer)`);
   }
 
-  const metaplex = getMetaplexInstance();
+  const umi = getUmiInstance();
+  const collectionMint = generateSigner(umi);
+
   try {
-    const collectionNft = await metaplex.nfts().create({
+    const result = await createNft(umi, {
+      mint: collectionMint,
       name,
       symbol,
       uri: metadataUri,
       sellerFeeBasisPoints: sellerFee,
-      maxSupply: supply,
+      maxSupply: supply === 0 ? null : supply, // 0 → unlimited
       isCollection: true,
-    });
-    console.log('✅ Collection created:', collectionNft.mintAddress.toBase58());
-    return collectionNft;
+    }).sendAndConfirm(umi);
+
+    console.log('✅ Collection created:', collectionMint.publicKey.toString());
+    // Return an object that mimics the old Metaplex NFT interface
+    return {
+      mintAddress: collectionMint.publicKey,
+      signature: result.signature,
+      // Add other fields if needed (e.g., metadata)
+    };
   } catch (err) {
-    console.error('❌ Metaplex create error:', err);
+    console.error('❌ UMI create error:', err);
     throw err;
   }
 }
@@ -65,14 +89,27 @@ export async function mintNftFromCollection(
   symbol: string,
   royaltyBasisPoints?: number
 ) {
-  const metaplex = getMetaplexInstance();
-  const nft = await metaplex.nfts().create({
+  const umi = getUmiInstance();
+  const mint = generateSigner(umi);
+  const collection = publicKey(collectionMintAddress.toString());
+  const tokenOwner = publicKey(owner.toString());
+
+  const result = await createNft(umi, {
+    mint,
     name,
     symbol,
     uri: metadataUri,
     sellerFeeBasisPoints: royaltyBasisPoints || 0,
-    collection: collectionMintAddress,
-    tokenOwner: owner,
-  });
-  return nft;
+    collection: {
+      address: collection,
+      verified: false, // will be verified later (or set to true if you have the authority)
+    },
+    tokenOwner,
+  }).sendAndConfirm(umi);
+
+  console.log('✅ NFT minted:', mint.publicKey.toString());
+  return {
+    mintAddress: mint.publicKey,
+    signature: result.signature,
+  };
 }

@@ -28,6 +28,8 @@
     "@solana/web3.js": "^1.98.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/formidable": "^3.4.5",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "axios": "^1.7.9",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",

@@ -3,7 +3,7 @@ console.log('🔥🔥🔥 Using UMI version of metaplex.ts 🔥🔥🔥');
 
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import {
-  create,                    // ✅ correct export for mpl-token-metadata@3.x
+  createNft,                    // ✅ changed from create
   mplTokenMetadata,
 } from '@metaplex-foundation/mpl-token-metadata';
 import {
@@ -55,13 +55,13 @@ export async function createNftCollection(
   const collectionMint = generateSigner(umi);
 
   try {
-    const result = await create(umi, {
+    const result = await createNft(umi, {
       mint: collectionMint,
       name,
       symbol,
       uri: metadataUri,
       sellerFeeBasisPoints: sellerFee,
-      maxSupply: supply === 0 ? null : supply, // 0 → unlimited
+      maxSupply: supply === 0 ? null : supply,
       isCollection: true,
     }).sendAndConfirm(umi);
 
@@ -90,7 +90,7 @@ export async function mintNftFromCollection(
   const collection = publicKey(collectionMintAddress.toString());
   const tokenOwner = publicKey(owner.toString());
 
-  const result = await create(umi, {
+  const result = await createNft(umi, {
     mint,
     name,
     symbol,
@@ -98,7 +98,7 @@ export async function mintNftFromCollection(
     sellerFeeBasisPoints: royaltyBasisPoints || 0,
     collection: {
       address: collection,
-      verified: false, // will be verified later
+      verified: false,
     },
     tokenOwner,
   }).sendAndConfirm(umi);

@@ -5,7 +5,7 @@ import { createNftCollection } from '@/lib/metaplex';
 import { uploadMetadata } from '@/lib/ipfs';
 import { Connection, PublicKey } from '@solana/web3.js';
 
-const CREATION_FEE_SOL = 0.15; // fixed fee in SOL
+const CREATION_FEE_SOL = 0.15;
 const FEE_WALLET = process.env.NEXT_PUBLIC_FEE_REC;
 
 export async function POST(req: NextRequest) {
@@ -39,7 +39,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee transaction not found' }, { status: 400 });
     }
 
-    // Check that the fee wallet is involved
     const feeWalletPubkey = new PublicKey(FEE_WALLET!);
     const accountPubkeys = tx.transaction.message.accountKeys.map(key => key.toBase58());
     if (!accountPubkeys.includes(FEE_WALLET!)) {
@@ -67,14 +66,23 @@ export async function POST(req: NextRequest) {
     const metadataUri = await uploadMetadata(metadata);
 
     // ─── 4. Create collection on-chain ────────────────────────────────
-    const collectionNft = await createNftCollection(
-      name,
-      symbol,
-      description,
-      royaltyBasisPoints,    // <-- integer
-      maxSupplyNum,          // <-- integer > 0
-      metadataUri
-    );
+    let collectionNft;
+    try {
+      collectionNft = await createNftCollection(
+        name,
+        symbol,
+        description,
+        royaltyBasisPoints,
+        maxSupplyNum,
+        metadataUri
+      );
+    } catch (err: any) {
+      console.error('❌ Metaplex creation error:', err);
+      return NextResponse.json(
+        { error: err.message || 'Metaplex creation failed' },
+        { status: 500 }
+      );
+    }
 
     // ─── 5. Save to DB ────────────────────────────────────────────────
     const result = await query(

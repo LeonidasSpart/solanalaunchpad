@@ -67,17 +67,15 @@ export async function createNftCollection(
       uri: metadataUri,
     }).sendAndConfirm(umi);
 
-    // Step 2: Add royalties plugin separately
+    // Step 2: Add royalties plugin separately (no data wrapper)
     if (sellerFee > 0) {
       await addCollectionPlugin(umi, {
         collection: collection.publicKey,
         plugin: {
           type: 'Royalties',
-          data: {
-            basisPoints: sellerFee,
-            creators: [],
-            ruleSet: ruleSet('None'),
-          },
+          basisPoints: sellerFee,
+          creators: [],
+          ruleSet: ruleSet('None'),
         },
       }).sendAndConfirm(umi);
     }

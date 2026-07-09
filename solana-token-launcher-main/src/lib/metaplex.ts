@@ -23,12 +23,13 @@ function getRpcUrl(): string {
 
 // Dynamically import mpl-token-metadata to avoid ESM/CJS bundling issues
 async function getMplTokenMetadata() {
-  const mpl = await import('@metaplex-foundation/mpl-token-metadata');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mpl: any = await import('@metaplex-foundation/mpl-token-metadata');
   console.log('📦 mpl-token-metadata loaded, exports:', Object.keys(mpl));
   
-  // The plugin function might be on default export or named export
-  const mplTokenMetadata = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;
-  const createNft = mpl.createNft || mpl.default?.createNft;
+  // Access exports with type assertion to bypass TS checker
+  const mplTokenMetadata = mpl.mplTokenMetadata;
+  const createNft = mpl.createNft;
   
   if (!mplTokenMetadata || !createNft) {
     throw new Error(

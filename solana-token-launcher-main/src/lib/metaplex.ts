@@ -98,8 +98,8 @@ export async function mintNftFromCollection(
   const mint = generateSigner(umi);
 
   try {
-    // Fetch the collection object first
-    const collection = await fetchCollectionV1(umi, collectionMintAddress.toString());
+    // Fetch the collection object first, converting web3.js PublicKey to UMI PublicKey
+    const collection = await fetchCollectionV1(umi, publicKey(collectionMintAddress.toString()));
 
     await create(umi, {
       asset: mint,

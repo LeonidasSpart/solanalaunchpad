@@ -106,7 +106,7 @@ export async function mintNftFromCollection(
       collection,
       name,
       uri: metadataUri,
-      owner: owner.toString(),
+      owner: publicKey(owner.toString()), // Convert web3.js PublicKey to UMI PublicKey
     }).sendAndConfirm(umi);
 
     console.log('✅ NFT minted:', mint.publicKey.toString());

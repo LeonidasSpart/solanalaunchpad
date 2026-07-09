@@ -66,6 +66,7 @@ export default function AddLiquidityPage() {
     fetchSolBalance();
   }, [publicKey, connection]);
 
+  // ─── HANDLE CREATE LP ──────────────────────────────────────────────
   const handleCreateLP = async () => {
     if (!connected || !publicKey) {
       setStatus({ type: 'error', message: 'Please connect your wallet first' });
@@ -107,26 +108,44 @@ export default function AddLiquidityPage() {
       const solAmountRaw = sol * LAMPORTS_PER_SOL;
 
       // ─── 2. Call Jupiter API from the frontend ────────────────
+      const payload = {
+        mintA: tokenMint,
+        mintB: 'So11111111111111111111111111111111111111112',
+        amountA: tokenAmountRaw,
+        amountB: solAmountRaw,
+        user: publicKey.toBase58(),
+      };
+
+      console.log('Jupiter payload:', JSON.stringify(payload, null, 2));
+
       const jupiterRes = await fetch('https://quote-api.jup.ag/v6/create-pool', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mintA: tokenMint,
-          mintB: 'So11111111111111111111111111111111111111112',
-          amountA: tokenAmountRaw,
-          amountB: solAmountRaw,
-          user: publicKey.toBase58(),
-        }),
+        body: JSON.stringify(payload),
       });
 
+      const responseText = await jupiterRes.text();
+      console.log('Jupiter status:', jupiterRes.status);
+      console.log('Jupiter response:', responseText);
+
       if (!jupiterRes.ok) {
-        const errorText = await jupiterRes.text();
-        throw new Error(`Jupiter API error: ${jupiterRes.status} ${errorText}`);
+        let errorMsg = `Jupiter API error (${jupiterRes.status})`;
+        try {
+          const errorJson = JSON.parse(responseText);
+          errorMsg += `: ${errorJson.error || errorJson.message || responseText}`;
+        } catch {
+          errorMsg += `: ${responseText}`;
+        }
+        setStatus({ type: 'error', message: `❌ ${errorMsg}` });
+        setLoading(false);
+        return;
       }
 
-      const data = await jupiterRes.json();
+      const data = JSON.parse(responseText);
       if (!data.transaction) {
-        throw new Error('Jupiter did not return a transaction');
+        setStatus({ type: 'error', message: '❌ Jupiter did not return a transaction' });
+        setLoading(false);
+        return;
       }
 
       // ─── 3. Sign and send ──────────────────────────────────────
@@ -165,7 +184,8 @@ export default function AddLiquidityPage() {
         message: `✅ Liquidity pool created! Pool address: ${data.poolAddress.slice(0, 8)}...`,
       });
     } catch (err: any) {
-      setStatus({ type: 'error', message: err.message || 'Failed to create LP' });
+      console.error('Full error:', err);
+      setStatus({ type: 'error', message: `❌ ${err.message || 'Failed to create pool'}` });
     } finally {
       setLoading(false);
     }

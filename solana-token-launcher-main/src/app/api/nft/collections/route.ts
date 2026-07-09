@@ -1,3 +1,4 @@
+// src/app/api/nft/collections/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { createNftCollection } from '@/lib/metaplex';
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee payment required' }, { status: 400 });
     }
 
-    // ─── 1. Verify the fee transaction exists ────────────────────────
+    // ─── 1. Verify the fee transaction ────────────────────────────────
     const connection = new Connection(process.env.RPC_URL_DEVNET!);
     const tx = await connection.getTransaction(fee_tx_signature, {
       commitment: 'confirmed',
@@ -38,15 +39,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee transaction not found' }, { status: 400 });
     }
 
-    // Check that the fee wallet is one of the accounts involved
+    // Check that the fee wallet is involved
     const feeWalletPubkey = new PublicKey(FEE_WALLET!);
-    // accountKeys is an array of PublicKey
     const accountPubkeys = tx.transaction.message.accountKeys.map(key => key.toBase58());
     if (!accountPubkeys.includes(FEE_WALLET!)) {
       return NextResponse.json({ error: 'Fee wallet not involved in transaction' }, { status: 400 });
     }
 
-    // ─── 2. Upload metadata ──────────────────────────────────────────
+    // ─── 2. Parse numeric values ──────────────────────────────────────
+    const royaltyBasisPoints = parseInt(royalty_basis_points) || 0;
+    const maxSupplyNum = parseInt(max_supply);
+    if (isNaN(maxSupplyNum) || maxSupplyNum <= 0) {
+      return NextResponse.json({ error: 'Max supply must be a positive integer' }, { status: 400 });
+    }
+    if (royaltyBasisPoints < 0 || royaltyBasisPoints > 10000) {
+      return NextResponse.json({ error: 'Royalty must be between 0 and 10000 (0-100%)' }, { status: 400 });
+    }
+
+    // ─── 3. Upload metadata ──────────────────────────────────────────
     const metadata = {
       name,
       symbol,
@@ -56,31 +66,32 @@ export async function POST(req: NextRequest) {
     };
     const metadataUri = await uploadMetadata(metadata);
 
-    // ─── 3. Create collection ────────────────────────────────────────
+    // ─── 4. Create collection on-chain ────────────────────────────────
     const collectionNft = await createNftCollection(
       name,
       symbol,
       description,
-      royalty_basis_points || 0,
-      max_supply,
+      royaltyBasisPoints,    // <-- integer
+      maxSupplyNum,          // <-- integer > 0
       metadataUri
     );
 
-    // ─── 4. Save to DB ──────────────────────────────────────────────
+    // ─── 5. Save to DB ────────────────────────────────────────────────
     const result = await query(
       `INSERT INTO nft_collections (creator_wallet, name, symbol, description, royalty_basis_points, collection_mint, metadata_uri, max_supply, price_sol, network)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
-        creator_wallet, name, symbol, description, royalty_basis_points || 0,
-        collectionNft.mintAddress.toBase58(), metadataUri, max_supply, price_sol || 0,
+        creator_wallet, name, symbol, description, royaltyBasisPoints,
+        collectionNft.mintAddress.toBase58(), metadataUri, maxSupplyNum,
+        parseFloat(price_sol) || 0,
         process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet'
       ]
     );
 
     return NextResponse.json(result.rows[0], { status: 201 });
   } catch (error) {
-    console.error(error);
+    console.error('NFT collection creation error:', error);
     return NextResponse.json({ error: 'Failed to create NFT collection' }, { status: 500 });
   }
 }

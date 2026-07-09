@@ -1,10 +1,23 @@
+// src/app/api/affiliate/track/route.ts
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { isValidPublicKey } from '@/lib/validate';
+import { ratelimit } from '@/lib/rate-limit';
+import { NextRequest } from 'next/server';
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
+  // ─── Rate limiting ──────────────────────────────────────────────
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
-    const { referrer, referred, event } = await request.json();
+    const body = await req.json();
+    const { referrer, referred, event } = body;
 
+    // ─── Validation ──────────────────────────────────────────────
     if (!referrer || !referred) {
       return NextResponse.json(
         { error: 'Referrer and referred wallet addresses are required' },
@@ -12,21 +25,37 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if referral already exists
+    // ─── Self‑referral check ──────────────────────────────────────
+    if (referrer === referred) {
+      return NextResponse.json(
+        { error: 'Self‑referral is not allowed' },
+        { status: 400 }
+      );
+    }
+
+    // ─── Validate wallet addresses ──────────────────────────────
+    if (!isValidPublicKey(referrer) || !isValidPublicKey(referred)) {
+      return NextResponse.json(
+        { error: 'Invalid wallet address format' },
+        { status: 400 }
+      );
+    }
+
+    // ─── Check if referral already exists ────────────────────────
     const existing = await query(
       `SELECT * FROM referrals WHERE referrer_wallet = $1 AND referred_wallet = $2`,
       [referrer, referred]
     );
 
     if (existing.rows.length === 0) {
-      // Create new referral
+      // ─── Create new referral ────────────────────────────────────
       await query(
         `INSERT INTO referrals (referrer_wallet, referred_wallet, status, created_at)
          VALUES ($1, $2, 'pending', NOW())`,
         [referrer, referred]
       );
 
-      // Update referral stats
+      // ─── Update referral stats ──────────────────────────────────
       await query(
         `INSERT INTO referral_stats (wallet, total_referrals, last_updated)
          VALUES ($1, 1, NOW())
@@ -36,14 +65,14 @@ export async function POST(request: Request) {
         [referrer]
       );
 
-      // Log event
+      // ─── Log event ──────────────────────────────────────────────
       await query(
         `INSERT INTO referral_events (wallet, event_type, metadata, created_at)
          VALUES ($1, 'signup', $2::jsonb, NOW())`,
         [referrer, JSON.stringify({ referred, event })]
       );
 
-      // Check milestone
+      // ─── Check milestone ────────────────────────────────────────
       const statsRes = await query(
         `SELECT total_referrals FROM referral_stats WHERE wallet = $1`,
         [referrer]
@@ -58,7 +87,6 @@ export async function POST(request: Request) {
       else if (total === 100) milestoneMessage = '🎉 You reached 100 referrals! Bonus: 1.00 SOL';
 
       if (milestoneMessage) {
-        // Log milestone event
         await query(
           `INSERT INTO referral_events (wallet, event_type, metadata, created_at)
            VALUES ($1, 'milestone', $2::jsonb, NOW())`,

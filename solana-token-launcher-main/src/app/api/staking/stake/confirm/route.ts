@@ -2,8 +2,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/solana';
 import { query } from '@/lib/db';
+import { isValidPublicKey } from '@/lib/validate';
+import { ratelimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  // ─── Rate limiting ──────────────────────────────────────────────
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
     const { poolId, userWallet, signature, amount } = await req.json();
 
@@ -11,9 +20,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // ─── Validate wallet ──────────────────────────────────────────
+    if (!isValidPublicKey(userWallet)) {
+      return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
+    }
+
     const connection = getConnection();
 
-    // ─── 1. Fetch the actual transaction ────────────────────────────
+    // ─── 1. Verify transaction exists and succeeded ──────────────
     const tx = await connection.getTransaction(signature, {
       commitment: 'confirmed',
     });
@@ -21,7 +35,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Transaction not found or failed' }, { status: 400 });
     }
 
-    // ─── 2. Prevent replay attacks ──────────────────────────────────
+    // ─── 2. Prevent replay attacks ────────────────────────────────
     const existing = await query(
       'SELECT id FROM staking_transactions WHERE tx_signature = $1',
       [signature]
@@ -30,13 +44,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Transaction already processed' }, { status: 409 });
     }
 
-    // ─── 3. (Optional) Verify the transaction transferred the correct amount to the platform wallet ───
-    // We'll add a more robust check in a future update.
-
-    // ─── 4. Update or create position ───────────────────────────────
+    // ─── 3. Get pool info ──────────────────────────────────────────
     const poolResult = await query('SELECT * FROM staking_pools WHERE id = $1', [poolId]);
     const pool = poolResult.rows[0];
 
+    // ─── 4. Update or create position ──────────────────────────────
     const existingPos = await query(
       'SELECT * FROM staking_positions WHERE pool_id = $1 AND user_wallet = $2 AND status = $3',
       [poolId, userWallet, 'active']
@@ -50,7 +62,6 @@ export async function POST(req: NextRequest) {
         [amount, existingPos.rows[0].id]
       );
     } else {
-      // SAFE parameterized SQL with conditional unlocked_at
       await query(
         `INSERT INTO staking_positions
           (pool_id, user_wallet, amount, staked_at, last_reward_calc, unlocked_at)
@@ -60,13 +71,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ─── 5. Update pool total staked ────────────────────────────────
+    // ─── 5. Update pool total staked ──────────────────────────────
     await query(
       'UPDATE staking_pools SET total_staked = total_staked + $1 WHERE id = $2',
       [amount, poolId]
     );
 
-    // ─── 6. Log transaction ──────────────────────────────────────────
+    // ─── 6. Log transaction ────────────────────────────────────────
     await query(
       `INSERT INTO staking_transactions
         (user_wallet, pool_id, type, amount, tx_signature)

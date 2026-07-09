@@ -7,20 +7,12 @@ import {
   keypairIdentity,
   publicKey,
   percentAmount,
+  createSignerFromKeypair,
 } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
+import { createNft, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { PublicKey } from '@solana/web3.js';
 import { getPlatformKeypair } from './solana';
-
-let mplModule: any = null;
-
-async function getMpl() {
-  if (!mplModule) {
-    mplModule = await import('@metaplex-foundation/mpl-token-metadata');
-    console.log('📦 mpl-token-metadata loaded, exports:', Object.keys(mplModule));
-  }
-  return mplModule;
-}
 
 function getRpcUrl(): string {
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
@@ -31,20 +23,13 @@ function getRpcUrl(): string {
   return url;
 }
 
-async function getUmiInstance() {
+function getUmiInstance() {
   const rpcUrl = getRpcUrl();
   const platformKeypair = getPlatformKeypair();
-  const mpl = await getMpl();
 
   const umi = createUmi(rpcUrl)
-    .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)));
-
-  const plugin = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;
-  if (plugin) {
-    umi.use(plugin());
-  } else {
-    console.warn('⚠️ mplTokenMetadata plugin not found – attempting without it');
-  }
+    .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)))
+    .use(mplTokenMetadata());
 
   return umi;
 }
@@ -75,17 +60,11 @@ export async function createNftCollection(
     throw new Error(`Invalid maxSupply: ${supply} (must be a non-negative integer)`);
   }
 
-  const umi = await getUmiInstance();
+  const umi = getUmiInstance();
   const collectionMint = generateSigner(umi);
-  const mpl = await getMpl();
-
-  const createFn = mpl.createNft || mpl.create || mpl.default?.createNft || mpl.default?.create;
-  if (!createFn) {
-    throw new Error('Cannot find createNft function. Exports: ' + Object.keys(mpl).join(', '));
-  }
 
   try {
-    const result = await createFn(umi, {
+    const result = await createNft(umi, {
       mint: collectionMint,
       name,
       symbol,
@@ -115,18 +94,12 @@ export async function mintNftFromCollection(
   symbol: string,
   royaltyBasisPoints?: number
 ) {
-  const umi = await getUmiInstance();
+  const umi = getUmiInstance();
   const mint = generateSigner(umi);
   const collection = publicKey(collectionMintAddress.toString());
   const tokenOwner = publicKey(owner.toString());
 
-  const mpl = await getMpl();
-  const createFn = mpl.createNft || mpl.create || mpl.default?.createNft || mpl.default?.create;
-  if (!createFn) {
-    throw new Error('Cannot find createNft function');
-  }
-
-  const result = await createFn(umi, {
+  const result = await createNft(umi, {
     mint,
     name,
     symbol,

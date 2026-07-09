@@ -85,13 +85,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── 5. Save to DB ────────────────────────────────────────────────
+    // ✅ FIX: use .toString() instead of .toBase58()
     const result = await query(
       `INSERT INTO nft_collections (creator_wallet, name, symbol, description, royalty_basis_points, collection_mint, metadata_uri, max_supply, price_sol, network)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         creator_wallet, name, symbol, description, royaltyBasisPoints,
-        collectionNft.mintAddress.toBase58(), metadataUri, maxSupplyNum,
+        collectionNft.mintAddress.toString(), metadataUri, maxSupplyNum,
         parseFloat(price_sol) || 0,
         process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet'
       ]

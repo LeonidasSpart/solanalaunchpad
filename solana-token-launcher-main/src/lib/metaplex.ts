@@ -6,8 +6,9 @@ import {
   generateSigner,
   keypairIdentity,
   publicKey,
+  percentAmount,
 } from '@metaplex-foundation/umi';
-import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
+import { fromWeb3JsKeypair, fromWeb3JsConnection } from '@metaplex-foundation/umi-web3js-adapters';
 import { PublicKey } from '@solana/web3.js';
 import { getConnection, getPlatformKeypair } from './solana';
 
@@ -26,7 +27,8 @@ async function getUmiInstance() {
   const platformKeypair = getPlatformKeypair();
   const mpl = await getMpl();
 
-  const umi = createUmi(connection)
+  // Convert web3.js Connection to UMI-compatible connection
+  const umi = createUmi(fromWeb3JsConnection(connection))
     .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)));
 
   const plugin = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;
@@ -80,7 +82,7 @@ export async function createNftCollection(
       name,
       symbol,
       uri: metadataUri,
-      sellerFeeBasisPoints: sellerFee,
+      sellerFeeBasisPoints: percentAmount(sellerFee / 100),
       maxSupply: supply === 0 ? null : supply,
       isCollection: true,
     }).sendAndConfirm(umi);
@@ -121,7 +123,7 @@ export async function mintNftFromCollection(
     name,
     symbol,
     uri: metadataUri,
-    sellerFeeBasisPoints: royaltyBasisPoints || 0,
+    sellerFeeBasisPoints: percentAmount((royaltyBasisPoints || 0) / 100),
     collection: {
       address: collection,
       verified: false,

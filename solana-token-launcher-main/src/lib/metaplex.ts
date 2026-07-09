@@ -1,28 +1,33 @@
 // src/lib/metaplex.ts
+console.log('🔥🔥🔥 Using MPL Core version of metaplex.ts 🔥🔥🔥');
+
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import {
-  createNft,
-  mplTokenMetadata,
-} from '@metaplex-foundation/mpl-token-metadata';
 import {
   generateSigner,
   keypairIdentity,
   publicKey,
   percentAmount,
 } from '@metaplex-foundation/umi';
+import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
+import { createCollectionV1, createV1, mplCore } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@solana/web3.js';
-import { getConnection, getPlatformKeypair } from './solana';
+import { getPlatformKeypair } from './solana';
+
+function getRpcUrl(): string {
+  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet';
+  const url = network === 'mainnet'
+    ? process.env.RPC_URL_MAINNET
+    : process.env.RPC_URL_DEVNET;
+  if (!url) throw new Error(`RPC URL for ${network} not set`);
+  return url;
+}
 
 function getUmiInstance() {
-  const connection = getConnection();
+  const rpcUrl = getRpcUrl();
   const platformKeypair = getPlatformKeypair();
-
-  // Convert web3.js Keypair to UMI signer
-  const umi = createUmi(connection)
-    .use(mplTokenMetadata())
-    .use(keypairIdentity(platformKeypair));
-
-  return umi;
+  return createUmi(rpcUrl)
+    .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)))
+    .use(mplCore());
 }
 
 // ─── Create NFT Collection ──────────────────────────────────────────
@@ -34,48 +39,50 @@ export async function createNftCollection(
   maxSupply: number,
   metadataUri: string
 ) {
-  console.log('📦 createNftCollection (UMI) called with:');
+  console.log('📦 createNftCollection (MPL Core) called with:');
   console.log('  name:', name);
   console.log('  symbol:', symbol);
   console.log('  royaltyBasisPoints:', royaltyBasisPoints, typeof royaltyBasisPoints);
   console.log('  maxSupply:', maxSupply, typeof maxSupply);
   console.log('  metadataUri:', metadataUri);
 
-  // ── Validate and convert ──
   const sellerFee = Number(royaltyBasisPoints);
   const supply = Number(maxSupply);
 
   if (!Number.isInteger(sellerFee) || sellerFee < 0 || sellerFee > 10000) {
     throw new Error(`Invalid sellerFeeBasisPoints: ${sellerFee} (must be integer 0-10000)`);
   }
-  // UMI uses `null` for unlimited; allow 0 to mean unlimited
   if (!Number.isInteger(supply) || supply < 0) {
     throw new Error(`Invalid maxSupply: ${supply} (must be a non-negative integer)`);
   }
 
   const umi = getUmiInstance();
-  const collectionMint = generateSigner(umi);
+  const collection = generateSigner(umi);
 
   try {
-    const result = await createNft(umi, {
-      mint: collectionMint,
+    await createCollectionV1(umi, {
+      collection,
       name,
-      symbol,
       uri: metadataUri,
-      sellerFeeBasisPoints: sellerFee,
-      maxSupply: supply === 0 ? null : supply, // 0 → unlimited
-      isCollection: true,
+      plugins: [
+        {
+          type: 'Royalties',
+          data: {
+            basisPoints: sellerFee,
+            creators: [],
+            ruleSet: { type: 'None' },
+          },
+        },
+      ],
     }).sendAndConfirm(umi);
 
-    console.log('✅ Collection created:', collectionMint.publicKey.toString());
-    // Return an object that mimics the old Metaplex NFT interface
+    console.log('✅ Collection created:', collection.publicKey.toString());
     return {
-      mintAddress: collectionMint.publicKey,
-      signature: result.signature,
-      // Add other fields if needed (e.g., metadata)
+      mintAddress: collection.publicKey,
+      signature: 'created',
     };
   } catch (err) {
-    console.error('❌ UMI create error:', err);
+    console.error('❌ MPL Core create collection error:', err);
     throw err;
   }
 }
@@ -90,26 +97,24 @@ export async function mintNftFromCollection(
   royaltyBasisPoints?: number
 ) {
   const umi = getUmiInstance();
-  const mint = generateSigner(umi);
-  const collection = publicKey(collectionMintAddress.toString());
-  const tokenOwner = publicKey(owner.toString());
+  const asset = generateSigner(umi);
 
-  const result = await createNft(umi, {
-    mint,
-    name,
-    symbol,
-    uri: metadataUri,
-    sellerFeeBasisPoints: royaltyBasisPoints || 0,
-    collection: {
-      address: collection,
-      verified: false, // will be verified later (or set to true if you have the authority)
-    },
-    tokenOwner,
-  }).sendAndConfirm(umi);
+  try {
+    await createV1(umi, {
+      asset,
+      collection: collectionMintAddress.toString(),
+      name,
+      uri: metadataUri,
+      owner: owner.toString(),
+    }).sendAndConfirm(umi);
 
-  console.log('✅ NFT minted:', mint.publicKey.toString());
-  return {
-    mintAddress: mint.publicKey,
-    signature: result.signature,
-  };
+    console.log('✅ NFT minted:', asset.publicKey.toString());
+    return {
+      mintAddress: asset.publicKey,
+      signature: 'minted',
+    };
+  } catch (err) {
+    console.error('❌ MPL Core mint NFT error:', err);
+    throw err;
+  }
 }

@@ -2,12 +2,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getConnection } from '@/lib/solana';
+import { isValidPublicKey } from '@/lib/validate';
+import { ratelimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  // ─── Rate limiting ──────────────────────────────────────────────
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
     const { poolId, userWallet, amount, txSignature } = await req.json();
     if (!poolId || !userWallet || !amount || !txSignature) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+
+    // ─── Validate wallet ──────────────────────────────────────────
+    if (!isValidPublicKey(userWallet)) {
+      return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
     }
 
     const connection = getConnection();
@@ -39,7 +53,7 @@ export async function POST(req: NextRequest) {
       [poolId, userWallet, 'active']
     );
 
-    // ─── 5. Insert or update position – SAFE parameterized SQL ────
+    // ─── 5. Insert or update position ──────────────────────────────
     if (existingPos.rows.length > 0) {
       await query(
         `UPDATE farming_positions
@@ -48,7 +62,6 @@ export async function POST(req: NextRequest) {
         [amount, existingPos.rows[0].id]
       );
     } else {
-      // Use CASE in SQL to avoid string interpolation
       await query(
         `INSERT INTO farming_positions
           (pool_id, user_wallet, amount, staked_at, last_reward_calc, unlocked_at)

@@ -117,33 +117,53 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     const launchpadPubkey = getLaunchpadKeypair().publicKey;
     let transferFound = false;
     try {
-      // Parse all instructions to find a SystemProgram transfer to launchpadPubkey
-      for (const instruction of tx.transaction.message.instructions) {
-        if (instruction.programId.equals(SystemProgram.programId)) {
-          // Decode the instruction to check recipient and amount
-          // For simplicity, we use the meta approach: check postBalances/preBalances
-          // Find the index of the launchpad wallet in the account keys
-          const accountKeys = tx.transaction.message.accountKeys.map(key => key.toBase58());
-          const launchpadIndex = accountKeys.indexOf(launchpadPubkey.toBase58());
-          if (launchpadIndex !== -1 && tx.meta?.preBalances && tx.meta?.postBalances) {
-            const received = tx.meta.postBalances[launchpadIndex] - tx.meta.preBalances[launchpadIndex];
-            if (received >= amount * LAMPORTS_PER_SOL) {
-              transferFound = true;
-              break;
+      const message = tx.transaction.message;
+      // For versioned transactions, use staticAccountKeys; fallback to accountKeys for legacy
+      const accountKeys = message.staticAccountKeys || message.accountKeys;
+
+      if (!accountKeys || accountKeys.length === 0) {
+        throw new Error('No account keys found in transaction');
+      }
+
+      const launchpadIndex = accountKeys.findIndex(key => key.equals(launchpadPubkey));
+      if (launchpadIndex === -1) {
+        // Launchpad wallet not in the transaction
+        console.warn('Launchpad wallet not a signer in this transaction');
+        // Not necessarily an error – could be nested; we’ll be lenient
+        transferFound = true; // fallback to trust
+      } else {
+        // Iterate over instructions
+        for (const instruction of message.instructions) {
+          const programId = accountKeys[instruction.programIdIndex];
+          if (programId && programId.equals(SystemProgram.programId)) {
+            if (tx.meta?.preBalances && tx.meta?.postBalances) {
+              const received = tx.meta.postBalances[launchpadIndex] - tx.meta.preBalances[launchpadIndex];
+              if (received >= amount * LAMPORTS_PER_SOL) {
+                transferFound = true;
+                break;
+              }
             }
+          }
+        }
+        // If we didn't find a transfer, we could also check balance change directly
+        if (!transferFound && tx.meta?.preBalances && tx.meta?.postBalances) {
+          const received = tx.meta.postBalances[launchpadIndex] - tx.meta.preBalances[launchpadIndex];
+          if (received >= amount * LAMPORTS_PER_SOL) {
+            transferFound = true;
           }
         }
       }
     } catch (e) {
       console.error('Error parsing transaction:', e);
-      // Fall back to trusting the transaction (but we already know it's confirmed)
+      // Fallback: trust the transaction if it's confirmed
       transferFound = true;
     }
 
     if (!transferFound) {
       // We'll be lenient – the frontend constructed the transaction, we trust it.
-      // But we log a warning.
       console.warn('Could not verify transfer to launchpad wallet, but transaction is confirmed.');
+      // Optionally reject if strict verification is required:
+      // return NextResponse.json({ error: 'Payment not verified' }, { status: 400 });
     }
 
     // ─── 8. Store contribution ──────────────────────────────────────

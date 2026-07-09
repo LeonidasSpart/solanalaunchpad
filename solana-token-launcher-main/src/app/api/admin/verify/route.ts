@@ -1,30 +1,27 @@
-// src/app/api/admin/verify/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-// ─── No fallback – fail if not set ────────────────────────────────
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
-}
-
-export async function GET(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const token = request.cookies.get('admin_token')?.value;
+    const { token } = await request.json();
 
-    if (!token) {
+    // Check if JWT_SECRET is set
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
       return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Server misconfiguration: JWT_SECRET missing' },
+        { status: 500 }
       );
     }
 
-    jwt.verify(token, JWT_SECRET);
+    // Verify token
+    jwt.verify(token, secret);
+
     return NextResponse.json({ message: 'Authorized' }, { status: 200 });
   } catch (error) {
     console.error('JWT verification error:', error);
     return NextResponse.json(
-      { message: 'Unauthorized' },
+      { error: 'Invalid or expired token' },
       { status: 401 }
     );
   }

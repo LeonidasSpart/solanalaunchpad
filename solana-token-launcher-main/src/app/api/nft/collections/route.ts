@@ -136,6 +136,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── 7. Save to DB ────────────────────────────────────────────────
+    // ✅ FIX: collectionNft.mintAddress is a UMI PublicKey (branded string) – use directly
     const result = await query(
       `INSERT INTO nft_collections (
         creator_wallet, name, symbol, description,
@@ -146,7 +147,8 @@ export async function POST(req: NextRequest) {
        RETURNING *`,
       [
         creator_wallet, name, symbol, description, royaltyBasisPoints,
-        collectionNft.mintAddress.toBase58(), metadataUri, maxSupplyNum,
+        collectionNft.mintAddress,    // ← changed: removed .toBase58()
+        metadataUri, maxSupplyNum,
         parseFloat(price_sol) || 0,
         process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet',
         fee_tx_signature,

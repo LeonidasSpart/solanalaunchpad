@@ -4,6 +4,8 @@ import { query } from '@/lib/db';
 import { createNftCollection } from '@/lib/metaplex';
 import { uploadMetadata } from '@/lib/ipfs';
 import { Connection, PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { isValidPublicKey } from '@/lib/validate';
+import { ratelimit } from '@/lib/rate-limit';
 
 const CREATION_FEE_SOL = 0.15;
 const FEE_WALLET = process.env.NEXT_PUBLIC_FEE_REC;
@@ -15,28 +17,13 @@ function extractFeePayment(
 ): { paid: boolean; amount: number } {
   let totalLamports = 0;
   try {
-    // Iterate over all instructions in the transaction
-    for (const instruction of tx.transaction.message.instructions) {
-      // Check if it's a SystemProgram transfer
-      if (instruction.programId.equals(SystemProgram.programId)) {
-        // We need to decode the instruction data to get the amount and recipient
-        // For simplicity, we can use the postBalances/preBalances approach
-        // Or we can use the transaction meta to find transfers
-        // Let's use the meta approach
-        if (tx.meta?.postBalances && tx.meta?.preBalances) {
-          // Find the index of the fee wallet in the account keys
-          const accountKeys = tx.transaction.message.accountKeys.map(key => key.toBase58());
-          const feeIndex = accountKeys.indexOf(feeWallet);
-          if (feeIndex !== -1) {
-            const preBalance = tx.meta.preBalances[feeIndex] || 0;
-            const postBalance = tx.meta.postBalances[feeIndex] || 0;
-            const received = postBalance - preBalance;
-            if (received > 0) {
-              totalLamports += received;
-            }
-          }
-        }
-      }
+    // Use the meta approach to find transfers to fee wallet
+    const accountKeys = tx.transaction.message.accountKeys.map((key: any) => key.toBase58());
+    const feeIndex = accountKeys.indexOf(feeWallet);
+    if (feeIndex !== -1 && tx.meta?.preBalances && tx.meta?.postBalances) {
+      const preBalance = tx.meta.preBalances[feeIndex] || 0;
+      const postBalance = tx.meta.postBalances[feeIndex] || 0;
+      totalLamports = postBalance - preBalance;
     }
   } catch (e) {
     console.error('Error parsing fee payment:', e);
@@ -49,6 +36,13 @@ function extractFeePayment(
 }
 
 export async function POST(req: NextRequest) {
+  // ─── Rate limiting ──────────────────────────────────────────────
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
     const body = await req.json();
     const {
@@ -70,6 +64,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fee payment required' }, { status: 400 });
     }
 
+    // ─── Validate wallet ──────────────────────────────────────────
+    if (!isValidPublicKey(creator_wallet)) {
+      return NextResponse.json({ error: 'Invalid creator wallet address' }, { status: 400 });
+    }
+
     // ─── 1. Verify the fee transaction ────────────────────────────────
     const connection = new Connection(process.env.RPC_URL_DEVNET!);
     const tx = await connection.getTransaction(fee_tx_signature, {
@@ -89,7 +88,6 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── 3. Verify fee payment amount ──────────────────────────────
-    const feeWallet = new PublicKey(FEE_WALLET!);
     const feeCheck = extractFeePayment(tx, FEE_WALLET!);
     if (!feeCheck.paid) {
       return NextResponse.json(

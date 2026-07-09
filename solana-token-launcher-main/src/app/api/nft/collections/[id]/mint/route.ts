@@ -121,6 +121,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     );
 
     // ─── 8. Save to DB ──────────────────────────────────────────────
+    // ✅ FIX: nft.mintAddress is a UMI PublicKey (branded string) – use it directly
     const result = await query(
       `INSERT INTO nft_tokens (
         collection_id, mint_address, metadata_uri, owner_wallet, fee_tx_signature
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
        RETURNING *`,
       [
         collectionId,
-        nft.mintAddress.toBase58(),
+        nft.mintAddress,          // ← changed: removed .toBase58()
         metadataUri,
         owner_wallet,
         fee_tx_signature,

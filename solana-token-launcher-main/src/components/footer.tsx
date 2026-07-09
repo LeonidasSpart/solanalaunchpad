@@ -43,7 +43,7 @@ const Footer = () => {
             <p className="text-[#BDDBDB] text-sm mt-2">
               Starting from <span className="text-[#FF2D2D] font-semibold">0.15 SOL</span> · No hidden fees · Your keys, your tokens
             </p>
-            
+
             {/* Social Media Links */}
             <div className="flex items-center gap-3 mt-4">
               <a 
@@ -114,20 +114,22 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Product</h4>
             <ul className="space-y-2.5">
-            <li><Link href="/" className="text-[#BDDBDB] hover:text-white text-sm transition">Home</Link></li>
-            <li><Link href="/create-mint" className="text-[#BDDBDB] hover:text-white text-sm transition">Create Token</Link></li>
-            <li><Link href="/launchpad" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad</Link></li>
-            <li><Link href="/add-liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">Add Liquidity</Link></li>
-            <li><Link href="/airdrop" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Tool</Link></li>
-            <li><Link href="/revoke" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
-            <li><Link href="/burn-lp" className="text-[#BDDBDB] hover:text-white text-sm transition">Burn LP</Link></li>
-            <li><Link href="/vesting" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting</Link></li>
-            <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
-            <li><Link href="/dao" className="text-[#BDDBDB] hover:text-white text-sm transition">DAO</Link></li>
-            <li><Link href="/nft" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT</Link></li>
-            <li><Link href="/nft-staking" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking</Link></li>
-            <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
-            <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
+              <li><Link href="/" className="text-[#BDDBDB] hover:text-white text-sm transition">Home</Link></li>
+              <li><Link href="/create-mint" className="text-[#BDDBDB] hover:text-white text-sm transition">Create Token</Link></li>
+              <li><Link href="/launchpad" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad</Link></li>
+              <li><Link href="/add-liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">Add Liquidity</Link></li>
+              <li><Link href="/airdrop" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Tool</Link></li>
+              <li><Link href="/revoke" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
+              <li><Link href="/burn-lp" className="text-[#BDDBDB] hover:text-white text-sm transition">Burn LP</Link></li>
+              <li><Link href="/vesting" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Vesting</Link></li>
+              <li><Link href="/staking" className="text-[#BDDBDB] hover:text-white text-sm transition">Staking</Link></li>
+              <li><Link href="/dao" className="text-[#BDDBDB] hover:text-white text-sm transition">DAO</Link></li>
+              <li><Link href="/nft" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT</Link></li>
+              <li><Link href="/nft-staking" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking</Link></li>
+              <li><Link href="/farming" className="text-[#BDDBDB] hover:text-white text-sm transition">Farming</Link></li>
+              <li><Link href="/liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">My Liquidity</Link></li>
+              <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
+              <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Explorer</Link></li>
             </ul>
           </div>
 
@@ -153,12 +155,6 @@ const Footer = () => {
               <li><Link href="/community" className="text-[#BDDBDB] hover:text-white text-sm transition">Community Building</Link></li>
               <li><Link href="/marketing" className="text-[#BDDBDB] hover:text-white text-sm transition">Marketing</Link></li>
               <li><Link href="/security" className="text-[#BDDBDB] hover:text-white text-sm transition">Security</Link></li>
-              <li><Link href="/dao/info" className="text-[#BDDBDB] hover:text-white text-sm transition">DAO Guide</Link></li>
-              <li><Link href="/tokenomics" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics</Link></li>
-              <li><Link href="/tokenomics-calculator" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
-              <li><Link href="/no-code-creator" className="text-[#BDDBDB] hover:text-white text-sm transition">No-Code Creator</Link></li>
-              <li><Link href="/nft/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFTs Guide</Link></li>
-              <li><Link href="/nft-staking/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking Guide</Link></li>
             </ul>
           </div>
 
@@ -167,13 +163,13 @@ const Footer = () => {
             <h4 className="text-white font-semibold text-sm mb-4">Resources</h4>
             <ul className="space-y-2.5">
               <li><Link href="/blog" className="text-[#BDDBDB] hover:text-white text-sm transition">Blog</Link></li>
+              <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">SPL Token Guide</Link></li>
+              <li><Link href="/revoke-authority" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
-              <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Pricing</Link></li>
-              <li><Link href="/why-zrp" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
-              <li><Link href="/affiliate-info" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliate Earn SOL</Link></li>
+              <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
+              <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
-              <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>
             </ul>
           </div>
@@ -181,66 +177,50 @@ const Footer = () => {
           {/* Trust & Security */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Trust & Security</h4>
-            <ul className="space-y-2.5">
+            <ul className="space-y-3">
               <li className="flex items-center gap-2 text-[#BDDBDB] text-sm">
-                <span className="text-[#FF2D2D]">✓</span> Wallet-signed only
+                <span className="text-green-400">✓</span>Wallet-signed only
               </li>
               <li className="flex items-center gap-2 text-[#BDDBDB] text-sm">
-                <span className="text-[#FF2D2D]">✓</span> No seed phrase access
+                <span className="text-green-400">✓</span>No seed phrase access
               </li>
               <li className="flex items-center gap-2 text-[#BDDBDB] text-sm">
-                <span className="text-[#FF2D2D]">✓</span> Decentralised storage
+                <span className="text-green-400">✓</span>Decentralised storage
               </li>
               <li className="flex items-center gap-2 text-[#BDDBDB] text-sm">
-                <span className="text-[#FF2D2D]">✓</span> You own your tokens
+                <span className="text-green-400">✓</span>You own your tokens
               </li>
               <li className="flex items-center gap-2 text-[#BDDBDB] text-sm">
-                <span className="text-[#FF2D2D]">✓</span> Transparent pricing
+                <span className="text-green-400">✓</span>Transparent pricing
               </li>
             </ul>
-
-            {/* Ecosystem */}
-            <h4 className="text-white font-semibold text-sm mt-6 mb-3">Ecosystem</h4>
-            <div className="flex flex-wrap gap-3">
-              <a href="https://phantom.app/" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] text-xs bg-[#0D0D0D] px-3 py-1 rounded-full hover:text-white hover:bg-[#1a1a1a] transition">Phantom</a>
-              <a href="https://solflare.com/" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] text-xs bg-[#0D0D0D] px-3 py-1 rounded-full hover:text-white hover:bg-[#1a1a1a] transition">Solflare</a>
-              <a href="https://raydium.io/" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] text-xs bg-[#0D0D0D] px-3 py-1 rounded-full hover:text-white hover:bg-[#1a1a1a] transition">Raydium</a>
-              <a href="https://jup.ag/" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] text-xs bg-[#0D0D0D] px-3 py-1 rounded-full hover:text-white hover:bg-[#1a1a1a] transition">Jupiter</a>
-              <a href="https://metaplex.com/" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] text-xs bg-[#0D0D0D] px-3 py-1 rounded-full hover:text-white hover:bg-[#1a1a1a] transition">Metaplex</a>
-              <a href="https://solscan.io/" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] text-xs bg-[#0D0D0D] px-3 py-1 rounded-full hover:text-white hover:bg-[#1a1a1a] transition">Solscan</a>
-            </div>
           </div>
         </div>
 
-        {/* Disclaimer & Safety Notice */}
-        <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-6 mt-8">
-          <h4 className="text-[#FF2D2D] font-semibold text-sm mb-2">⚠️ Disclaimer &amp; Safety Notice</h4>
-          <p className="text-[#BDDBDB] text-xs leading-relaxed">
+        {/* Disclaimer */}
+        <div className="bg-[#0D0D0D] rounded-xl p-6 border border-[#1a1a1a] mb-8">
+          <h4 className="text-[#FF2D2D] font-semibold text-sm mb-3">⚠️ Disclaimer & Safety Notice</h4>
+          <p className="text-[#BDDBDB] text-sm opacity-70 leading-relaxed">
             This platform provides tools for interacting with the Solana blockchain. We do not control, verify, or endorse tokens created by users. Nothing on this website constitutes financial, investment, or trading advice. Blockchain transactions are irreversible — always verify details before confirming in your wallet. We will never request your seed phrase or private keys. Users are solely responsible for tokens they create and must ensure compliance with applicable laws and regulations.
           </p>
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-6 border-t border-[#1a1a1a]/50 mt-6">
-          <p className="text-[#BDDBDB] text-sm">
-            © {new Date().getFullYear()} ZRP. All rights reserved.
-          </p>
-          <div className="flex flex-wrap items-center gap-6 text-sm">
-            <Link href="/privacy" className="text-[#BDDBDB] hover:text-white transition">Privacy Policy</Link>
-            <Link href="/terms" className="text-[#BDDBDB] hover:text-white transition">Terms of Service</Link>
-            <Link href="/admin/login" className="text-[#BDDBDB] hover:text-[#FF2D2D] transition text-xs border border-[#1a1a1a] px-3 py-1 rounded-full hover:border-[#FF2D2D]/50">
-              Admin
-            </Link>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-8 border-t border-[#1a1a1a]">
+          <p className="text-[#BDDBDB] text-sm opacity-50">© {new Date().getFullYear()} ZRP. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="text-[#BDDBDB] text-sm opacity-50 hover:opacity-100 transition">Privacy Policy</Link>
+            <Link href="/terms" className="text-[#BDDBDB] text-sm opacity-50 hover:opacity-100 transition">Terms of Service</Link>
+            <Link href="/admin" className="text-[#BDDBDB] text-sm opacity-50 hover:opacity-100 transition">Admin</Link>
           </div>
         </div>
       </div>
 
-      {/* Back to Top Button */}
+      {/* Back to Top */}
       {showBackToTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 p-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-full shadow-lg shadow-[#FF2D2D]/30 transition-all hover:scale-110 duration-300"
-          aria-label="Back to top"
+          className="fixed bottom-8 right-8 w-10 h-10 bg-[#FF2D2D] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#FF2D2D]/20 hover:bg-[#B10000] transition z-50"
         >
           <ArrowUp className="h-5 w-5" />
         </button>

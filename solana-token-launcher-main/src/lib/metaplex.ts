@@ -2,7 +2,7 @@
 console.log('🔥🔥🔥 Using UMI version of metaplex.ts 🔥🔥🔥');
 
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
-import * as mpl from '@metaplex-foundation/mpl-token-metadata';
+import { create, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import {
   generateSigner,
   keypairIdentity,
@@ -16,7 +16,7 @@ function getUmiInstance() {
   const platformKeypair = getPlatformKeypair();
 
   const umi = createUmi(connection)
-    .use(mpl.mplTokenMetadata())
+    .use(mplTokenMetadata())   // ✅ plugin is a function
     .use(keypairIdentity(platformKeypair));
 
   return umi;
@@ -52,8 +52,7 @@ export async function createNftCollection(
   const collectionMint = generateSigner(umi);
 
   try {
-    // Use mpl.createNft – if it fails, we'll switch to mpl.create
-    const result = await mpl.createNft(umi, {
+    const result = await create(umi, {
       mint: collectionMint,
       name,
       symbol,
@@ -88,7 +87,7 @@ export async function mintNftFromCollection(
   const collection = publicKey(collectionMintAddress.toString());
   const tokenOwner = publicKey(owner.toString());
 
-  const result = await mpl.createNft(umi, {
+  const result = await create(umi, {
     mint,
     name,
     symbol,

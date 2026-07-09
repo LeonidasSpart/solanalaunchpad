@@ -129,7 +129,11 @@ const Footer = () => {
               <li><Link href="/farming" className="text-[#BDDBDB] hover:text-white text-sm transition">Farming</Link></li>
               <li><Link href="/liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">My Liquidity</Link></li>
               <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
+              <li><Link href="/affiliate-info" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliate Info</Link></li>
               <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Explorer</Link></li>
+              <li><Link href="/dashboard" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
+              <li><Link href="/analytics" className="text-[#BDDBDB] hover:text-white text-sm transition">Analytics</Link></li>
+              <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
             </ul>
           </div>
 
@@ -155,6 +159,10 @@ const Footer = () => {
               <li><Link href="/community" className="text-[#BDDBDB] hover:text-white text-sm transition">Community Building</Link></li>
               <li><Link href="/marketing" className="text-[#BDDBDB] hover:text-white text-sm transition">Marketing</Link></li>
               <li><Link href="/security" className="text-[#BDDBDB] hover:text-white text-sm transition">Security</Link></li>
+              <li><Link href="/tokenomics" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics</Link></li>
+              <li><Link href="/tokenomics-calculator" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
+              <li><Link href="/no-code-creator" className="text-[#BDDBDB] hover:text-white text-sm transition">No-Code Creator</Link></li>
+              <li><Link href="/why-zrp" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
             </ul>
           </div>
 
@@ -168,9 +176,13 @@ const Footer = () => {
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
               <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
+              <li><Link href="/affiliate-info" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliate Info</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>
+              <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
+              <li><Link href="/status" className="text-[#BDDBDB] hover:text-white text-sm transition">Status</Link></li>
+              <li><Link href="/ref" className="text-[#BDDBDB] hover:text-white text-sm transition">Referral</Link></li>
             </ul>
           </div>
 

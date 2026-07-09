@@ -1,27 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PublicKey, Transaction } from '@solana/web3.js';  // ← added Transaction
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { query } from '@/lib/db';
 import { getConnection, getPlatformKeypair, getDecimals } from '@/lib/solana';
-import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { isValidPublicKey } from '@/lib/validate';
+import { ratelimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  // ─── Rate limiting ──────────────────────────────────────────────
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
     const { poolId, userWallet, positionId } = await req.json();
     if (!poolId || !userWallet || !positionId) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
-    // Get position
+    // ─── Validate wallet ──────────────────────────────────────────
+    if (!isValidPublicKey(userWallet)) {
+      return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 });
+    }
+
+    const connection = getConnection();
+
+    // ─── 1. Get position with row lock ────────────────────────────
+    await query('BEGIN');
     const posRes = await query(
-      'SELECT * FROM farming_positions WHERE id = $1 AND pool_id = $2 AND user_wallet = $3 AND status = $4',
+      `SELECT * FROM farming_positions
+       WHERE id = $1 AND pool_id = $2 AND user_wallet = $3 AND status = $4
+       FOR UPDATE`,
       [positionId, poolId, userWallet, 'active']
     );
     if (posRes.rows.length === 0) {
+      await query('ROLLBACK');
       return NextResponse.json({ error: 'No active position' }, { status: 404 });
     }
     const position = posRes.rows[0];
 
-    // Calculate reward
+    // ─── 2. Calculate reward ──────────────────────────────────────
     const poolRes = await query('SELECT * FROM farming_pools WHERE id = $1', [poolId]);
     const pool = poolRes.rows[0];
     const now = new Date();
@@ -30,9 +50,11 @@ export async function POST(req: NextRequest) {
     const reward = position.amount * (pool.apy / 100) * (elapsedHours / (365.25 * 24));
 
     if (reward <= 0) {
+      await query('ROLLBACK');
       return NextResponse.json({ error: 'No rewards to claim' }, { status: 400 });
     }
 
+    // ─── 3. Transfer reward token from platform to user ──────────
     const mint = new PublicKey(pool.reward_mint);
     const decimals = await getDecimals(mint);
     const rawReward = Math.floor(reward * Math.pow(10, decimals));
@@ -42,7 +64,6 @@ export async function POST(req: NextRequest) {
     const userAta = await getAssociatedTokenAddress(mint, userPubkey);
     const platformAta = await getAssociatedTokenAddress(mint, platformKeypair.publicKey);
 
-    const connection = getConnection();
     const { blockhash } = await connection.getLatestBlockhash();
 
     const transferIx = createTransferInstruction(
@@ -60,7 +81,17 @@ export async function POST(req: NextRequest) {
     const signature = await connection.sendRawTransaction(tx.serialize());
     await connection.confirmTransaction(signature, 'confirmed');
 
-    // Update position
+    // ─── 4. Prevent replay attacks (in case of race condition) ──
+    const existing = await query(
+      'SELECT id FROM farming_transactions WHERE tx_signature = $1',
+      [signature]
+    );
+    if (existing.rows.length > 0) {
+      await query('ROLLBACK');
+      return NextResponse.json({ error: 'Transaction already processed' }, { status: 409 });
+    }
+
+    // ─── 5. Update position and pool ──────────────────────────────
     await query(
       `UPDATE farming_positions
        SET reward_earned = reward_earned + $1,
@@ -76,14 +107,18 @@ export async function POST(req: NextRequest) {
     );
 
     await query(
-      `INSERT INTO farming_transactions (user_wallet, pool_id, type, amount, tx_signature)
+      `INSERT INTO farming_transactions
+        (user_wallet, pool_id, type, amount, tx_signature)
        VALUES ($1, $2, 'claim', $3, $4)`,
       [userWallet, poolId, reward, signature]
     );
 
+    await query('COMMIT');
+
     return NextResponse.json({ success: true, reward, signature });
   } catch (error) {
-    console.error(error);
+    console.error('Farming claim error:', error);
+    await query('ROLLBACK');
     return NextResponse.json({ error: 'Claim failed' }, { status: 500 });
   }
 }

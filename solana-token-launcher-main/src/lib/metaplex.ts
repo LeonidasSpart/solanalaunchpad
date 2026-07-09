@@ -7,10 +7,8 @@ import {
   keypairIdentity,
   publicKey,
   percentAmount,
-  createSignerFromKeypair,
 } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
-import { createNft, mplTokenMetadata } from '@metaplex-foundation/mpl-token-metadata';
 import { PublicKey } from '@solana/web3.js';
 import { getPlatformKeypair } from './solana';
 
@@ -23,15 +21,34 @@ function getRpcUrl(): string {
   return url;
 }
 
-function getUmiInstance() {
+// Dynamically import mpl-token-metadata to avoid ESM/CJS bundling issues
+async function getMplTokenMetadata() {
+  const mpl = await import('@metaplex-foundation/mpl-token-metadata');
+  console.log('📦 mpl-token-metadata loaded, exports:', Object.keys(mpl));
+  
+  // The plugin function might be on default export or named export
+  const mplTokenMetadata = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;
+  const createNft = mpl.createNft || mpl.default?.createNft;
+  
+  if (!mplTokenMetadata || !createNft) {
+    throw new Error(
+      `Could not find required exports. Available: ${Object.keys(mpl).join(', ')}`
+    );
+  }
+  
+  return { mplTokenMetadata, createNft };
+}
+
+async function getUmiInstance() {
   const rpcUrl = getRpcUrl();
   const platformKeypair = getPlatformKeypair();
+  const { mplTokenMetadata, createNft } = await getMplTokenMetadata();
 
   const umi = createUmi(rpcUrl)
     .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)))
     .use(mplTokenMetadata());
 
-  return umi;
+  return { umi, createNft };
 }
 
 // ─── Create NFT Collection ──────────────────────────────────────────
@@ -60,7 +77,7 @@ export async function createNftCollection(
     throw new Error(`Invalid maxSupply: ${supply} (must be a non-negative integer)`);
   }
 
-  const umi = getUmiInstance();
+  const { umi, createNft } = await getUmiInstance();
   const collectionMint = generateSigner(umi);
 
   try {
@@ -94,7 +111,7 @@ export async function mintNftFromCollection(
   symbol: string,
   royaltyBasisPoints?: number
 ) {
-  const umi = getUmiInstance();
+  const { umi, createNft } = await getUmiInstance();
   const mint = generateSigner(umi);
   const collection = publicKey(collectionMintAddress.toString());
   const tokenOwner = publicKey(owner.toString());

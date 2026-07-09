@@ -158,7 +158,7 @@ const Footer = () => {
               <li><Link href="/tokenomics-calculator" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
               <li><Link href="/no-code-creator" className="text-[#BDDBDB] hover:text-white text-sm transition">No-Code Creator</Link></li>
               <li><Link href="/nft/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFTs Guide</Link></li>
-              <li><Link href="/nft-staking/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking Guide</Link></li>
+<li><Link href="/nft-staking/info" className="text-[#BDDBDB] hover:text-white text-sm transition">NFT Staking Guide</Link></li>
             </ul>
           </div>
 

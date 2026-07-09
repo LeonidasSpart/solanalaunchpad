@@ -9,7 +9,7 @@ import {
   percentAmount,
 } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
-import { createCollectionV1, createV1, mplCore } from '@metaplex-foundation/mpl-core';
+import { createCollection, create, mplCore, ruleSet, fetchCollectionV1, addCollectionPlugin } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@solana/web3.js';
 import { getPlatformKeypair } from './solana';
 
@@ -60,21 +60,25 @@ export async function createNftCollection(
   const collection = generateSigner(umi);
 
   try {
-    await createCollectionV1(umi, {
+    // Step 1: Create the collection (no plugins at creation)
+    await createCollection(umi, {
       collection,
       name,
       uri: metadataUri,
-      plugins: [
-        {
-          type: 'Royalties',
-          data: {
-            basisPoints: sellerFee,
-            creators: [],
-            ruleSet: { type: 'None' },
-          },
-        },
-      ],
     }).sendAndConfirm(umi);
+
+    // Step 2: Add royalties plugin separately (no data wrapper)
+    if (sellerFee > 0) {
+      await addCollectionPlugin(umi, {
+        collection: collection.publicKey,
+        plugin: {
+          type: 'Royalties',
+          basisPoints: sellerFee,
+          creators: [],
+          ruleSet: ruleSet('None'),
+        },
+      }).sendAndConfirm(umi);
+    }
 
     console.log('✅ Collection created:', collection.publicKey.toString());
     return {
@@ -97,20 +101,23 @@ export async function mintNftFromCollection(
   royaltyBasisPoints?: number
 ) {
   const umi = getUmiInstance();
-  const asset = generateSigner(umi);
+  const mint = generateSigner(umi);
 
   try {
-    await createV1(umi, {
-      asset,
-      collection: collectionMintAddress.toString(),
+    // Fetch the collection object first
+    const collection = await fetchCollectionV1(umi, publicKey(collectionMintAddress.toString()));
+
+    await create(umi, {
+      asset: mint,
+      collection,
       name,
       uri: metadataUri,
-      owner: owner.toString(),
+      owner: publicKey(owner.toString()),
     }).sendAndConfirm(umi);
 
-    console.log('✅ NFT minted:', asset.publicKey.toString());
+    console.log('✅ NFT minted:', mint.publicKey.toString());
     return {
-      mintAddress: asset.publicKey,
+      mintAddress: mint.publicKey,
       signature: 'minted',
     };
   } catch (err) {
@@ -118,4 +125,3 @@ export async function mintNftFromCollection(
     throw err;
   }
 }
-// Rebuild trigger

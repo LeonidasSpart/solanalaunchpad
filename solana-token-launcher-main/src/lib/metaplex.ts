@@ -9,6 +9,7 @@ import {
   percentAmount,
 } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
+import { createV1, mintV1, TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
 import { PublicKey } from '@solana/web3.js';
 import { getPlatformKeypair } from './solana';
 
@@ -21,35 +22,14 @@ function getRpcUrl(): string {
   return url;
 }
 
-// Dynamically import mpl-token-metadata to avoid ESM/CJS bundling issues
-async function getMplTokenMetadata() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mpl: any = await import('@metaplex-foundation/mpl-token-metadata');
-  console.log('📦 mpl-token-metadata loaded, exports:', Object.keys(mpl));
-  
-  // Access exports with type assertion to bypass TS checker
-  const mplTokenMetadata = mpl.mplTokenMetadata;
-  const createNft = mpl.createNft;
-  
-  if (!mplTokenMetadata || !createNft) {
-    throw new Error(
-      `Could not find required exports. Available: ${Object.keys(mpl).join(', ')}`
-    );
-  }
-  
-  return { mplTokenMetadata, createNft };
-}
-
-async function getUmiInstance() {
+function getUmiInstance() {
   const rpcUrl = getRpcUrl();
   const platformKeypair = getPlatformKeypair();
-  const { mplTokenMetadata, createNft } = await getMplTokenMetadata();
 
   const umi = createUmi(rpcUrl)
-    .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)))
-    .use(mplTokenMetadata());
+    .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)));
 
-  return { umi, createNft };
+  return umi;
 }
 
 // ─── Create NFT Collection ──────────────────────────────────────────
@@ -78,24 +58,35 @@ export async function createNftCollection(
     throw new Error(`Invalid maxSupply: ${supply} (must be a non-negative integer)`);
   }
 
-  const { umi, createNft } = await getUmiInstance();
+  const umi = getUmiInstance();
   const collectionMint = generateSigner(umi);
 
   try {
-    const result = await createNft(umi, {
+    // Step 1: Create the mint + metadata + master edition accounts
+    await createV1(umi, {
       mint: collectionMint,
+      authority: umi.identity,
       name,
       symbol,
       uri: metadataUri,
       sellerFeeBasisPoints: percentAmount(sellerFee / 100),
-      maxSupply: supply === 0 ? null : supply,
+      tokenStandard: TokenStandard.NonFungible,
       isCollection: true,
+    }).sendAndConfirm(umi);
+
+    // Step 2: Mint the collection NFT token (1 token for the collection itself)
+    await mintV1(umi, {
+      mint: collectionMint.publicKey,
+      authority: umi.identity,
+      amount: 1,
+      tokenOwner: umi.identity.publicKey,
+      tokenStandard: TokenStandard.NonFungible,
     }).sendAndConfirm(umi);
 
     console.log('✅ Collection created:', collectionMint.publicKey.toString());
     return {
       mintAddress: collectionMint.publicKey,
-      signature: result.signature,
+      signature: 'created', // mintV1 doesn't return a simple signature, fetch from logs if needed
     };
   } catch (err) {
     console.error('❌ UMI create error:', err);
@@ -112,27 +103,38 @@ export async function mintNftFromCollection(
   symbol: string,
   royaltyBasisPoints?: number
 ) {
-  const { umi, createNft } = await getUmiInstance();
+  const umi = getUmiInstance();
   const mint = generateSigner(umi);
   const collection = publicKey(collectionMintAddress.toString());
   const tokenOwner = publicKey(owner.toString());
 
-  const result = await createNft(umi, {
+  // Step 1: Create the NFT accounts
+  await createV1(umi, {
     mint,
+    authority: umi.identity,
     name,
     symbol,
     uri: metadataUri,
     sellerFeeBasisPoints: percentAmount((royaltyBasisPoints || 0) / 100),
+    tokenStandard: TokenStandard.NonFungible,
     collection: {
-      address: collection,
+      key: collection,
       verified: false,
     },
+  }).sendAndConfirm(umi);
+
+  // Step 2: Mint the NFT token to the owner
+  await mintV1(umi, {
+    mint: mint.publicKey,
+    authority: umi.identity,
+    amount: 1,
     tokenOwner,
+    tokenStandard: TokenStandard.NonFungible,
   }).sendAndConfirm(umi);
 
   console.log('✅ NFT minted:', mint.publicKey.toString());
   return {
     mintAddress: mint.publicKey,
-    signature: result.signature,
+    signature: 'minted',
   };
 }

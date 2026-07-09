@@ -69,11 +69,12 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     );
 
     // ─── 6. Save to DB ──────────────────────────────────────────────
+    // ✅ FIX: use .toString() instead of .toBase58()
     const result = await query(
       `INSERT INTO nft_tokens (collection_id, mint_address, metadata_uri, owner_wallet)
        VALUES ($1, $2, $3, $4)
        RETURNING *`,
-      [collectionId, nft.mintAddress.toBase58(), metadataUri, owner_wallet]
+      [collectionId, nft.mintAddress.toString(), metadataUri, owner_wallet]
     );
 
     return NextResponse.json(result.rows[0], { status: 201 });

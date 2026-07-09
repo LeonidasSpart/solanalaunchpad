@@ -26,13 +26,9 @@ async function getUmiInstance() {
   const platformKeypair = getPlatformKeypair();
   const mpl = await getMpl();
 
-  // Convert web3.js keypair to UMI-compatible keypair
-  const umiKeypair = fromWeb3JsKeypair(platformKeypair);
-
   const umi = createUmi(connection)
-    .use(keypairIdentity(umiKeypair));
+    .use(keypairIdentity(fromWeb3JsKeypair(platformKeypair)));
 
-  // Try to add the token metadata plugin if available
   const plugin = mpl.mplTokenMetadata || mpl.default?.mplTokenMetadata;
   if (plugin) {
     umi.use(plugin());

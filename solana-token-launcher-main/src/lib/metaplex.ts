@@ -1,7 +1,7 @@
 // src/lib/metaplex.ts
 import { createUmi } from '@metaplex-foundation/umi-bundle-defaults';
 import {
-  createNft,
+  create,                    // ✅ changed from createNft
   mplTokenMetadata,
 } from '@metaplex-foundation/mpl-token-metadata';
 import {
@@ -17,7 +17,6 @@ function getUmiInstance() {
   const connection = getConnection();
   const platformKeypair = getPlatformKeypair();
 
-  // Convert web3.js Keypair to UMI signer
   const umi = createUmi(connection)
     .use(mplTokenMetadata())
     .use(keypairIdentity(platformKeypair));
@@ -41,14 +40,12 @@ export async function createNftCollection(
   console.log('  maxSupply:', maxSupply, typeof maxSupply);
   console.log('  metadataUri:', metadataUri);
 
-  // ── Validate and convert ──
   const sellerFee = Number(royaltyBasisPoints);
   const supply = Number(maxSupply);
 
   if (!Number.isInteger(sellerFee) || sellerFee < 0 || sellerFee > 10000) {
     throw new Error(`Invalid sellerFeeBasisPoints: ${sellerFee} (must be integer 0-10000)`);
   }
-  // UMI uses `null` for unlimited; allow 0 to mean unlimited
   if (!Number.isInteger(supply) || supply < 0) {
     throw new Error(`Invalid maxSupply: ${supply} (must be a non-negative integer)`);
   }
@@ -57,22 +54,21 @@ export async function createNftCollection(
   const collectionMint = generateSigner(umi);
 
   try {
-    const result = await createNft(umi, {
+    // ✅ use create instead of createNft
+    const result = await create(umi, {
       mint: collectionMint,
       name,
       symbol,
       uri: metadataUri,
       sellerFeeBasisPoints: sellerFee,
-      maxSupply: supply === 0 ? null : supply, // 0 → unlimited
+      maxSupply: supply === 0 ? null : supply,
       isCollection: true,
     }).sendAndConfirm(umi);
 
     console.log('✅ Collection created:', collectionMint.publicKey.toString());
-    // Return an object that mimics the old Metaplex NFT interface
     return {
       mintAddress: collectionMint.publicKey,
       signature: result.signature,
-      // Add other fields if needed (e.g., metadata)
     };
   } catch (err) {
     console.error('❌ UMI create error:', err);
@@ -94,7 +90,8 @@ export async function mintNftFromCollection(
   const collection = publicKey(collectionMintAddress.toString());
   const tokenOwner = publicKey(owner.toString());
 
-  const result = await createNft(umi, {
+  // ✅ use create instead of createNft
+  const result = await create(umi, {
     mint,
     name,
     symbol,
@@ -102,7 +99,7 @@ export async function mintNftFromCollection(
     sellerFeeBasisPoints: royaltyBasisPoints || 0,
     collection: {
       address: collection,
-      verified: false, // will be verified later (or set to true if you have the authority)
+      verified: false,
     },
     tokenOwner,
   }).sendAndConfirm(umi);

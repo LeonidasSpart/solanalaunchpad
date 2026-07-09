@@ -5,45 +5,34 @@ import { mintNftFromCollection } from '@/lib/metaplex';
 import { uploadMetadata } from '@/lib/ipfs';
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { getConnection } from '@/lib/solana';
+import { isValidPublicKey } from '@/lib/validate';
+import { ratelimit } from '@/lib/rate-limit';
 
-// ─── Constants ──────────────────────────────────────────────────────
 const MINTING_FEE_PERCENT = parseFloat(process.env.NFT_MINTING_FEE_PERCENT || '3') / 100;
 const FEE_WALLET = process.env.NEXT_PUBLIC_FEE_REC;
 
-// ─── Helper: verify wallet address ─────────────────────────────────
-function isValidPublicKey(key: string): boolean {
-  try {
-    new PublicKey(key);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ─── Helper: extract SOL transfer amount to a specific wallet ──────
-function extractFeePayment(
-  tx: any,
-  feeWallet: string
-): { paid: boolean; amount: number } {
+function extractFeePayment(tx: any, feeWallet: string): { paid: boolean; amount: number } {
   let totalLamports = 0;
   try {
-    const accountKeys = tx.transaction.message.accountKeys.map(key => key.toBase58());
+    const accountKeys = tx.transaction.message.accountKeys.map((key: any) => key.toBase58());
     const feeIndex = accountKeys.indexOf(feeWallet);
     if (feeIndex !== -1 && tx.meta?.preBalances && tx.meta?.postBalances) {
-      const preBalance = tx.meta.preBalances[feeIndex] || 0;
-      const postBalance = tx.meta.postBalances[feeIndex] || 0;
-      totalLamports = postBalance - preBalance;
+      totalLamports = tx.meta.postBalances[feeIndex] - tx.meta.preBalances[feeIndex];
     }
   } catch (e) {
     console.error('Error parsing fee payment:', e);
   }
-  return {
-    paid: totalLamports > 0, // we will compare against required amount later
-    amount: totalLamports,
-  };
+  return { paid: totalLamports > 0, amount: totalLamports };
 }
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  // ─── Rate limiting ──────────────────────────────────────────────
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+  }
+
   try {
     const { id } = await context.params;
     const collectionId = parseInt(id);
@@ -65,7 +54,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Missing required fields (owner_wallet, fee_tx_signature)' }, { status: 400 });
     }
 
-    // ─── Validate wallet address ─────────────────────────────────────
     if (!isValidPublicKey(owner_wallet)) {
       return NextResponse.json({ error: 'Invalid owner wallet address' }, { status: 400 });
     }
@@ -84,11 +72,9 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Max supply reached' }, { status: 400 });
     }
 
-    // ─── 3. Verify the fee transaction ─────────────────────────────
+    // ─── 3. Verify fee transaction ──────────────────────────────────
     const connection = getConnection();
-    const tx = await connection.getTransaction(fee_tx_signature, {
-      commitment: 'confirmed',
-    });
+    const tx = await connection.getTransaction(fee_tx_signature, { commitment: 'confirmed' });
     if (!tx || tx.meta?.err) {
       return NextResponse.json({ error: 'Fee transaction not found or failed' }, { status: 400 });
     }
@@ -102,19 +88,18 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Fee transaction already used' }, { status: 409 });
     }
 
-    // ─── 5. Verify fee amount ───────────────────────────────────────
+    // ─── 5. Verify fee amount ──────────────────────────────────────
     const mintPrice = parseFloat(collection.price_sol) || 0;
     const requiredFee = mintPrice * MINTING_FEE_PERCENT;
     const feeCheck = extractFeePayment(tx, FEE_WALLET!);
-    const expectedLamports = requiredFee * LAMPORTS_PER_SOL;
-    if (!feeCheck.paid || feeCheck.amount < expectedLamports) {
+    if (!feeCheck.paid || feeCheck.amount < requiredFee * LAMPORTS_PER_SOL) {
       return NextResponse.json(
         { error: `Insufficient fee. Required: ${requiredFee.toFixed(6)} SOL` },
         { status: 400 }
       );
     }
 
-    // ─── 6. Upload NFT metadata ─────────────────────────────────────
+    // ─── 6. Upload metadata ──────────────────────────────────────────
     const nftMetadata = {
       name: name || `${collection.name} #${minted + 1}`,
       symbol: collection.symbol,
@@ -124,7 +109,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     };
     const metadataUri = await uploadMetadata(nftMetadata);
 
-    // ─── 7. Mint on-chain ───────────────────────────────────────────
+    // ─── 7. Mint on-chain ────────────────────────────────────────────
     const collectionMint = new PublicKey(collection.collection_mint);
     const owner = new PublicKey(owner_wallet);
     const nft = await mintNftFromCollection(

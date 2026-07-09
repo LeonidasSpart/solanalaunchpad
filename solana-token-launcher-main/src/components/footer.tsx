@@ -97,12 +97,23 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-12 mb-12">
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{background: 'linear-gradient(135deg, #FF2D2D 0%, #B10000 100%)', boxShadow: '0 0 30px rgba(255,45,45,0.3)'}}>
-                <span className="text-white text-3xl font-black" style={{fontFamily: "'Orbitron', sans-serif"}}>Z</span>
+              {/* Logo: replace the "Z" with your official logo */}
+              <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="ZRP Logo"
+                  width={64}
+                  height={64}
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
-                <span className="text-white text-2xl font-bold tracking-wider" style={{fontFamily: "'Orbitron', sans-serif"}}>ZRP</span>
-                <span className="block text-[#FF2D2D] text-xs tracking-widest mt-1" style={{fontFamily: "'Orbitron', sans-serif"}}>LAUNCH • BUILD • CONNECT</span>
+                <span className="text-white text-2xl font-bold tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  ZRP
+                </span>
+                <span className="block text-[#FF2D2D] text-xs tracking-widest mt-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
+                  LAUNCH • BUILD • CONNECT
+                </span>
               </div>
             </div>
             <p className="text-[#BDDBDB] text-sm max-w-md leading-relaxed mb-2">
@@ -156,7 +167,7 @@ const Footer = () => {
 
         <div className="zrp-divider mb-12"></div>
 
-        {/* Main Footer Grid */}
+        {/* Main Footer Grid – deduplicated */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12">
           {/* Product */}
           <div>
@@ -185,12 +196,11 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Guides */}
+          {/* Guides (cleaned duplicates) */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Guides</h4>
             <ul className="space-y-2.5">
               <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">SPL Token Guide</Link></li>
-              <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">How to Create Token</Link></li>
               <li><Link href="/checklist" className="text-[#BDDBDB] hover:text-white text-sm transition">Pre-Launch Checklist</Link></li>
               <li><Link href="/launch" className="text-[#BDDBDB] hover:text-white text-sm transition">Launch Strategy</Link></li>
               <li><Link href="/launchpad/info" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad Guide</Link></li>
@@ -214,20 +224,15 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources */}
+          {/* Resources (duplicates removed) */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Resources</h4>
             <ul className="space-y-2.5">
               <li><Link href="/blog" className="text-[#BDDBDB] hover:text-white text-sm transition">Blog</Link></li>
-              <li><Link href="/guide" className="text-[#BDDBDB] hover:text-white text-sm transition">SPL Token Guide</Link></li>
-              <li><Link href="/revoke-authority" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
-              <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">Why ZRP</Link></li>
-              <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
-              <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
+              <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>
-              <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
               <li><Link href="/status" className="text-[#BDDBDB] hover:text-white text-sm transition">Status</Link></li>
               <li><Link href="/ref" className="text-[#BDDBDB] hover:text-white text-sm transition">Referral</Link></li>
             </ul>

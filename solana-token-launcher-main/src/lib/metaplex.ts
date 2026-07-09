@@ -9,7 +9,7 @@ import {
   percentAmount,
 } from '@metaplex-foundation/umi';
 import { fromWeb3JsKeypair } from '@metaplex-foundation/umi-web3js-adapters';
-import { createCollection, create, mplCore, ruleSet } from '@metaplex-foundation/mpl-core';
+import { createCollection, create, mplCore, ruleSet, fetchCollectionV1 } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@solana/web3.js';
 import { getPlatformKeypair } from './solana';
 
@@ -98,9 +98,12 @@ export async function mintNftFromCollection(
   const mint = generateSigner(umi);
 
   try {
+    // Fetch the collection object first
+    const collection = await fetchCollectionV1(umi, collectionMintAddress.toString());
+
     await create(umi, {
       asset: mint,
-      collection: collectionMintAddress.toString(),
+      collection,
       name,
       uri: metadataUri,
       owner: owner.toString(),

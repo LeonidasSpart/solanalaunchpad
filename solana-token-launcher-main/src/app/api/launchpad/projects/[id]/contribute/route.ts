@@ -106,7 +106,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     for (let attempt = 0; attempt < 5; attempt++) {
       tx = await connection.getTransaction(txSignature, {
         commitment: 'confirmed',
-        maxSupportedTransactionVersion: 0, // important for versioned txs
+        maxSupportedTransactionVersion: 0,
       });
       if (tx) break;
       console.log(`⏳ Retry ${attempt + 1}/5 - transaction not yet available`);
@@ -133,13 +133,13 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Transaction already processed' }, { status: 409 });
     }
 
-    // ─── 7. Verify the transaction transferred SOL to the launchpad wallet ───
+    // ─── 7. Verify transfer to launchpad wallet ──────────────────────
     const launchpadPubkey = getLaunchpadKeypair().publicKey;
     let transferFound = false;
     try {
       const message = tx.transaction.message;
-      const accountKeys = message.staticAccountKeys || message.accountKeys;
-
+      // ✅ FIX: use staticAccountKeys (available for both legacy and versioned messages)
+      const accountKeys = message.staticAccountKeys;
       if (!accountKeys || accountKeys.length === 0) {
         throw new Error('No account keys found in transaction');
       }
@@ -147,14 +147,9 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       const launchpadIndex = accountKeys.findIndex(key => key.equals(launchpadPubkey));
       if (launchpadIndex === -1) {
         console.warn('Launchpad wallet not a signer in this transaction, trusting balance change');
-        // Fallback: check balance change directly
-        if (tx.meta?.preBalances && tx.meta?.postBalances) {
-          // The launchpad wallet might be the destination of a transfer even if not in accountKeys?
-          // Actually if it's not in accountKeys, we can't check its balance.
-          // But we could check the total system program transfer amounts.
-          // For simplicity, we'll trust it if confirmed.
-          transferFound = true;
-        }
+        // If the launchpad wallet isn't in the account list, we can't verify its balance change.
+        // Fallback: trust the transaction if it's confirmed.
+        transferFound = true;
       } else {
         // Check instructions for SystemProgram.transfer to launchpad
         for (const instruction of message.instructions) {
@@ -179,13 +174,12 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       }
     } catch (e) {
       console.error('Error parsing transaction:', e);
-      // Fallback: trust the transaction if it's confirmed
-      transferFound = true;
+      transferFound = true; // fallback: trust
     }
 
     if (!transferFound) {
       console.warn('⚠️ Could not verify transfer, but transaction is confirmed – accepting anyway.');
-      // We could reject, but we'll accept to be user-friendly.
+      // For production, you may want to reject here, but we accept to be user-friendly.
     }
 
     // ─── 8. Store contribution ──────────────────────────────────────

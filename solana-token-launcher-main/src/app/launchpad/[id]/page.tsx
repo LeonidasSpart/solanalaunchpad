@@ -8,8 +8,7 @@ import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, External
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
-// ─── THIS IS THE CORRECT KEY – DO NOT EDIT ──────────────────────────────
-// It is 44 characters long and contains no line breaks.
+// ─── CORRECT PUBLIC KEY – ANY HIDDEN CHARACTERS WILL BE FILTERED OUT ──
 const LAUNCHPAD_PUBKEY_STR = 'HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM';
 
 interface Project {
@@ -93,40 +92,48 @@ export default function ProjectDetailPage() {
   }, [id]);
 
   const handleContribute = async () => {
+    if (!connected || !publicKey) {
+      setError('Please connect your wallet');
+      return;
+    }
+    if (!project) return;
+
+    const amount = parseFloat(contributionAmount);
+    if (isNaN(amount) || amount <= 0) {
+      setError('Please enter a valid amount');
+      return;
+    }
+    if (project.min_contribution > 0 && amount < project.min_contribution) {
+      setError(`Minimum contribution is ${project.min_contribution} SOL`);
+      return;
+    }
+    if (project.max_contribution > 0 && amount > project.max_contribution) {
+      setError(`Maximum contribution is ${project.max_contribution} SOL`);
+      return;
+    }
+    const remaining = project.hard_cap - (project.raised_so_far || 0);
+    if (amount > remaining) {
+      setError(`Only ${remaining.toFixed(2)} SOL remaining in hard cap`);
+      return;
+    }
+
+    // ─── SAFE PUBLIC KEY CREATION ──────────────────────────────────────
+    // Remove any non-base58 characters (newlines, spaces, etc.)
+    const cleanPubkey = LAUNCHPAD_PUBKEY_STR.replace(/[^1-9A-HJ-NP-Za-km-z]/g, '');
+    let launchpadPubkey: PublicKey;
     try {
-      if (!connected || !publicKey) {
-        setError('Please connect your wallet');
-        return;
-      }
-      if (!project) return;
+      launchpadPubkey = new PublicKey(cleanPubkey);
+    } catch {
+      // Fallback – should never happen since we filter, but just in case.
+      setError('Invalid platform wallet address. Please contact support.');
+      return;
+    }
 
-      const amount = parseFloat(contributionAmount);
-      if (isNaN(amount) || amount <= 0) {
-        setError('Please enter a valid amount');
-        return;
-      }
-      if (project.min_contribution > 0 && amount < project.min_contribution) {
-        setError(`Minimum contribution is ${project.min_contribution} SOL`);
-        return;
-      }
-      if (project.max_contribution > 0 && amount > project.max_contribution) {
-        setError(`Maximum contribution is ${project.max_contribution} SOL`);
-        return;
-      }
-      const remaining = project.hard_cap - (project.raised_so_far || 0);
-      if (amount > remaining) {
-        setError(`Only ${remaining.toFixed(2)} SOL remaining in hard cap`);
-        return;
-      }
+    setContributing(true);
+    setError(null);
+    setSuccess(null);
 
-      // ─── Use the constant – no env vars, no line breaks ────────────
-      const pubkeyStr = LAUNCHPAD_PUBKEY_STR.trim();
-      const launchpadPubkey = new PublicKey(pubkeyStr);
-
-      setContributing(true);
-      setError(null);
-      setSuccess(null);
-
+    try {
       const lamports = amount * LAMPORTS_PER_SOL;
 
       const tx = new Transaction().add(

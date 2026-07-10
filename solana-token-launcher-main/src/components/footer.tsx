@@ -93,27 +93,19 @@ const Footer = () => {
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 zrp-brand-footer">
-        {/* Top Section: Logo + Tagline + Socials */}
+        {/* Top Section: Logo (bigger) + Tagline + Socials */}
         <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-12 mb-12">
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-4">
-              {/* Logo: replace the "Z" with your official logo */}
-              <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0">
+              {/* Bigger logo – removed text beside it */}
+              <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0">
                 <Image
                   src="/logo.png"
                   alt="ZRP Logo"
-                  width={64}
-                  height={64}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
-              </div>
-              <div>
-                <span className="text-white text-2xl font-bold tracking-wider" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  ZRP
-                </span>
-                <span className="block text-[#FF2D2D] text-xs tracking-widest mt-1" style={{ fontFamily: "'Orbitron', sans-serif" }}>
-                  LAUNCH • BUILD • CONNECT
-                </span>
               </div>
             </div>
             <p className="text-[#BDDBDB] text-sm max-w-md leading-relaxed mb-2">
@@ -167,9 +159,8 @@ const Footer = () => {
 
         <div className="zrp-divider mb-12"></div>
 
-        {/* Main Footer Grid – deduplicated */}
+        {/* Main Footer Grid – unchanged */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12">
-          {/* Product */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Product</h4>
             <ul className="space-y-2.5">
@@ -196,7 +187,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Guides (cleaned duplicates) */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Guides</h4>
             <ul className="space-y-2.5">
@@ -224,7 +214,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources (duplicates removed) */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Resources</h4>
             <ul className="space-y-2.5">
@@ -238,7 +227,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Trust & Security */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Trust & Security</h4>
             <ul className="space-y-3.5">

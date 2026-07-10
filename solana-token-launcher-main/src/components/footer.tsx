@@ -92,15 +92,15 @@ const Footer = () => {
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 zrp-brand-footer">
-        {/* Top Section: Logo (no box) + Tagline + Socials + Buttons */}
+        {/* Top Section: Logo + Tagline + Socials + Buttons */}
         <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-12 mb-12">
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-4">
-              {/* Logo – no wrapper, just the image */}
+              {/* Logo – 116x115, no box, clean */}
               <img
                 src="/logo.png"
                 alt="ZRP Logo"
-                className="w-24 h-24 object-contain"
+                className="w-[116px] h-[115px] object-contain"
               />
             </div>
             <p className="text-[#BDDBDB] text-sm max-w-md leading-relaxed mb-2">
@@ -143,7 +143,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* ACTION BUTTONS */}
+          {/* ✅ ACTION BUTTONS – clearly visible */}
           <div className="flex flex-wrap gap-4">
             <Link href="/create-mint" className="zrp-btn-primary px-6 py-2.5 text-white font-semibold rounded-xl text-sm inline-block">
               Create Token
@@ -156,7 +156,7 @@ const Footer = () => {
 
         <div className="zrp-divider mb-12"></div>
 
-        {/* Main Footer Grid – deduplicated */}
+        {/* Footer Grid – same as before */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12">
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Product</h4>

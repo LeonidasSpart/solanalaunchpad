@@ -204,6 +204,7 @@ const Footer = () => {
               <li><Link href="/security" className="text-[#BDDBDB] hover:text-white text-sm transition">Security</Link></li>
               <li><Link href="/tokenomics" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics</Link></li>
               <li><Link href="/tokenomics-calculator" className="text-[#BDDBDB] hover:text-white text-sm transition">Tokenomics Calculator</Link></li>
+              <li><Link href="/affiliate-info" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliate Guide</Link></li>
               <li><Link href="/no-code-creator" className="text-[#BDDBDB] hover:text-white text-sm transition">No-Code Creator</Link></li>
             </ul>
           </div>
@@ -214,7 +215,6 @@ const Footer = () => {
               <li><Link href="/blog" className="text-[#BDDBDB] hover:text-white text-sm transition">Blog</Link></li>
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
-              <li><Link href="/affiliate-info" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliate Info</Link></li>
               <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>

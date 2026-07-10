@@ -8,8 +8,8 @@ import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, External
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
-// ─── CORRECT PUBLIC KEY – ANY HIDDEN CHARACTERS WILL BE FILTERED OUT ──
-const LAUNCHPAD_PUBKEY_STR = 'HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM';
+// ─── USE THE PLATFORM WALLET (matches backend) ──────────────────────────
+const LAUNCHPAD_PUBKEY_STR = process.env.NEXT_PUBLIC_LAUNCHPAD_PUBLIC_KEY || '86xqUFmu8GF5RzYDbW6JKtKKQBXh97CZdw9McJaaH7tW';
 
 interface Project {
   id: number;
@@ -118,13 +118,11 @@ export default function ProjectDetailPage() {
     }
 
     // ─── SAFE PUBLIC KEY CREATION ──────────────────────────────────────
-    // Remove any non-base58 characters (newlines, spaces, etc.)
     const cleanPubkey = LAUNCHPAD_PUBKEY_STR.replace(/[^1-9A-HJ-NP-Za-km-z]/g, '');
     let launchpadPubkey: PublicKey;
     try {
       launchpadPubkey = new PublicKey(cleanPubkey);
     } catch {
-      // Fallback – should never happen since we filter, but just in case.
       setError('Invalid platform wallet address. Please contact support.');
       return;
     }

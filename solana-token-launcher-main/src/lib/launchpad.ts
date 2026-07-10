@@ -2,26 +2,16 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 
 export function getLaunchpadKeypair(): Keypair {
-  const privateKeyStr = process.env.LAUNCHPAD_PRIVATE_KEY || process.env.PLATFORM_PRIVATE_KEY;
+  // Use PLATFORM_PRIVATE_KEY – it is already correct and stored as a single line.
+  const privateKeyStr = process.env.PLATFORM_PRIVATE_KEY;
   if (!privateKeyStr) {
-    throw new Error('Missing LAUNCHPAD_PRIVATE_KEY or PLATFORM_PRIVATE_KEY');
+    throw new Error('PLATFORM_PRIVATE_KEY is missing');
   }
-
-  // Remove all whitespace (spaces, newlines, tabs)
   const clean = privateKeyStr.replace(/\s/g, '');
-  
-  // Log the length for debugging – you'll see this in Railway logs
-  console.log('Private key length (chars):', clean.length);
-  console.log('First 20 chars:', clean.slice(0, 20));
-
-  // Decode from base64 (this is what you have in Railway)
   const buffer = Buffer.from(clean, 'base64');
-  console.log('Decoded buffer length (bytes):', buffer.length);
-
   if (buffer.length !== 64) {
-    throw new Error(`Invalid private key length: ${buffer.length} bytes, expected 64.`);
+    throw new Error(`Invalid private key length: ${buffer.length} bytes (expected 64)`);
   }
-
   return Keypair.fromSecretKey(new Uint8Array(buffer));
 }
 

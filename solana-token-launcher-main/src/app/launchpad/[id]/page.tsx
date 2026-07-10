@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
+
+// ─── USE THE PLATFORM WALLET (matches backend) ──────────────────────────
+const LAUNCHPAD_PUBKEY_STR = process.env.NEXT_PUBLIC_LAUNCHPAD_PUBLIC_KEY || '86xqUFmu8GF5RzYDbW6JKtKKQBXh97CZdw9McJaaH7tW';
 
 interface Project {
   id: number;
@@ -39,7 +42,6 @@ interface Project {
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const { publicKey, connected, sendTransaction } = useWallet();
@@ -58,7 +60,26 @@ export default function ProjectDetailPage() {
       const res = await fetch(`/api/launchpad/projects/${id}`);
       if (!res.ok) throw new Error('Project not found');
       const data = await res.json();
-      setProject(data);
+      setProject({
+        ...data,
+        token_supply: parseFloat(data.token_supply) || 0,
+        token_price: parseFloat(data.token_price) || 0,
+        hard_cap: parseFloat(data.hard_cap) || 0,
+        soft_cap: parseFloat(data.soft_cap) || 0,
+        raised_so_far: parseFloat(data.raised_so_far) || 0,
+        min_contribution: parseFloat(data.min_contribution) || 0,
+        max_contribution: parseFloat(data.max_contribution) || 0,
+        fee_percentage: parseFloat(data.fee_percentage) || 0,
+        website: data.website || '',
+        twitter: data.twitter || '',
+        telegram: data.telegram || '',
+        discord: data.discord || '',
+        logo_url: data.logo_url || '',
+        lp_created: data.lp_created || false,
+        lp_pool_address: data.lp_pool_address || '',
+        lp_lock_end: data.lp_lock_end || '',
+        lp_locked: data.lp_locked || false,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -70,7 +91,6 @@ export default function ProjectDetailPage() {
     fetchProject();
   }, [id]);
 
-  // ─── Contribute ──────────────────────────────────────────────────────
   const handleContribute = async () => {
     if (!connected || !publicKey) {
       setError('Please connect your wallet');
@@ -97,12 +117,21 @@ export default function ProjectDetailPage() {
       return;
     }
 
+    // ─── SAFE PUBLIC KEY CREATION ──────────────────────────────────────
+    const cleanPubkey = LAUNCHPAD_PUBKEY_STR.replace(/[^1-9A-HJ-NP-Za-km-z]/g, '');
+    let launchpadPubkey: PublicKey;
+    try {
+      launchpadPubkey = new PublicKey(cleanPubkey);
+    } catch {
+      setError('Invalid platform wallet address. Please contact support.');
+      return;
+    }
+
     setContributing(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const launchpadPubkey = new PublicKey(process.env.NEXT_PUBLIC_LAUNCHPAD_PUBLIC_KEY!);
       const lamports = amount * LAMPORTS_PER_SOL;
 
       const tx = new Transaction().add(
@@ -118,7 +147,6 @@ export default function ProjectDetailPage() {
 
       const signature = await sendTransaction(tx, connection);
 
-      // Confirm and record contribution
       const confirmRes = await fetch(`/api/launchpad/projects/${id}/contribute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -144,7 +172,6 @@ export default function ProjectDetailPage() {
     }
   };
 
-  // ─── Refund ──────────────────────────────────────────────────────────
   const handleRefund = async () => {
     if (!connected || !publicKey) {
       setError('Please connect your wallet');
@@ -196,8 +223,9 @@ export default function ProjectDetailPage() {
     );
   }
 
-  const isActive = project.status === 'active' && new Date() < new Date(project.end_time);
-  const isEnded = new Date() > new Date(project.end_time);
+  const endDate = project.end_time ? new Date(project.end_time) : new Date(0);
+  const isActive = project.status === 'active' && new Date() < endDate;
+  const isEnded = new Date() > endDate;
   const progress = project.hard_cap > 0 ? ((project.raised_so_far || 0) / project.hard_cap) * 100 : 0;
   const raised = project.raised_so_far || 0;
 
@@ -259,10 +287,17 @@ export default function ProjectDetailPage() {
           </div>
         </div>
 
-        {/* ─── Contribution section ─── */}
         {isActive && (
           <div className="mt-6 bg-[#050505] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-medium mb-3">Contribute</h3>
+            
+            <div className="mb-3 text-xs text-[#BDDBDB] space-y-1">
+              <div>connected: {String(connected)}</div>
+              <div>contributing: {String(contributing)}</div>
+              <div>amount: "{contributionAmount || 'empty'}"</div>
+              <div>publicKey: {publicKey?.toBase58() || 'none'}</div>
+            </div>
+
             {connected ? (
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
@@ -297,7 +332,6 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        {/* ─── Refund section ─── */}
         {project.status === 'failed' && (
           <div className="mt-6 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4">
             <p className="text-[#FF2D2D] font-medium">This sale did not reach the soft cap.</p>
@@ -328,7 +362,6 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        {/* ─── LP Status section ────────────────────────────────────── */}
         {project.lp_created && (
           <div className="mt-6 bg-[#0D0D0D] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-semibold mb-3">🌊 Liquidity Pool</h3>
@@ -351,24 +384,16 @@ export default function ProjectDetailPage() {
                   </a>
                 </div>
               )}
-              {project.lp_lock_end ? (
-                <div className="flex justify-between">
-                  <span className="text-[#BDDBDB]">Locked until</span>
-                  <span className="text-white">
-                    {new Date(project.lp_lock_end).toLocaleDateString()}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex justify-between">
-                  <span className="text-[#BDDBDB]">Locked</span>
-                  <span className="text-[#BDDBDB]">No lock</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-[#BDDBDB]">Locked</span>
+                <span className="text-white">
+                  {project.lp_lock_end ? new Date(project.lp_lock_end).toLocaleDateString() : 'No lock'}
+                </span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* ─── Error / Success messages ──────────────────────────────── */}
         {error && (
           <div className="mt-4 bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-3 text-[#FF2D2D] text-sm flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
@@ -382,25 +407,24 @@ export default function ProjectDetailPage() {
           </div>
         )}
 
-        {/* Social links */}
         <div className="mt-6 flex flex-wrap gap-4 text-sm">
           {project.website && (
-            <a href={project.website} target="_blank" rel="noopener" className="text-[#BDDBDB] hover:text-white transition">
+            <a href={project.website} target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] hover:text-white transition">
               🌐 Website
             </a>
           )}
           {project.twitter && (
-            <a href={`https://twitter.com/${project.twitter.replace('@', '')}`} target="_blank" rel="noopener" className="text-[#BDDBDB] hover:text-white transition">
+            <a href={`https://twitter.com/${project.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] hover:text-white transition">
               🐦 Twitter
             </a>
           )}
           {project.telegram && (
-            <a href={project.telegram.startsWith('http') ? project.telegram : `https://t.me/${project.telegram.replace('t.me/', '')}`} target="_blank" rel="noopener" className="text-[#BDDBDB] hover:text-white transition">
+            <a href={project.telegram.startsWith('http') ? project.telegram : `https://t.me/${project.telegram.replace('t.me/', '')}`} target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] hover:text-white transition">
               💬 Telegram
             </a>
           )}
           {project.discord && (
-            <a href={project.discord} target="_blank" rel="noopener" className="text-[#BDDBDB] hover:text-white transition">
+            <a href={project.discord} target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] hover:text-white transition">
               🎮 Discord
             </a>
           )}

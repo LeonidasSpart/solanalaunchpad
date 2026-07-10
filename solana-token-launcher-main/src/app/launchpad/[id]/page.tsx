@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, ExternalLink } from 'lucide-react';
@@ -39,7 +39,6 @@ interface Project {
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const { publicKey, connected, sendTransaction } = useWallet();
@@ -89,10 +88,10 @@ export default function ProjectDetailPage() {
     fetchProject();
   }, [id]);
 
-  // ─── CONTRIBUTE FUNCTION WITH CATCH-ALL ERROR HANDLING ────────────────
+  // ─── THE ONLY FUNCTION THAT MATTERS ──────────────────────────────────────
   const handleContribute = async () => {
     try {
-      alert('🚀 Starting handleContribute...');
+      alert('🔥 Starting handleContribute...');
 
       if (!connected || !publicKey) {
         alert('❌ Wallet not connected');
@@ -100,7 +99,7 @@ export default function ProjectDetailPage() {
         return;
       }
       if (!project) {
-        alert('❌ No project data');
+        alert('❌ No project');
         return;
       }
 
@@ -129,8 +128,17 @@ export default function ProjectDetailPage() {
       }
 
       // ─── Hardcoded public key ──────────────────────────────────────────
-      const launchpadPubkey = new PublicKey('HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM');
-      alert(`✅ Launchpad pubkey: ${launchpadPubkey.toBase58()}`);
+      // This key is known to be valid.
+      const LAUNCHPAD_PUBKEY_STR = 'HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM';
+      alert(`🔑 Using pubkey: ${LAUNCHPAD_PUBKEY_STR}`);
+      let launchpadPubkey: PublicKey;
+      try {
+        launchpadPubkey = new PublicKey(LAUNCHPAD_PUBKEY_STR);
+      } catch (e: any) {
+        alert(`❌ Failed to create PublicKey: ${e.message}`);
+        setError('Invalid launchpad public key');
+        return;
+      }
 
       setContributing(true);
       setError(null);

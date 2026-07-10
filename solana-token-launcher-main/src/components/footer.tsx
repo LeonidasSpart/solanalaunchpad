@@ -92,18 +92,16 @@ const Footer = () => {
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 zrp-brand-footer">
-        {/* Top Section: Logo + Tagline + Socials + Buttons */}
+        {/* Top Section: Logo (no box) + Tagline + Socials + Buttons */}
         <div className="flex flex-col md:flex-row items-start justify-between gap-8 pb-12 mb-12">
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-4">
-              {/* Logo as plain img for reliability */}
-              <div className="w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-[#1a1a1a] flex items-center justify-center">
-                <img
-                  src="/logo.png"
-                  alt="ZRP Logo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              {/* Logo – no wrapper, just the image */}
+              <img
+                src="/logo.png"
+                alt="ZRP Logo"
+                className="w-24 h-24 object-contain"
+              />
             </div>
             <p className="text-[#BDDBDB] text-sm max-w-md leading-relaxed mb-2">
               The no-code platform to launch tokens on Solana in seconds.
@@ -145,7 +143,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* ACTION BUTTONS – both in red */}
+          {/* ACTION BUTTONS */}
           <div className="flex flex-wrap gap-4">
             <Link href="/create-mint" className="zrp-btn-primary px-6 py-2.5 text-white font-semibold rounded-xl text-sm inline-block">
               Create Token
@@ -158,9 +156,8 @@ const Footer = () => {
 
         <div className="zrp-divider mb-12"></div>
 
-        {/* Main Footer Grid – deduplicated as requested */}
+        {/* Main Footer Grid – deduplicated */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-12">
-          {/* Product */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Product</h4>
             <ul className="space-y-2.5">
@@ -187,7 +184,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Guides (deduplicated) */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Guides</h4>
             <ul className="space-y-2.5">
@@ -215,7 +211,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Resources (deduplicated) */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Resources</h4>
             <ul className="space-y-2.5">
@@ -229,7 +224,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Trust & Security */}
           <div>
             <h4 className="text-white font-semibold text-sm mb-5">Trust & Security</h4>
             <ul className="space-y-3.5">

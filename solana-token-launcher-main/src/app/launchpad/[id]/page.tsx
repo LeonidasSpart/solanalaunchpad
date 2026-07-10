@@ -45,6 +45,8 @@ export default function ProjectDetailPage() {
   const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
 
+  console.log('🔍 ProjectDetailPage rendered - connected:', connected, 'publicKey:', publicKey?.toBase58());
+
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [contributing, setContributing] = useState(false);
@@ -54,10 +56,12 @@ export default function ProjectDetailPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const fetchProject = async () => {
+    console.log('📡 Fetching project:', id);
     try {
       const res = await fetch(`/api/launchpad/projects/${id}`);
       if (!res.ok) throw new Error('Project not found');
       const data = await res.json();
+      console.log('📡 Project data:', data);
       setProject({
         ...data,
         token_supply: parseFloat(data.token_supply) || 0,
@@ -79,6 +83,7 @@ export default function ProjectDetailPage() {
         lp_locked: data.lp_locked || false,
       });
     } catch (err: any) {
+      console.error('❌ Fetch error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -90,14 +95,26 @@ export default function ProjectDetailPage() {
   }, [id]);
 
   const handleContribute = async () => {
+    console.log('🟢 handleContribute called!');
+    console.log('  - connected:', connected);
+    console.log('  - publicKey:', publicKey?.toBase58());
+    console.log('  - project:', project?.token_name);
+    console.log('  - amount:', contributionAmount);
+
     if (!connected || !publicKey) {
+      console.log('❌ Wallet not connected');
       setError('Please connect your wallet');
       return;
     }
-    if (!project) return;
+    if (!project) {
+      console.log('❌ No project');
+      return;
+    }
 
     const amount = parseFloat(contributionAmount);
+    console.log('  - parsed amount:', amount);
     if (isNaN(amount) || amount <= 0) {
+      console.log('❌ Invalid amount');
       setError('Please enter a valid amount');
       return;
     }
@@ -117,6 +134,7 @@ export default function ProjectDetailPage() {
 
     // ─── Hardcoded public key (bypasses env var) ────────────────────
     const launchpadPubkey = new PublicKey('HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM');
+    console.log('  - launchpadPubkey:', launchpadPubkey.toBase58());
 
     setContributing(true);
     setError(null);
@@ -124,6 +142,7 @@ export default function ProjectDetailPage() {
 
     try {
       const lamports = amount * LAMPORTS_PER_SOL;
+      console.log('  - lamports:', lamports);
 
       const tx = new Transaction().add(
         SystemProgram.transfer({
@@ -136,7 +155,9 @@ export default function ProjectDetailPage() {
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
 
+      console.log('🔄 Sending transaction...');
       const signature = await sendTransaction(tx, connection);
+      console.log('✅ Transaction sent:', signature);
 
       const confirmRes = await fetch(`/api/launchpad/projects/${id}/contribute`, {
         method: 'POST',
@@ -148,15 +169,21 @@ export default function ProjectDetailPage() {
         }),
       });
 
+      console.log('📡 Confirm response status:', confirmRes.status);
       if (!confirmRes.ok) {
         const errData = await confirmRes.json();
+        console.error('❌ Confirm error:', errData);
         throw new Error(errData.error || 'Failed to record contribution');
       }
+
+      const confirmData = await confirmRes.json();
+      console.log('✅ Contribution confirmed:', confirmData);
 
       setSuccess(`✅ Contributed ${amount} SOL successfully!`);
       setContributionAmount('');
       await fetchProject();
     } catch (err: any) {
+      console.error('❌ Contribution error:', err);
       setError(err.message || 'Contribution failed');
     } finally {
       setContributing(false);
@@ -287,12 +314,18 @@ export default function ProjectDetailPage() {
                   type="number"
                   placeholder="Amount (SOL)"
                   value={contributionAmount}
-                  onChange={(e) => setContributionAmount(e.target.value)}
+                  onChange={(e) => {
+                    console.log('📝 Amount changed:', e.target.value);
+                    setContributionAmount(e.target.value);
+                  }}
                   className="flex-1 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
                   disabled={contributing}
                 />
                 <button
-                  onClick={handleContribute}
+                  onClick={() => {
+                    console.log('🟢 Button clicked!');
+                    handleContribute();
+                  }}
                   disabled={contributing || !contributionAmount}
                   className="px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white rounded-xl transition flex items-center justify-center gap-2"
                 >

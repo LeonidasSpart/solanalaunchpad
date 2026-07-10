@@ -95,6 +95,7 @@ export default function ProjectDetailPage() {
   }, [id]);
 
   const handleContribute = async () => {
+    alert('🟢 handleContribute called!');
     console.log('🟢 handleContribute called!');
     console.log('  - connected:', connected);
     console.log('  - publicKey:', publicKey?.toBase58());
@@ -308,6 +309,15 @@ export default function ProjectDetailPage() {
         {isActive && (
           <div className="mt-6 bg-[#050505] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-medium mb-3">Contribute</h3>
+            
+            {/* DEBUG DISPLAY */}
+            <div className="mb-3 text-xs text-[#BDDBDB] space-y-1">
+              <div>connected: {String(connected)}</div>
+              <div>contributing: {String(contributing)}</div>
+              <div>amount: "{contributionAmount || 'empty'}"</div>
+              <div>publicKey: {publicKey?.toBase58() || 'none'}</div>
+            </div>
+
             {connected ? (
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
@@ -323,6 +333,7 @@ export default function ProjectDetailPage() {
                 />
                 <button
                   onClick={() => {
+                    alert('🟢 Button clicked!');
                     console.log('🟢 Button clicked!');
                     handleContribute();
                   }}

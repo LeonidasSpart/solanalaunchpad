@@ -1,11 +1,22 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 
 export function getLaunchpadKeypair(): Keypair {
   const privateKeyStr = process.env.PLATFORM_PRIVATE_KEY;
   if (!privateKeyStr) {
     throw new Error('PLATFORM_PRIVATE_KEY is missing');
   }
+  
+  // Try JSON array format first
+  try {
+    const arr = JSON.parse(privateKeyStr);
+    if (Array.isArray(arr) && arr.length === 64) {
+      return Keypair.fromSecretKey(new Uint8Array(arr));
+    }
+  } catch {
+    // Not JSON, try base64
+  }
+  
+  // Try base64
   const clean = privateKeyStr.replace(/\s/g, '');
   const buffer = Buffer.from(clean, 'base64');
   if (buffer.length !== 64) {

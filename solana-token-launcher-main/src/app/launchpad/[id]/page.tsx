@@ -45,8 +45,6 @@ export default function ProjectDetailPage() {
   const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
 
-  console.log('🔍 ProjectDetailPage rendered - connected:', connected, 'publicKey:', publicKey?.toBase58());
-
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [contributing, setContributing] = useState(false);
@@ -56,12 +54,10 @@ export default function ProjectDetailPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const fetchProject = async () => {
-    console.log('📡 Fetching project:', id);
     try {
       const res = await fetch(`/api/launchpad/projects/${id}`);
       if (!res.ok) throw new Error('Project not found');
       const data = await res.json();
-      console.log('📡 Project data:', data);
       setProject({
         ...data,
         token_supply: parseFloat(data.token_supply) || 0,
@@ -83,7 +79,6 @@ export default function ProjectDetailPage() {
         lp_locked: data.lp_locked || false,
       });
     } catch (err: any) {
-      console.error('❌ Fetch error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -94,48 +89,46 @@ export default function ProjectDetailPage() {
     fetchProject();
   }, [id]);
 
+  // ─── THE ONLY FUNCTION THAT MATTERS ──────────────────────────────────────
   const handleContribute = async () => {
-    alert('🟢 handleContribute called!');
-    console.log('🟢 handleContribute called!');
-    console.log('  - connected:', connected);
-    console.log('  - publicKey:', publicKey?.toBase58());
-    console.log('  - project:', project?.token_name);
-    console.log('  - amount:', contributionAmount);
-
+    alert('🚀 STEP 1: handleContribute called');
     if (!connected || !publicKey) {
-      console.log('❌ Wallet not connected');
+      alert('❌ Wallet not connected');
       setError('Please connect your wallet');
       return;
     }
     if (!project) {
-      console.log('❌ No project');
+      alert('❌ No project');
       return;
     }
 
     const amount = parseFloat(contributionAmount);
-    console.log('  - parsed amount:', amount);
+    alert(`📊 Amount parsed: ${amount}`);
     if (isNaN(amount) || amount <= 0) {
-      console.log('❌ Invalid amount');
+      alert('❌ Invalid amount');
       setError('Please enter a valid amount');
       return;
     }
     if (project.min_contribution > 0 && amount < project.min_contribution) {
+      alert(`❌ Below min: ${project.min_contribution}`);
       setError(`Minimum contribution is ${project.min_contribution} SOL`);
       return;
     }
     if (project.max_contribution > 0 && amount > project.max_contribution) {
+      alert(`❌ Above max: ${project.max_contribution}`);
       setError(`Maximum contribution is ${project.max_contribution} SOL`);
       return;
     }
     const remaining = project.hard_cap - (project.raised_so_far || 0);
     if (amount > remaining) {
+      alert(`❌ Exceeds remaining cap: ${remaining}`);
       setError(`Only ${remaining.toFixed(2)} SOL remaining in hard cap`);
       return;
     }
 
-    // ─── Hardcoded public key (bypasses env var) ────────────────────
+    // ─── Hardcoded public key ──────────────────────────────────────────
     const launchpadPubkey = new PublicKey('HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM');
-    console.log('  - launchpadPubkey:', launchpadPubkey.toBase58());
+    alert(`✅ Launchpad pubkey: ${launchpadPubkey.toBase58()}`);
 
     setContributing(true);
     setError(null);
@@ -143,8 +136,9 @@ export default function ProjectDetailPage() {
 
     try {
       const lamports = amount * LAMPORTS_PER_SOL;
-      console.log('  - lamports:', lamports);
+      alert(`💰 Lamports: ${lamports}`);
 
+      alert('📦 Creating transaction...');
       const tx = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
@@ -152,14 +146,18 @@ export default function ProjectDetailPage() {
           lamports,
         })
       );
+
+      alert('⏳ Getting latest blockhash...');
       const { blockhash } = await connection.getLatestBlockhash();
+      alert(`✅ Blockhash: ${blockhash}`);
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
 
-      console.log('🔄 Sending transaction...');
+      alert('📤 Sending transaction via wallet...');
       const signature = await sendTransaction(tx, connection);
-      console.log('✅ Transaction sent:', signature);
+      alert(`✅ Transaction sent! Signature: ${signature}`);
 
+      alert('📡 Confirming with backend...');
       const confirmRes = await fetch(`/api/launchpad/projects/${id}/contribute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -170,24 +168,24 @@ export default function ProjectDetailPage() {
         }),
       });
 
-      console.log('📡 Confirm response status:', confirmRes.status);
+      alert(`📡 Backend response status: ${confirmRes.status}`);
       if (!confirmRes.ok) {
         const errData = await confirmRes.json();
-        console.error('❌ Confirm error:', errData);
+        alert(`❌ Backend error: ${JSON.stringify(errData)}`);
         throw new Error(errData.error || 'Failed to record contribution');
       }
 
       const confirmData = await confirmRes.json();
-      console.log('✅ Contribution confirmed:', confirmData);
-
+      alert(`✅ Contribution confirmed!`);
       setSuccess(`✅ Contributed ${amount} SOL successfully!`);
       setContributionAmount('');
       await fetchProject();
     } catch (err: any) {
-      console.error('❌ Contribution error:', err);
+      alert(`❌ Caught error: ${err.message}`);
       setError(err.message || 'Contribution failed');
     } finally {
       setContributing(false);
+      alert('🏁 handleContribute finished');
     }
   };
 
@@ -310,7 +308,7 @@ export default function ProjectDetailPage() {
           <div className="mt-6 bg-[#050505] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-medium mb-3">Contribute</h3>
             
-            {/* DEBUG DISPLAY */}
+            {/* Debug display – helps you see the state */}
             <div className="mb-3 text-xs text-[#BDDBDB] space-y-1">
               <div>connected: {String(connected)}</div>
               <div>contributing: {String(contributing)}</div>
@@ -324,19 +322,12 @@ export default function ProjectDetailPage() {
                   type="number"
                   placeholder="Amount (SOL)"
                   value={contributionAmount}
-                  onChange={(e) => {
-                    console.log('📝 Amount changed:', e.target.value);
-                    setContributionAmount(e.target.value);
-                  }}
+                  onChange={(e) => setContributionAmount(e.target.value)}
                   className="flex-1 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl px-4 py-2 text-white placeholder-[#BDDBDB] focus:outline-none focus:border-[#FF2D2D]"
                   disabled={contributing}
                 />
                 <button
-                  onClick={() => {
-                    alert('🟢 Button clicked!');
-                    console.log('🟢 Button clicked!');
-                    handleContribute();
-                  }}
+                  onClick={handleContribute}
                   disabled={contributing || !contributionAmount}
                   className="px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] disabled:opacity-50 text-white rounded-xl transition flex items-center justify-center gap-2"
                 >

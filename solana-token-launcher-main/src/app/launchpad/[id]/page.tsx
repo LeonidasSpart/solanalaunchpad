@@ -89,52 +89,53 @@ export default function ProjectDetailPage() {
     fetchProject();
   }, [id]);
 
-  // ─── THE ONLY FUNCTION THAT MATTERS ──────────────────────────────────────
+  // ─── CONTRIBUTE FUNCTION WITH CATCH-ALL ERROR HANDLING ────────────────
   const handleContribute = async () => {
-    alert('🚀 STEP 1: handleContribute called');
-    if (!connected || !publicKey) {
-      alert('❌ Wallet not connected');
-      setError('Please connect your wallet');
-      return;
-    }
-    if (!project) {
-      alert('❌ No project');
-      return;
-    }
-
-    const amount = parseFloat(contributionAmount);
-    alert(`📊 Amount parsed: ${amount}`);
-    if (isNaN(amount) || amount <= 0) {
-      alert('❌ Invalid amount');
-      setError('Please enter a valid amount');
-      return;
-    }
-    if (project.min_contribution > 0 && amount < project.min_contribution) {
-      alert(`❌ Below min: ${project.min_contribution}`);
-      setError(`Minimum contribution is ${project.min_contribution} SOL`);
-      return;
-    }
-    if (project.max_contribution > 0 && amount > project.max_contribution) {
-      alert(`❌ Above max: ${project.max_contribution}`);
-      setError(`Maximum contribution is ${project.max_contribution} SOL`);
-      return;
-    }
-    const remaining = project.hard_cap - (project.raised_so_far || 0);
-    if (amount > remaining) {
-      alert(`❌ Exceeds remaining cap: ${remaining}`);
-      setError(`Only ${remaining.toFixed(2)} SOL remaining in hard cap`);
-      return;
-    }
-
-    // ─── Hardcoded public key ──────────────────────────────────────────
-    const launchpadPubkey = new PublicKey('HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM');
-    alert(`✅ Launchpad pubkey: ${launchpadPubkey.toBase58()}`);
-
-    setContributing(true);
-    setError(null);
-    setSuccess(null);
-
     try {
+      alert('🚀 Starting handleContribute...');
+
+      if (!connected || !publicKey) {
+        alert('❌ Wallet not connected');
+        setError('Please connect your wallet');
+        return;
+      }
+      if (!project) {
+        alert('❌ No project data');
+        return;
+      }
+
+      const amount = parseFloat(contributionAmount);
+      alert(`📊 Amount: ${amount}`);
+      if (isNaN(amount) || amount <= 0) {
+        alert('❌ Invalid amount');
+        setError('Please enter a valid amount');
+        return;
+      }
+      if (project.min_contribution > 0 && amount < project.min_contribution) {
+        alert(`❌ Below min: ${project.min_contribution}`);
+        setError(`Minimum contribution is ${project.min_contribution} SOL`);
+        return;
+      }
+      if (project.max_contribution > 0 && amount > project.max_contribution) {
+        alert(`❌ Above max: ${project.max_contribution}`);
+        setError(`Maximum contribution is ${project.max_contribution} SOL`);
+        return;
+      }
+      const remaining = project.hard_cap - (project.raised_so_far || 0);
+      if (amount > remaining) {
+        alert(`❌ Exceeds remaining cap: ${remaining}`);
+        setError(`Only ${remaining.toFixed(2)} SOL remaining in hard cap`);
+        return;
+      }
+
+      // ─── Hardcoded public key ──────────────────────────────────────────
+      const launchpadPubkey = new PublicKey('HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM');
+      alert(`✅ Launchpad pubkey: ${launchpadPubkey.toBase58()}`);
+
+      setContributing(true);
+      setError(null);
+      setSuccess(null);
+
       const lamports = amount * LAMPORTS_PER_SOL;
       alert(`💰 Lamports: ${lamports}`);
 
@@ -147,13 +148,13 @@ export default function ProjectDetailPage() {
         })
       );
 
-      alert('⏳ Getting latest blockhash...');
+      alert('⏳ Getting blockhash...');
       const { blockhash } = await connection.getLatestBlockhash();
       alert(`✅ Blockhash: ${blockhash}`);
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
 
-      alert('📤 Sending transaction via wallet...');
+      alert('📤 Sending transaction...');
       const signature = await sendTransaction(tx, connection);
       alert(`✅ Transaction sent! Signature: ${signature}`);
 
@@ -168,7 +169,7 @@ export default function ProjectDetailPage() {
         }),
       });
 
-      alert(`📡 Backend response status: ${confirmRes.status}`);
+      alert(`📡 Backend status: ${confirmRes.status}`);
       if (!confirmRes.ok) {
         const errData = await confirmRes.json();
         alert(`❌ Backend error: ${JSON.stringify(errData)}`);
@@ -176,12 +177,12 @@ export default function ProjectDetailPage() {
       }
 
       const confirmData = await confirmRes.json();
-      alert(`✅ Contribution confirmed!`);
+      alert('✅ Contribution confirmed!');
       setSuccess(`✅ Contributed ${amount} SOL successfully!`);
       setContributionAmount('');
       await fetchProject();
     } catch (err: any) {
-      alert(`❌ Caught error: ${err.message}`);
+      alert(`❌ ERROR: ${err.message}`);
       setError(err.message || 'Contribution failed');
     } finally {
       setContributing(false);
@@ -308,7 +309,7 @@ export default function ProjectDetailPage() {
           <div className="mt-6 bg-[#050505] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-medium mb-3">Contribute</h3>
             
-            {/* Debug display – helps you see the state */}
+            {/* Debug display – shows current state */}
             <div className="mb-3 text-xs text-[#BDDBDB] space-y-1">
               <div>connected: {String(connected)}</div>
               <div>contributing: {String(contributing)}</div>

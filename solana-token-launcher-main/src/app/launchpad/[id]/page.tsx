@@ -115,19 +115,8 @@ export default function ProjectDetailPage() {
       return;
     }
 
-    // ─── Safely get and validate the launchpad public key ──────────
-    const launchpadPubkeyStr = process.env.NEXT_PUBLIC_LAUNCHPAD_PUBLIC_KEY;
-    if (!launchpadPubkeyStr) {
-      setError('Platform wallet not configured. Please contact support.');
-      return;
-    }
-    let launchpadPubkey: PublicKey;
-    try {
-      launchpadPubkey = new PublicKey(launchpadPubkeyStr);
-    } catch {
-      setError('Invalid platform wallet address. Please contact support.');
-      return;
-    }
+    // ─── Hardcoded public key (bypasses env var) ────────────────────
+    const launchpadPubkey = new PublicKey('HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM');
 
     setContributing(true);
     setError(null);

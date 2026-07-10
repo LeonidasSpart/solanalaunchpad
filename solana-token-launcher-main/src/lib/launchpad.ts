@@ -6,23 +6,32 @@ export function getLaunchpadKeypair(): Keypair {
     throw new Error('PLATFORM_PRIVATE_KEY is missing');
   }
   
-  // Try JSON array format first
+  // Try hex format first (128 chars, no special characters)
+  const clean = privateKeyStr.replace(/\s/g, '');
+  if (clean.length === 128) {
+    const buffer = Buffer.from(clean, 'hex');
+    if (buffer.length === 64) {
+      return Keypair.fromSecretKey(new Uint8Array(buffer));
+    }
+  }
+  
+  // Try JSON array format
   try {
     const arr = JSON.parse(privateKeyStr);
     if (Array.isArray(arr) && arr.length === 64) {
       return Keypair.fromSecretKey(new Uint8Array(arr));
     }
   } catch {
-    // Not JSON, try base64
+    // Not JSON
   }
   
   // Try base64
-  const clean = privateKeyStr.replace(/\s/g, '');
-  const buffer = Buffer.from(clean, 'base64');
-  if (buffer.length !== 64) {
-    throw new Error(`Invalid private key length: ${buffer.length} bytes (expected 64)`);
+  const b64Buffer = Buffer.from(clean, 'base64');
+  if (b64Buffer.length === 64) {
+    return Keypair.fromSecretKey(new Uint8Array(b64Buffer));
   }
-  return Keypair.fromSecretKey(new Uint8Array(buffer));
+  
+  throw new Error(`Invalid private key length: ${clean.length} chars (hex should be 128, base64 should be 88)`);
 }
 
 export function getFeeWalletPubkey(): PublicKey {

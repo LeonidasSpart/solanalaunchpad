@@ -2,7 +2,6 @@ import { Keypair, PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 
 export function getLaunchpadKeypair(): Keypair {
-  // Use PLATFORM_PRIVATE_KEY – it is already correct and stored as a single line.
   const privateKeyStr = process.env.PLATFORM_PRIVATE_KEY;
   if (!privateKeyStr) {
     throw new Error('PLATFORM_PRIVATE_KEY is missing');

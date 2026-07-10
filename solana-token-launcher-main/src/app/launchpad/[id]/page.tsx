@@ -8,7 +8,8 @@ import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, External
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
-// ─── THE CORRECT PUBLIC KEY – NO LINE BREAKS, NO SPACES ────────────────
+// ─── THIS IS THE CORRECT KEY – DO NOT EDIT ──────────────────────────────
+// It is 44 characters long and contains no line breaks.
 const LAUNCHPAD_PUBKEY_STR = 'HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM';
 
 interface Project {
@@ -93,62 +94,41 @@ export default function ProjectDetailPage() {
 
   const handleContribute = async () => {
     try {
-      alert('🔥 Starting handleContribute...');
-
       if (!connected || !publicKey) {
-        alert('❌ Wallet not connected');
         setError('Please connect your wallet');
         return;
       }
-      if (!project) {
-        alert('❌ No project');
-        return;
-      }
+      if (!project) return;
 
       const amount = parseFloat(contributionAmount);
-      alert(`📊 Amount: ${amount}`);
       if (isNaN(amount) || amount <= 0) {
-        alert('❌ Invalid amount');
         setError('Please enter a valid amount');
         return;
       }
       if (project.min_contribution > 0 && amount < project.min_contribution) {
-        alert(`❌ Below min: ${project.min_contribution}`);
         setError(`Minimum contribution is ${project.min_contribution} SOL`);
         return;
       }
       if (project.max_contribution > 0 && amount > project.max_contribution) {
-        alert(`❌ Above max: ${project.max_contribution}`);
         setError(`Maximum contribution is ${project.max_contribution} SOL`);
         return;
       }
       const remaining = project.hard_cap - (project.raised_so_far || 0);
       if (amount > remaining) {
-        alert(`❌ Exceeds remaining cap: ${remaining}`);
         setError(`Only ${remaining.toFixed(2)} SOL remaining in hard cap`);
         return;
       }
 
-      // ─── Use the constant, trim to be safe ──────────────────────────
+      // ─── Use the constant – no env vars, no line breaks ────────────
       const pubkeyStr = LAUNCHPAD_PUBKEY_STR.trim();
-      alert(`🔑 Using pubkey: "${pubkeyStr}"`);
-      let launchpadPubkey: PublicKey;
-      try {
-        launchpadPubkey = new PublicKey(pubkeyStr);
-      } catch (e: any) {
-        alert(`❌ Failed to create PublicKey from "${pubkeyStr}": ${e.message}`);
-        setError('Invalid launchpad public key');
-        return;
-      }
+      const launchpadPubkey = new PublicKey(pubkeyStr);
 
       setContributing(true);
       setError(null);
       setSuccess(null);
 
       const lamports = amount * LAMPORTS_PER_SOL;
-      alert(`💰 Lamports: ${lamports}`);
 
-      alert('📦 Creating transaction...');
       const tx = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
@@ -156,18 +136,12 @@ export default function ProjectDetailPage() {
           lamports,
         })
       );
-
-      alert('⏳ Getting blockhash...');
       const { blockhash } = await connection.getLatestBlockhash();
-      alert(`✅ Blockhash: ${blockhash}`);
       tx.recentBlockhash = blockhash;
       tx.feePayer = publicKey;
 
-      alert('📤 Sending transaction...');
       const signature = await sendTransaction(tx, connection);
-      alert(`✅ Transaction sent! Signature: ${signature}`);
 
-      alert('📡 Confirming with backend...');
       const confirmRes = await fetch(`/api/launchpad/projects/${id}/contribute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -178,24 +152,18 @@ export default function ProjectDetailPage() {
         }),
       });
 
-      alert(`📡 Backend status: ${confirmRes.status}`);
       if (!confirmRes.ok) {
         const errData = await confirmRes.json();
-        alert(`❌ Backend error: ${JSON.stringify(errData)}`);
         throw new Error(errData.error || 'Failed to record contribution');
       }
 
-      const confirmData = await confirmRes.json();
-      alert('✅ Contribution confirmed!');
       setSuccess(`✅ Contributed ${amount} SOL successfully!`);
       setContributionAmount('');
       await fetchProject();
     } catch (err: any) {
-      alert(`❌ ERROR: ${err.message}`);
       setError(err.message || 'Contribution failed');
     } finally {
       setContributing(false);
-      alert('🏁 handleContribute finished');
     }
   };
 

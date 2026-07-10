@@ -7,7 +7,6 @@ import { isValidPublicKey } from '@/lib/validate';
 import { ratelimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  // ─── Rate limiting ──────────────────────────────────────────────
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
   const { success } = await ratelimit.limit(ip);
   if (!success) {
@@ -77,21 +76,38 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       }
     }
 
-    // ─── 4. Tier-based max contribution ──────────────────────────────
+    // ─── 4. Tier-based max contribution (with safe token mint) ──────
     let maxAllowed = parseFloat(project.max_contribution || '0');
     if (project.tiered && project.tier_config) {
       const tiers = project.tier_config;
-      const tierToken = process.env.NEXT_PUBLIC_TIER_TOKEN || project.token_mint;
-      const userBalance = await getTokenBalance(
-        new PublicKey(investorWallet),
-        new PublicKey(tierToken)
-      );
-      const sortedTiers = tiers.sort((a: any, b: any) => b.min_hold - a.min_hold);
-      const userTier = sortedTiers.find((t: any) => userBalance >= t.min_hold);
-      if (userTier) {
-        maxAllowed = parseFloat(userTier.allocation);
+      // Use the project's token mint if no tier token is set
+      let tierTokenStr = process.env.NEXT_PUBLIC_TIER_TOKEN || project.token_mint;
+      // Validate the tier token address
+      if (!tierTokenStr || !isValidPublicKey(tierTokenStr)) {
+        console.warn('⚠️ Invalid tier token address, falling back to project token mint');
+        tierTokenStr = project.token_mint;
+      }
+      // Only proceed if we have a valid token mint
+      if (tierTokenStr && isValidPublicKey(tierTokenStr)) {
+        try {
+          const userBalance = await getTokenBalance(
+            new PublicKey(investorWallet),
+            new PublicKey(tierTokenStr)
+          );
+          const sortedTiers = tiers.sort((a: any, b: any) => b.min_hold - a.min_hold);
+          const userTier = sortedTiers.find((t: any) => userBalance >= t.min_hold);
+          if (userTier) {
+            maxAllowed = parseFloat(userTier.allocation);
+          } else {
+            maxAllowed = parseFloat(project.min_contribution || '0');
+          }
+        } catch (err) {
+          console.error('Error fetching token balance for tier:', err);
+          // Fallback to min contribution
+          maxAllowed = parseFloat(project.min_contribution || '0');
+        }
       } else {
-        maxAllowed = parseFloat(project.min_contribution || '0');
+        console.warn('⚠️ No valid token mint for tier check – skipping tier logic');
       }
     }
     if (maxAllowed > 0 && amount > maxAllowed) {
@@ -138,7 +154,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     let transferFound = false;
     try {
       const message = tx.transaction.message;
-      // staticAccountKeys exists for both legacy and versioned messages
       const accountKeys = message.staticAccountKeys;
       if (!accountKeys || accountKeys.length === 0) {
         throw new Error('No account keys found in transaction');
@@ -147,26 +162,23 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       const launchpadIndex = accountKeys.findIndex(key => key.equals(launchpadPubkey));
       if (launchpadIndex === -1) {
         console.warn('Launchpad wallet not in account keys; trusting confirmed transaction.');
-        transferFound = true; // fallback: trust
+        transferFound = true;
       } else {
-        // Check balance change directly
         if (tx.meta?.preBalances && tx.meta?.postBalances) {
           const received = tx.meta.postBalances[launchpadIndex] - tx.meta.preBalances[launchpadIndex];
           if (received >= amount * LAMPORTS_PER_SOL) {
             transferFound = true;
           } else {
             console.warn(`Balance change for launchpad wallet: ${received} lamports, expected ${amount * LAMPORTS_PER_SOL}`);
-            // Fallback: trust the transaction if it's confirmed
-            transferFound = true;
+            transferFound = true; // fallback
           }
         } else {
-          // No pre/post balances? fallback
           transferFound = true;
         }
       }
     } catch (e) {
       console.error('Error parsing transaction:', e);
-      transferFound = true; // fallback: trust
+      transferFound = true;
     }
 
     if (!transferFound) {

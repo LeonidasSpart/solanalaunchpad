@@ -8,6 +8,9 @@ import { ArrowLeft, Send, Loader2, CheckCircle, AlertCircle, RotateCcw, External
 import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
+// ─── THE CORRECT PUBLIC KEY – NO LINE BREAKS, NO SPACES ────────────────
+const LAUNCHPAD_PUBKEY_STR = 'HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM';
+
 interface Project {
   id: number;
   creator_wallet: string;
@@ -88,7 +91,6 @@ export default function ProjectDetailPage() {
     fetchProject();
   }, [id]);
 
-  // ─── THE ONLY FUNCTION THAT MATTERS ──────────────────────────────────────
   const handleContribute = async () => {
     try {
       alert('🔥 Starting handleContribute...');
@@ -127,15 +129,14 @@ export default function ProjectDetailPage() {
         return;
       }
 
-      // ─── Hardcoded public key ──────────────────────────────────────────
-      // This key is known to be valid.
-      const LAUNCHPAD_PUBKEY_STR = 'HkkXDw3RJC1GpJCC4wYKUMfeHYyX8yPKzh2g0Hk1knPM';
-      alert(`🔑 Using pubkey: ${LAUNCHPAD_PUBKEY_STR}`);
+      // ─── Use the constant, trim to be safe ──────────────────────────
+      const pubkeyStr = LAUNCHPAD_PUBKEY_STR.trim();
+      alert(`🔑 Using pubkey: "${pubkeyStr}"`);
       let launchpadPubkey: PublicKey;
       try {
-        launchpadPubkey = new PublicKey(LAUNCHPAD_PUBKEY_STR);
+        launchpadPubkey = new PublicKey(pubkeyStr);
       } catch (e: any) {
-        alert(`❌ Failed to create PublicKey: ${e.message}`);
+        alert(`❌ Failed to create PublicKey from "${pubkeyStr}": ${e.message}`);
         setError('Invalid launchpad public key');
         return;
       }
@@ -317,7 +318,6 @@ export default function ProjectDetailPage() {
           <div className="mt-6 bg-[#050505] rounded-xl p-4 border border-[#1a1a1a]">
             <h3 className="text-white font-medium mb-3">Contribute</h3>
             
-            {/* Debug display – shows current state */}
             <div className="mb-3 text-xs text-[#BDDBDB] space-y-1">
               <div>connected: {String(connected)}</div>
               <div>contributing: {String(contributing)}</div>

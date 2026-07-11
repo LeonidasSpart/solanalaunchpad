@@ -1,28 +1,52 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export function getLaunchpadKeypair(): Keypair {
+  // Try file first
+  try {
+    const keyPath = join(process.cwd(), '.secrets', 'platform_key.hex');
+    const hexStr = readFileSync(keyPath, 'utf-8').replace(/\s/g, '');
+    if (hexStr.length === 128) {
+      const buffer = Buffer.from(hexStr, 'hex');
+      if (buffer.length === 64) {
+        return Keypair.fromSecretKey(new Uint8Array(buffer));
+      }
+    }
+  } catch {
+    // File not found, fall back to env
+  }
+
+  // Fallback to env var
   const privateKeyStr = process.env.PLATFORM_PRIVATE_KEY;
   if (!privateKeyStr) {
-    throw new Error('PLATFORM_PRIVATE_KEY is missing');
+    throw new Error('PLATFORM_PRIVATE_KEY is missing and .secrets/platform_key.hex not found');
   }
+
+  const clean = privateKeyStr.replace(/\s/g, '');
   
-  // Try JSON array format first
+  if (clean.length === 128) {
+    const buffer = Buffer.from(clean, 'hex');
+    if (buffer.length === 64) {
+      return Keypair.fromSecretKey(new Uint8Array(buffer));
+    }
+  }
+
   try {
     const arr = JSON.parse(privateKeyStr);
     if (Array.isArray(arr) && arr.length === 64) {
       return Keypair.fromSecretKey(new Uint8Array(arr));
     }
   } catch {
-    // Not JSON, try base64
+    // Not JSON
   }
-  
-  // Try base64
-  const clean = privateKeyStr.replace(/\s/g, '');
-  const buffer = Buffer.from(clean, 'base64');
-  if (buffer.length !== 64) {
-    throw new Error(`Invalid private key length: ${buffer.length} bytes (expected 64)`);
+
+  const b64Buffer = Buffer.from(clean, 'base64');
+  if (b64Buffer.length === 64) {
+    return Keypair.fromSecretKey(new Uint8Array(b64Buffer));
   }
-  return Keypair.fromSecretKey(new Uint8Array(buffer));
+
+  throw new Error(`Invalid private key length: ${clean.length} chars`);
 }
 
 export function getFeeWalletPubkey(): PublicKey {

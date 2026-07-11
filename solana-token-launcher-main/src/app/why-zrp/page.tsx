@@ -1,5 +1,20 @@
 // src/app/why-zrp/page.tsx
+import type { Metadata } from "next";
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: "Why ZRP? | Best Solana Token Launchpad Comparison",
+  description:
+    "Compare ZRP vs other Solana token creators. Free devnet testing, built-in airdrops, token dashboard, authority revocation, and transparent 0.15 SOL pricing. See why creators choose ZRP.",
+  alternates: {
+    canonical: "https://zrp.one/why-zrp",
+  },
+  openGraph: {
+    title: "Why ZRP? | Best Solana Token Launchpad Comparison",
+    description: "Free devnet testing, built-in airdrops, token dashboard, and transparent pricing. See the feature comparison.",
+    url: "https://zrp.one/why-zrp",
+  },
+};
 
 export default function WhyZRPPage() {
   return (

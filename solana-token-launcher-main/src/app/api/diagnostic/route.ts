@@ -49,9 +49,9 @@ export async function GET() {
       try {
         const web3 = await import('@solana/web3.js');
         const conn = new web3.Connection(process.env.RPC_URL);
-        const health = await conn.getHealth();
+        const version = await conn.getVersion();
         results.rpc_connected = true;
-        results.rpc_health = health;
+        results.rpc_version = version['solana-core'];
       } catch (e: any) {
         results.rpc_connected = false;
         errors.push(`RPC failed: ${e.message}`);

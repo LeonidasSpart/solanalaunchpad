@@ -3,18 +3,25 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 
 export function getLaunchpadKeypair(): Keypair {
-  // Try file first
-  try {
-    const keyPath = join(process.cwd(), '.secrets', 'platform_key.hex');
-    const hexStr = readFileSync(keyPath, 'utf-8').replace(/\s/g, '');
-    if (hexStr.length === 128) {
-      const buffer = Buffer.from(hexStr, 'hex');
-      if (buffer.length === 64) {
-        return Keypair.fromSecretKey(new Uint8Array(buffer));
+  // Try multiple possible paths for the key file
+  const possiblePaths = [
+    '/app/.secrets/platform_key.hex',
+    join(process.cwd(), '.secrets', 'platform_key.hex'),
+    join(process.cwd(), '..', '.secrets', 'platform_key.hex'),
+  ];
+
+  for (const keyPath of possiblePaths) {
+    try {
+      const hexStr = readFileSync(keyPath, 'utf-8').replace(/\s/g, '');
+      if (hexStr.length === 128) {
+        const buffer = Buffer.from(hexStr, 'hex');
+        if (buffer.length === 64) {
+          return Keypair.fromSecretKey(new Uint8Array(buffer));
+        }
       }
+    } catch {
+      // File not found at this path, try next
     }
-  } catch {
-    // File not found, fall back to env
   }
 
   // Fallback to env var

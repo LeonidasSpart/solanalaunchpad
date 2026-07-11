@@ -11,10 +11,12 @@ export default function WelcomePopup() {
 
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem('zrp-welcome-seen');
+
     if (!hasSeenPopup) {
       const timer = setTimeout(() => {
         setIsOpen(true);
-      }, 1500);
+      }, 45000); // Show after 45 seconds
+
       return () => clearTimeout(timer);
     }
   }, []);
@@ -59,7 +61,7 @@ export default function WelcomePopup() {
             className="fixed inset-0 flex items-center justify-center z-[101] p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div 
+            <div
               className="relative w-full max-w-md bg-[#0D0D0D] rounded-3xl border border-[#FF2D2D]/20 shadow-2xl shadow-[#FF2D2D]/10 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
@@ -80,7 +82,7 @@ export default function WelcomePopup() {
 
               {/* Content */}
               <div className="relative z-10 p-8 pt-10">
-                {/* Logo - Using logo1.png */}
+                {/* Logo */}
                 <div className="flex justify-center mb-6">
                   <div className="relative w-20 h-20 rounded-2xl overflow-hidden shadow-lg shadow-[#FF2D2D]/25">
                     <Image
@@ -98,11 +100,12 @@ export default function WelcomePopup() {
                 <h2 className="text-2xl font-bold text-white text-center mb-2">
                   Welcome to <span className="text-[#FF2D2D]">ZRP</span>
                 </h2>
+
                 <p className="text-[#BDDBDB] text-center text-sm mb-8">
                   Create your own Solana token in minutes — no coding required.
                 </p>
 
-                {/* Features list */}
+                {/* Features */}
                 <div className="space-y-3 mb-8">
                   {features.map((feature, index) => (
                     <motion.div
@@ -115,7 +118,9 @@ export default function WelcomePopup() {
                       <div className="w-8 h-8 rounded-lg bg-[#FF2D2D]/10 flex items-center justify-center flex-shrink-0">
                         <span className="text-[#FF2D2D]">{feature.icon}</span>
                       </div>
-                      <span className="text-white text-sm font-medium">{feature.text}</span>
+                      <span className="text-white text-sm font-medium">
+                        {feature.text}
+                      </span>
                     </motion.div>
                   ))}
                 </div>

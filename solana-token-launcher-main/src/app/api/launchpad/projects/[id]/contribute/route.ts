@@ -5,6 +5,13 @@ import { getLaunchpadKeypair } from '@/lib/launchpad';
 import { isValidPublicKey } from '@/lib/validate';
 import { ratelimit } from '@/lib/rate-limit';
 
+function getRpcUrl(network: string): string {
+  if (network === 'mainnet') {
+    return process.env.RPC_URL_MAINNET || process.env.RPC_URL || '';
+  }
+  return process.env.RPC_URL_DEVNET || '';
+}
+
 export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
   const { success } = await ratelimit.limit(ip);
@@ -20,7 +27,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     }
 
     const body = await req.json();
-    const { investorWallet, amountSol, txSignature, network } = body; // ← added network
+    const { investorWallet, amountSol, txSignature, network } = body;
 
     console.log('📥 Contribution request:', { projectId, investorWallet, amountSol, txSignature, network });
 
@@ -32,15 +39,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Invalid investor wallet address' }, { status: 400 });
     }
 
-    // ─── Determine RPC based on network ─────────────────────────────
-    const networkName = network || 'devnet'; // default to devnet if not specified
-    let rpcUrl: string;
-    
-    if (networkName === 'mainnet') {
-      rpcUrl = process.env.RPC_URL_MAINNET || process.env.RPC_URL || '';
-    } else {
-      rpcUrl = process.env.RPC_URL_DEVNET || '';
-    }
+    const networkName = network || 'devnet';
+    const rpcUrl = getRpcUrl(networkName);
     
     if (!rpcUrl) {
       throw new Error(`RPC_URL not configured for ${networkName}`);
@@ -48,7 +48,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     
     console.log(`🔌 Using ${networkName} RPC:`, rpcUrl.replace(/api-key=.*/, 'api-key=***'));
 
-    // ─── 1. Get project ──────────────────────────────────────────────
     const projectRes = await query('SELECT * FROM launchpad_projects WHERE id = $1', [projectId]);
     const project = projectRes.rows[0];
     if (!project) {
@@ -74,7 +73,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: `Only ${remaining.toFixed(2)} SOL remaining` }, { status: 400 });
     }
 
-    // ─── 2. Min/max contribution validation ─────────────────────────
     const minAllowed = parseFloat(project.min_contribution || '0');
     if (minAllowed > 0 && amount < minAllowed) {
       return NextResponse.json({ error: `Minimum contribution is ${minAllowed} SOL` }, { status: 400 });
@@ -84,10 +82,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: `Maximum contribution is ${maxAllowed} SOL` }, { status: 400 });
     }
 
-    // ─── 3. Whitelist / KYC (optional – keep your existing checks) ──
-    // ... (insert your existing whitelist/KYC logic here)
-
-    // ─── 4. Verify transaction on-chain (with retry) ────────────────
     const connection = new Connection(rpcUrl);
     console.log(`🔍 Fetching transaction on ${networkName}:`, txSignature);
 
@@ -112,7 +106,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: `Transaction failed: ${JSON.stringify(tx.meta.err)}` }, { status: 400 });
     }
 
-    // ─── 5. Prevent replay attacks ──────────────────────────────────
     const existing = await query(
       'SELECT id FROM launchpad_contributions WHERE tx_signature = $1',
       [txSignature]
@@ -122,7 +115,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Transaction already processed' }, { status: 409 });
     }
 
-    // ─── 6. Verify transfer ─────────────────────────────────────────
     const launchpadPubkey = getLaunchpadKeypair().publicKey;
     let transferFound = false;
     let verifiedAmountLamports = 0;
@@ -142,7 +134,6 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       if (tx.meta?.preBalances && tx.meta?.postBalances) {
         verifiedAmountLamports = tx.meta.postBalances[launchpadIndex] - tx.meta.preBalances[launchpadIndex];
         const expectedLamports = Math.round(amount * LAMPORTS_PER_SOL);
-        // Allow small tolerance for rent/account changes (within 0.001 SOL)
         const tolerance = 0.001 * LAMPORTS_PER_SOL;
         if (verifiedAmountLamports >= expectedLamports - tolerance && verifiedAmountLamports > 0) {
           transferFound = true;
@@ -158,10 +149,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Transfer verification failed: amount mismatch' }, { status: 400 });
     }
 
-    // Use the ACTUAL verified amount from the transaction, not user input
     const verifiedAmountSol = verifiedAmountLamports / LAMPORTS_PER_SOL;
 
-    // ─── 7. Store contribution with network ─────────────────────────
     const result = await query(
       `INSERT INTO launchpad_contributions (project_id, investor_wallet, amount_sol, tx_signature, status, network)
        VALUES ($1, $2, $3, $4, 'confirmed', $5)
@@ -179,9 +168,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     console.log('✅ Contribution recorded on', networkName, ':', result.rows[0]);
     return NextResponse.json({ success: true, contribution: result.rows[0], network: networkName });
   } catch (error: any) {
-    console.error('❌ Contribution error:');
-    console.error('  Message:', error.message);
-    console.error('  Stack:', error.stack);
+    console.error('❌ Contribution error:', error.message, error.stack);
     return NextResponse.json({ error: 'Contribution failed: ' + error.message }, { status: 500 });
   }
 }

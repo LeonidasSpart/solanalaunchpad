@@ -9,7 +9,20 @@ import Link from 'next/link';
 import { LAMPORTS_PER_SOL, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
 
 // ─── USE THE PLATFORM WALLET (matches backend) ──────────────────────────
-const LAUNCHPAD_PUBKEY_STR = process.env.NEXT_PUBLIC_LAUNCHPAD_PUBLIC_KEY || '86xqUFmu8GF5RzYDbW6JKtKKQBXh97CZdw9McJaaH7tW';
+const LAUNCHPAD_PUBKEY_STR = process.env.NEXT_PUBLIC_LAUNCHPAD_PUBLIC_KEY || 'BQv7aJY5nf25Ft9EkaTqau2hpvZCnEDBH9pU1pzwpAaK';
+
+// ─── Helper to detect network from connection endpoint ───────────────────
+function getNetworkFromConnection(connection: any): string {
+  const endpoint = connection?.rpcEndpoint || '';
+  if (endpoint.includes('devnet')) {
+    return 'devnet';
+  }
+  if (endpoint.includes('mainnet') || endpoint.includes('helius-rpc.com')) {
+    return 'mainnet';
+  }
+  // Fallback to env var
+  return process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet' ? 'mainnet' : 'devnet';
+}
 
 interface Project {
   id: number;
@@ -117,7 +130,10 @@ export default function ProjectDetailPage() {
       return;
     }
 
-    // ─── SAFE PUBLIC KEY CREATION ──────────────────────────────────────
+    // Detect current network from wallet connection
+    const currentNetwork = getNetworkFromConnection(connection);
+    console.log('🌐 Contributing on network:', currentNetwork);
+
     const cleanPubkey = LAUNCHPAD_PUBKEY_STR.replace(/[^1-9A-HJ-NP-Za-km-z]/g, '');
     let launchpadPubkey: PublicKey;
     try {
@@ -146,6 +162,7 @@ export default function ProjectDetailPage() {
       tx.feePayer = publicKey;
 
       const signature = await sendTransaction(tx, connection);
+      console.log('✅ Transaction sent:', signature);
 
       const confirmRes = await fetch(`/api/launchpad/projects/${id}/contribute`, {
         method: 'POST',
@@ -154,6 +171,7 @@ export default function ProjectDetailPage() {
           investorWallet: publicKey.toBase58(),
           amountSol: amount,
           txSignature: signature,
+          network: currentNetwork, // ← SEND NETWORK TO BACKEND
         }),
       });
 
@@ -162,10 +180,11 @@ export default function ProjectDetailPage() {
         throw new Error(errData.error || 'Failed to record contribution');
       }
 
-      setSuccess(`✅ Contributed ${amount} SOL successfully!`);
+      setSuccess(`✅ Contributed ${amount} SOL on ${currentNetwork}!`);
       setContributionAmount('');
       await fetchProject();
     } catch (err: any) {
+      console.error('❌ Contribution error:', err);
       setError(err.message || 'Contribution failed');
     } finally {
       setContributing(false);
@@ -179,6 +198,10 @@ export default function ProjectDetailPage() {
     }
     if (!project) return;
 
+    // Detect current network from wallet connection
+    const currentNetwork = getNetworkFromConnection(connection);
+    console.log('🌐 Requesting refund on network:', currentNetwork);
+
     setRefunding(true);
     setError(null);
     setSuccess(null);
@@ -187,16 +210,20 @@ export default function ProjectDetailPage() {
       const res = await fetch(`/api/launchpad/projects/${id}/refund`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ investorWallet: publicKey.toBase58() }),
+        body: JSON.stringify({
+          investorWallet: publicKey.toBase58(),
+          network: currentNetwork, // ← SEND NETWORK TO BACKEND
+        }),
       });
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Refund failed');
       }
       const data = await res.json();
-      setSuccess(`✅ Refunded successfully! Tx: ${data.signature.slice(0, 8)}...`);
+      setSuccess(`✅ Refunded successfully on ${currentNetwork}! Tx: ${data.signature.slice(0, 8)}...`);
       await fetchProject();
     } catch (err: any) {
+      console.error('❌ Refund error:', err);
       setError(err.message);
     } finally {
       setRefunding(false);

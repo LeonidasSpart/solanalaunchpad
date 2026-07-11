@@ -20,9 +20,9 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     }
 
     const body = await req.json();
-    const { investorWallet, amountSol, txSignature } = body;
+    const { investorWallet, amountSol, txSignature, network } = body; // ← added network
 
-    console.log('📥 Contribution request:', { projectId, investorWallet, amountSol, txSignature });
+    console.log('📥 Contribution request:', { projectId, investorWallet, amountSol, txSignature, network });
 
     if (!investorWallet || amountSol === undefined || amountSol === null || !txSignature) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -31,6 +31,22 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     if (!isValidPublicKey(investorWallet)) {
       return NextResponse.json({ error: 'Invalid investor wallet address' }, { status: 400 });
     }
+
+    // ─── Determine RPC based on network ─────────────────────────────
+    const networkName = network || 'devnet'; // default to devnet if not specified
+    let rpcUrl: string;
+    
+    if (networkName === 'mainnet') {
+      rpcUrl = process.env.RPC_URL_MAINNET || process.env.RPC_URL || '';
+    } else {
+      rpcUrl = process.env.RPC_URL_DEVNET || '';
+    }
+    
+    if (!rpcUrl) {
+      throw new Error(`RPC_URL not configured for ${networkName}`);
+    }
+    
+    console.log(`🔌 Using ${networkName} RPC:`, rpcUrl.replace(/api-key=.*/, 'api-key=***'));
 
     // ─── 1. Get project ──────────────────────────────────────────────
     const projectRes = await query('SELECT * FROM launchpad_projects WHERE id = $1', [projectId]);
@@ -72,12 +88,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     // ... (insert your existing whitelist/KYC logic here)
 
     // ─── 4. Verify transaction on-chain (with retry) ────────────────
-    const rpcUrl = process.env.RPC_URL || process.env.RPC_URL_DEVNET;
-    if (!rpcUrl) {
-      throw new Error('RPC_URL not configured');
-    }
     const connection = new Connection(rpcUrl);
-    console.log(`🔍 Fetching transaction: ${txSignature}`);
+    console.log(`🔍 Fetching transaction on ${networkName}:`, txSignature);
 
     let tx = null;
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -86,13 +98,13 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
         maxSupportedTransactionVersion: 0,
       });
       if (tx) break;
-      console.log(`⏳ Retry ${attempt + 1}/5 - transaction not yet available`);
+      console.log(`⏳ Retry ${attempt + 1}/5 - transaction not yet available on ${networkName}`);
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
     if (!tx) {
-      console.error('❌ Transaction not found on-chain after retries:', txSignature);
-      return NextResponse.json({ error: 'Transaction not found on-chain. Please wait a moment and try again.' }, { status: 400 });
+      console.error(`❌ Transaction not found on ${networkName} after retries:`, txSignature);
+      return NextResponse.json({ error: `Transaction not found on ${networkName}. Please wait a moment and try again.` }, { status: 400 });
     }
 
     if (tx.meta?.err) {
@@ -149,12 +161,12 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     // Use the ACTUAL verified amount from the transaction, not user input
     const verifiedAmountSol = verifiedAmountLamports / LAMPORTS_PER_SOL;
 
-    // ─── 7. Store contribution ──────────────────────────────────────
+    // ─── 7. Store contribution with network ─────────────────────────
     const result = await query(
-      `INSERT INTO launchpad_contributions (project_id, investor_wallet, amount_sol, tx_signature, status)
-       VALUES ($1, $2, $3, $4, 'confirmed')
+      `INSERT INTO launchpad_contributions (project_id, investor_wallet, amount_sol, tx_signature, status, network)
+       VALUES ($1, $2, $3, $4, 'confirmed', $5)
        RETURNING *`,
-      [projectId, investorWallet, verifiedAmountSol, txSignature]
+      [projectId, investorWallet, verifiedAmountSol, txSignature, networkName]
     );
 
     await query(
@@ -164,8 +176,8 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       [verifiedAmountSol, projectId]
     );
 
-    console.log('✅ Contribution recorded:', result.rows[0]);
-    return NextResponse.json({ success: true, contribution: result.rows[0] });
+    console.log('✅ Contribution recorded on', networkName, ':', result.rows[0]);
+    return NextResponse.json({ success: true, contribution: result.rows[0], network: networkName });
   } catch (error: any) {
     console.error('❌ Contribution error:');
     console.error('  Message:', error.message);

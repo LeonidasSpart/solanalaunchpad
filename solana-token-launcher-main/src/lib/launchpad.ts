@@ -1,63 +1,55 @@
-import { Keypair, PublicKey } from '@solana/web3.js';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { Keypair } from '@solana/web3.js';
 
-export function getLaunchpadKeypair(): Keypair {
-  // Try multiple possible paths for the key file
-  const possiblePaths = [
-    '/app/.secrets/platform_key.hex',
-    join(process.cwd(), '.secrets', 'platform_key.hex'),
-    join(process.cwd(), '..', '.secrets', 'platform_key.hex'),
-  ];
+// Platform wallet keypair initialization
+let platformKeypair: Keypair;
 
-  for (const keyPath of possiblePaths) {
-    try {
-      const hexStr = readFileSync(keyPath, 'utf-8').replace(/\s/g, '');
-      if (hexStr.length === 128) {
-        const buffer = Buffer.from(hexStr, 'hex');
-        if (buffer.length === 64) {
-          return Keypair.fromSecretKey(new Uint8Array(buffer));
-        }
-      }
-    } catch {
-      // File not found at this path, try next
-    }
-  }
-
-  // Fallback to env var
-  const privateKeyStr = process.env.PLATFORM_PRIVATE_KEY;
-  if (!privateKeyStr) {
-    throw new Error('PLATFORM_PRIVATE_KEY is missing and .secrets/platform_key.hex not found');
-  }
-
-  const clean = privateKeyStr.replace(/\s/g, '');
+function initPlatformKeypair(): Keypair {
+  // Priority 1: PLATFORM_PRIVATE_KEY env var (hex string, 128 chars)
+  const hexKey = process.env.PLATFORM_PRIVATE_KEY || process.env.LAUNCHPAD_PRIVATE_KEY;
   
-  if (clean.length === 128) {
-    const buffer = Buffer.from(clean, 'hex');
-    if (buffer.length === 64) {
-      return Keypair.fromSecretKey(new Uint8Array(buffer));
+  if (hexKey && hexKey.length === 128 && /^[0-9a-fA-F]+$/.test(hexKey)) {
+    try {
+      const secretKey = Uint8Array.from(Buffer.from(hexKey, 'hex'));
+      if (secretKey.length === 64) {
+        return Keypair.fromSecretKey(secretKey);
+      }
+    } catch (e) {
+      console.error('Failed to parse hex key:', e);
     }
   }
-
-  try {
-    const arr = JSON.parse(privateKeyStr);
-    if (Array.isArray(arr) && arr.length === 64) {
-      return Keypair.fromSecretKey(new Uint8Array(arr));
+  
+  // Priority 2: JSON array format (for backwards compatibility)
+  const jsonKey = process.env.PLATFORM_PRIVATE_KEY_JSON || process.env.LAUNCHPAD_PRIVATE_KEY_JSON;
+  if (jsonKey) {
+    try {
+      const arr = JSON.parse(jsonKey);
+      if (Array.isArray(arr) && arr.length === 64) {
+        return Keypair.fromSecretKey(Uint8Array.from(arr));
+      }
+    } catch (e) {
+      console.error('Failed to parse JSON key:', e);
     }
-  } catch {
-    // Not JSON
   }
-
-  const b64Buffer = Buffer.from(clean, 'base64');
-  if (b64Buffer.length === 64) {
-    return Keypair.fromSecretKey(new Uint8Array(b64Buffer));
+  
+  // Priority 3: Base64 format (for backwards compatibility)
+  const b64Key = process.env.PLATFORM_PRIVATE_KEY_BASE64 || process.env.LAUNCHPAD_PRIVATE_KEY_BASE64;
+  if (b64Key) {
+    try {
+      const decoded = Buffer.from(b64Key, 'base64');
+      if (decoded.length === 64) {
+        return Keypair.fromSecretKey(new Uint8Array(decoded));
+      }
+    } catch (e) {
+      console.error('Failed to parse base64 key:', e);
+    }
   }
-
-  throw new Error(`Invalid private key length: ${clean.length} chars`);
+  
+  throw new Error(
+    'Platform keypair not configured. Set PLATFORM_PRIVATE_KEY (hex, 128 chars), ' +
+    'PLATFORM_PRIVATE_KEY_JSON (JSON array), or PLATFORM_PRIVATE_KEY_BASE64 (base64).'
+  );
 }
 
-export function getFeeWalletPubkey(): PublicKey {
-  const pubkeyStr = process.env.NEXT_PUBLIC_FEE_REC;
-  if (!pubkeyStr) throw new Error('NEXT_PUBLIC_FEE_REC missing');
-  return new PublicKey(pubkeyStr);
-}
+platformKeypair = initPlatformKeypair();
+
+export { platformKeypair };

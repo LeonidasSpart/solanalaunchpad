@@ -1,4 +1,4 @@
-import { Keypair } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 
 // ─── Platform Wallet Keypair ─────────────────────────────────────
 // Reads from env vars. Supports hex (128 chars), base64, or JSON array.
@@ -6,7 +6,7 @@ import { Keypair } from '@solana/web3.js';
 
 let platformKeypair: Keypair;
 
-function getPlatformKeypair(): Keypair {
+function initPlatformKeypair(): Keypair {
   const hexKey = process.env.PLATFORM_PRIVATE_KEY || process.env.LAUNCHPAD_PRIVATE_KEY;
 
   // ── Priority 1: Hex format (128 hex chars = 64 bytes) ──────────
@@ -55,6 +55,20 @@ function getPlatformKeypair(): Keypair {
   );
 }
 
-platformKeypair = getPlatformKeypair();
+platformKeypair = initPlatformKeypair();
+
+// ─── Backward-compatible exports ─────────────────────────────────
+
+/** Returns the platform keypair (cached) */
+export function getLaunchpadKeypair(): Keypair {
+  return platformKeypair;
+}
+
+/** Returns the fee recipient public key */
+export function getFeeWalletPubkey(): PublicKey {
+  const feeRec = process.env.NEXT_PUBLIC_FEE_REC || process.env.NEXT_PUBLIC_FEE_RECIPIENT;
+  if (!feeRec) throw new Error('NEXT_PUBLIC_FEE_REC not set');
+  return new PublicKey(feeRec);
+}
 
 export { platformKeypair };

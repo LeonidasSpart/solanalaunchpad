@@ -1,10 +1,10 @@
 import { Keypair, PublicKey } from '@solana/web3.js';
 
 // ─── Platform Wallet Keypair ─────────────────────────────────────
-// Reads from env vars. Supports hex (128 chars), base64, or JSON array.
-// Hex is preferred since Railway env vars handle it reliably.
+// Lazy initialization — only creates keypair when first accessed.
+// This avoids build-time errors since env vars aren't available during Next.js static generation.
 
-let platformKeypair: Keypair;
+let _platformKeypair: Keypair | null = null;
 
 function initPlatformKeypair(): Keypair {
   const hexKey = process.env.PLATFORM_PRIVATE_KEY || process.env.LAUNCHPAD_PRIVATE_KEY;
@@ -55,13 +55,19 @@ function initPlatformKeypair(): Keypair {
   );
 }
 
-platformKeypair = initPlatformKeypair();
+/** Lazy getter — initializes on first call */
+function getPlatformKeypair(): Keypair {
+  if (!_platformKeypair) {
+    _platformKeypair = initPlatformKeypair();
+  }
+  return _platformKeypair;
+}
 
 // ─── Backward-compatible exports ─────────────────────────────────
 
-/** Returns the platform keypair (cached) */
+/** Returns the platform keypair (lazy init) */
 export function getLaunchpadKeypair(): Keypair {
-  return platformKeypair;
+  return getPlatformKeypair();
 }
 
 /** Returns the fee recipient public key */
@@ -71,4 +77,10 @@ export function getFeeWalletPubkey(): PublicKey {
   return new PublicKey(feeRec);
 }
 
-export { platformKeypair };
+/** Proxy for direct access — lazy initializes on first property access */
+export const platformKeypair = new Proxy({} as Keypair, {
+  get(_target, prop) {
+    const kp = getPlatformKeypair();
+    return (kp as any)[prop];
+  },
+});

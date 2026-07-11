@@ -151,11 +151,18 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
 
     const verifiedAmountSol = verifiedAmountLamports / LAMPORTS_PER_SOL;
 
+    // ─── Calculate tokens allocated ─────────────────────────────────
+    const tokenPrice = parseFloat(project.token_price) || 0;
+    const tokensAllocated = tokenPrice > 0 ? verifiedAmountSol / tokenPrice : 0;
+    console.log('🪙 Tokens allocated:', tokensAllocated, 'at price', tokenPrice);
+
+    // ─── INSERT with tokens_allocated ───────────────────────────────
     const result = await query(
-      `INSERT INTO launchpad_contributions (project_id, investor_wallet, amount_sol, tx_signature, status, network)
-       VALUES ($1, $2, $3, $4, 'confirmed', $5)
+      `INSERT INTO launchpad_contributions 
+       (project_id, investor_wallet, amount_sol, tx_signature, status, network, tokens_allocated)
+       VALUES ($1, $2, $3, $4, 'confirmed', $5, $6)
        RETURNING *`,
-      [projectId, investorWallet, verifiedAmountSol, txSignature, networkName]
+      [projectId, investorWallet, verifiedAmountSol, txSignature, networkName, tokensAllocated]
     );
 
     await query(

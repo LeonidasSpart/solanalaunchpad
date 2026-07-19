@@ -5,8 +5,10 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start -p ${PORT:-3000}",
-    "lint": "next lint"
+    "start": "NODE_ENV=production next start -p ${PORT:-3000}",
+    "lint": "next lint",
+    "rebuild": "npm rebuild",
+    "postinstall": "npm run rebuild || true"
   },
   "dependencies": {
     "@langchain/openai": "^0.3.0",

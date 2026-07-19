@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@langchain/openai": "^0.3.0",
+    "@langchain/core": "^0.3.0",
+    "langchain": "^0.3.0",
+    "zod": "^3.22.4",
     "@metaplex-foundation/mpl-core": "^1.10.0",
     "@metaplex-foundation/mpl-token-metadata": "^2.5.0",
     "@metaplex-foundation/umi": "^1.5.1",

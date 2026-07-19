@@ -1,3 +1,4 @@
+// src/lib/ai/token-generator.ts
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { z } from "zod";
@@ -18,7 +19,7 @@ export class AITokenGenerator {
 
   constructor() {
     this.llm = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL || "gpt-4-turbo-preview",
+      modelName: process.env.OPENAI_MODEL || "gpt-4-turbo", // ✅ Updated model
       temperature: 0.7,
       apiKey: process.env.OPENAI_API_KEY,
     });

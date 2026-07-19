@@ -111,17 +111,49 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* Team Section */}
+        {/* ✅ Updated Team Section – Full List */}
         <section>
-          <h2 className="text-2xl font-bold text-white mb-3">Our Team</h2>
-          <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
-            <p className="font-semibold text-white">Built by LeonidasSpart</p>
-            <p className="text-[#BDDBDB] text-sm mt-1">
-              ZRP was created to remove the technical barriers (Rust, CLI, RPC config) that prevented non-developers from launching SPL tokens.
-            </p>
-            <p className="text-[#BDDBDB] text-sm mt-3">
-              The platform is constantly improved based on user feedback, with new guides, features, and tooling added regularly.
-            </p>
+          <h2 className="text-2xl font-bold text-white mb-4">Our Team</h2>
+          <p className="text-[#BDDBDB] mb-6">
+            We're a diverse team of builders, creators, and problem-solvers – united by a shared vision of making Solana accessible to everyone.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Leonidas</p>
+              <p className="text-[#BDDBDB] text-sm">Owner &amp; Founder</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Tanner</p>
+              <p className="text-[#BDDBDB] text-sm">CFO</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Yamina</p>
+              <p className="text-[#BDDBDB] text-sm">Community Development</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Olivier</p>
+              <p className="text-[#BDDBDB] text-sm">Frontend Engineer</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Guido</p>
+              <p className="text-[#BDDBDB] text-sm">Backend Engineer</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Schmid</p>
+              <p className="text-[#BDDBDB] text-sm">Network Engineer</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Silvia</p>
+              <p className="text-[#BDDBDB] text-sm">Marketing Manager</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Lorena</p>
+              <p className="text-[#BDDBDB] text-sm">Design</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <p className="text-white font-semibold">Carol</p>
+              <p className="text-[#BDDBDB] text-sm">HR</p>
+            </div>
           </div>
         </section>
 

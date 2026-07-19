@@ -2,13 +2,13 @@
 export default function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
-      {/* Hero Section */}
-      <div className="text-center mb-16">
+      {/* Hero Section with Visual Banner */}
+      <div className="relative bg-gradient-to-r from-[#FF2D2D]/20 to-transparent rounded-2xl p-8 md:p-12 mb-12 border border-[#FF2D2D]/20">
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
           Democratizing Solana <br className="hidden sm:block" />
           <span className="text-[#FF2D2D]">Token Creation</span>
         </h1>
-        <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
+        <p className="text-[#BDDBDB] text-lg max-w-2xl">
           We believe everyone should have access to the tools needed to create and launch tokens on the Solana blockchain.
         </p>
       </div>
@@ -23,6 +23,27 @@ export default function AboutPage() {
           <p className="mt-3">
             Our platform removes the technical barriers that prevent creators, entrepreneurs, and innovators from bringing their token ideas to life. With our no-code solution, anyone can create professional-grade Solana tokens in minutes.
           </p>
+        </section>
+
+        {/* What We Offer – 18 Products Grid */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">What We Offer</h2>
+          <p className="text-[#BDDBDB] mb-4">
+            A complete ecosystem of <span className="text-[#FF2D2D] font-semibold">18 products</span> – all in one platform.
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              'Token Creation', 'Airdrops', 'Staking', 'Vesting',
+              'Launchpad', 'DAO', 'NFTs', 'NFT Staking',
+              'LP Creation', 'Farming', 'Affiliates', 'Dashboard',
+              'Analytics', 'AI Generator', 'Browser Wallet',
+              'Wallet Service', 'Go SDK', 'AI Image Generation'
+            ].map((item) => (
+              <div key={item} className="bg-[#050505]/40 rounded-lg px-3 py-2 text-center border border-[#1a1a1a] text-[#BDDBDB] text-xs">
+                {item}
+              </div>
+            ))}
+          </div>
         </section>
 
         {/* Why Choose ZRP Section */}
@@ -44,6 +65,56 @@ export default function AboutPage() {
             <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
               <h3 className="text-white font-semibold mb-1">💰 Transparent Pricing</h3>
               <p className="text-[#BDDBDB] text-sm">No hidden fees, no subscriptions — just simple, clear pricing.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Trust ZRP – Trust Badges */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">Why Trust ZRP</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
+              <div className="text-2xl mb-1">🔓</div>
+              <div className="text-white font-semibold text-sm">Non-Custodial</div>
+              <div className="text-[#BDDBDB] text-xs">Your keys, your tokens</div>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
+              <div className="text-2xl mb-1">📖</div>
+              <div className="text-white font-semibold text-sm">Open Source</div>
+              <div className="text-[#BDDBDB] text-xs">Fully auditable code</div>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
+              <div className="text-2xl mb-1">🧠</div>
+              <div className="text-white font-semibold text-sm">AI-Powered</div>
+              <div className="text-[#BDDBDB] text-xs">Token + image generation</div>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 text-center border border-[#1a1a1a]">
+              <div className="text-2xl mb-1">🛡️</div>
+              <div className="text-white font-semibold text-sm">Self-Custody</div>
+              <div className="text-[#BDDBDB] text-xs">You own your assets</div>
+            </div>
+          </div>
+        </section>
+
+        {/* AI & Wallet Ecosystem Highlight */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">AI &amp; Wallet Ecosystem</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <h3 className="text-white font-semibold mb-1">🤖 AI Token Generator</h3>
+              <p className="text-[#BDDBDB] text-sm">Generate complete token configs and logos with AI. No manual work.</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <h3 className="text-white font-semibold mb-1">🧡 Browser Wallet</h3>
+              <p className="text-[#BDDBDB] text-sm">Non-custodial browser extension wallet. Your keys, your control.</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <h3 className="text-white font-semibold mb-1">⚙️ Wallet Service</h3>
+              <p className="text-[#BDDBDB] text-sm">HTTP wrapper for transaction building and signature verification.</p>
+            </div>
+            <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+              <h3 className="text-white font-semibold mb-1">🦾 Go SDK</h3>
+              <p className="text-[#BDDBDB] text-sm">Fully rebranded multi-chain Go SDK for wallet applications.</p>
             </div>
           </div>
         </section>
@@ -111,7 +182,27 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* ✅ Updated Team Section – Full List */}
+        {/* What's Next – Roadmap Section */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">What's Next</h2>
+          <p className="text-[#BDDBDB] mb-4">We're just getting started. Here's what we're building next:</p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-[#BDDBDB] text-sm">
+              <span className="text-[#FF2D2D]">●</span> AI Agent Launchpad – Deploy autonomous AI agents on Solana
+            </div>
+            <div className="flex items-center gap-3 text-[#BDDBDB] text-sm">
+              <span className="text-[#FF2D2D]">●</span> Mobile Wallet – iOS + Android app for ZRP wallet
+            </div>
+            <div className="flex items-center gap-3 text-[#BDDBDB] text-sm">
+              <span className="text-[#FF2D2D]">●</span> Cross-Chain Support – Launch tokens on Ethereum, Base, and BSC
+            </div>
+            <div className="flex items-center gap-3 text-[#BDDBDB] text-sm">
+              <span className="text-[#FF2D2D]">●</span> Platform Token – Governance and utility token (coming when the time is right)
+            </div>
+          </div>
+        </section>
+
+        {/* Team Section */}
         <section>
           <h2 className="text-2xl font-bold text-white mb-4">Our Team</h2>
           <p className="text-[#BDDBDB] mb-6">
@@ -154,6 +245,17 @@ export default function AboutPage() {
               <p className="text-white font-semibold">Carol</p>
               <p className="text-[#BDDBDB] text-sm">HR</p>
             </div>
+          </div>
+        </section>
+
+        {/* Office Address Section */}
+        <section>
+          <h2 className="text-2xl font-bold text-white mb-4">Our Office</h2>
+          <div className="bg-[#050505]/40 rounded-xl p-4 border border-[#1a1a1a]">
+            <p className="text-white font-semibold">ZRP</p>
+            <p className="text-[#BDDBDB] text-sm">Hardstrasse 201</p>
+            <p className="text-[#BDDBDB] text-sm">8005 Zurich</p>
+            <p className="text-[#BDDBDB] text-sm">Switzerland</p>
           </div>
         </section>
 

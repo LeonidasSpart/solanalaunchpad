@@ -12,7 +12,7 @@ interface TokenConfig {
   decimals: number;
   description: string;
   logoPrompt: string;
-  imageUrl?: string; // ✅ Added for DALL‑E generated logo
+  imageUrl?: string;
   website?: string;
   twitter?: string;
   telegram?: string;
@@ -70,7 +70,6 @@ export default function AICreatePage() {
     setLoading(true);
 
     try {
-      // Call existing ZRP token creation API
       const response = await fetch("/api/token/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -106,7 +105,10 @@ export default function AICreatePage() {
 
   return (
     <div className="container max-w-4xl mx-auto py-12 px-4">
-      <h1 className="text-3xl font-bold mb-4">🤖 AI Token Generator</h1>
+      <h1 className="text-3xl font-bold mb-4 flex items-center gap-2">
+        <img src="/AIZRP.PNG" alt="ZRP AI" className="h-10 w-auto" />
+        AI Token Generator
+      </h1>
       <p className="text-gray-400 mb-8">
         Describe your token idea, and AI will generate everything – name, symbol, supply, and more.
       </p>
@@ -138,7 +140,6 @@ export default function AICreatePage() {
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 space-y-4">
             <h2 className="text-xl font-semibold">📋 Review Configuration</h2>
 
-            {/* ✅ Display generated logo if available */}
             {config.imageUrl && (
               <div className="mt-4">
                 <label className="text-sm text-gray-400">Generated Logo</label>
@@ -200,7 +201,7 @@ export default function AICreatePage() {
             </div>
 
             <div>
-              <label className="text-sm text-gray-400">Logo Prompt (for image generation)</label>
+              <label className="text-sm text-gray-400">Logo Prompt</label>
               <input
                 value={config.logoPrompt}
                 onChange={(e) => setConfig({ ...config, logoPrompt: e.target.value })}

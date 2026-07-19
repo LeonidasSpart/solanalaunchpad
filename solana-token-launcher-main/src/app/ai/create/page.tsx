@@ -12,6 +12,7 @@ interface TokenConfig {
   decimals: number;
   description: string;
   logoPrompt: string;
+  imageUrl?: string; // ✅ Added for DALL‑E generated logo
   website?: string;
   twitter?: string;
   telegram?: string;
@@ -136,6 +137,20 @@ export default function AICreatePage() {
         <div className="space-y-6">
           <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 space-y-4">
             <h2 className="text-xl font-semibold">📋 Review Configuration</h2>
+
+            {/* ✅ Display generated logo if available */}
+            {config.imageUrl && (
+              <div className="mt-4">
+                <label className="text-sm text-gray-400">Generated Logo</label>
+                <div className="mt-2 border border-gray-700 rounded-lg overflow-hidden bg-gray-800 p-4">
+                  <img
+                    src={config.imageUrl}
+                    alt="Token Logo"
+                    className="w-full max-w-xs h-auto mx-auto rounded-lg"
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>

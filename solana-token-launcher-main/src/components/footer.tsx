@@ -164,6 +164,7 @@ const Footer = () => {
               <li><Link href="/" className="text-[#BDDBDB] hover:text-white text-sm transition">Home</Link></li>
               <li><Link href="/create-mint" className="text-[#BDDBDB] hover:text-white text-sm transition">Create Token</Link></li>
               <li><Link href="/launchpad" className="text-[#BDDBDB] hover:text-white text-sm transition">Launchpad</Link></li>
+              <li><Link href="/ai/create" className="text-[#BDDBDB] hover:text-white text-sm transition">🤖 AI Token Generator</Link></li>
               <li><Link href="/add-liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">Add Liquidity</Link></li>
               <li><Link href="/airdrop" className="text-[#BDDBDB] hover:text-white text-sm transition">Airdrop Tool</Link></li>
               <li><Link href="/revoke" className="text-[#BDDBDB] hover:text-white text-sm transition">Revoke Authority</Link></li>

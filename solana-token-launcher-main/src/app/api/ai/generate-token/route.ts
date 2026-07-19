@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getTokenGenerator } from "@/lib/ai/token-generator";
-import { rateLimit } from "@/lib/rate-limit";
+import { ratelimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
     const ip = req.ip || "unknown";
-    const { success } = await rateLimit(ip, "ai-generate", 10, 60);
+    const { success } = await ratelimit(ip, "ai-generate", 10, 60);
     if (!success) {
       return NextResponse.json(
-        { error: "Rate limit exceeded" },
+        { error: "Rate limit exceeded. Please try again later." },
         { status: 429 }
       );
     }
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     if (!prompt || prompt.length < 3) {
       return NextResponse.json(
-        { error: "Please provide a clear token idea" },
+        { error: "Please provide a clear token idea (min 3 characters)" },
         { status: 400 }
       );
     }
@@ -26,7 +26,11 @@ export async function POST(req: NextRequest) {
     const generator = getTokenGenerator();
     const config = await generator.generateToken(prompt);
 
-    return NextResponse.json({ success: true, config });
+    return NextResponse.json({
+      success: true,
+      config,
+      message: "Token configuration generated successfully. Review and confirm to mint.",
+    });
   } catch (error) {
     console.error("AI Token Generation Error:", error);
     return NextResponse.json(

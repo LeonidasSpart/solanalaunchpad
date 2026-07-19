@@ -1,7 +1,17 @@
 // src/app/api/ai/generate-token/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { generateToken } from "@/lib/ai/token-generator";
-import { generateTokenImage } from "@/lib/ai/image-generator";
+import { getTokenGenerator } from "@/lib/ai/token-generator";
+
+// Import image generator only if the file exists
+// If not, we'll skip image generation
+let generateTokenImage: (prompt: string) => Promise<string>;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const imageModule = require("@/lib/ai/image-generator");
+  generateTokenImage = imageModule.generateTokenImage;
+} catch {
+  generateTokenImage = async () => ""; // fallback
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,16 +26,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Step 1: Generate token config
-    const config = await generateToken(prompt);
+    const generator = getTokenGenerator();
+    const config = await generator.generateToken(prompt);
 
-    // Step 2: Generate image from logoPrompt
+    // Step 2: Generate image from logoPrompt (if available)
     let imageUrl = null;
     if (config.logoPrompt) {
       try {
         imageUrl = await generateTokenImage(config.logoPrompt);
       } catch (imageError) {
-        console.error("Image generation failed, continuing without image:", imageError);
-        // Don't fail the whole request – just skip the image
+        console.warn("Image generation failed, continuing without image:", imageError);
       }
     }
 

@@ -19,7 +19,7 @@ export class AITokenGenerator {
 
   constructor() {
     this.llm = new ChatOpenAI({
-      modelName: process.env.OPENAI_MODEL || "gpt-4-turbo", // ✅ Updated model
+      modelName: process.env.OPENAI_MODEL || "gpt-4o", // ✅ Updated to gpt-4o
       temperature: 0.7,
       apiKey: process.env.OPENAI_API_KEY,
     });

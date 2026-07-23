@@ -16,6 +16,7 @@ export interface TokenCheckResult {
   riskScore: number;
   riskLevel: "safe" | "medium" | "high" | "critical";
   risks: Risk[];
+  imageUrl?: string | null; // ✅ Added
   createdAt: string;
 }
 

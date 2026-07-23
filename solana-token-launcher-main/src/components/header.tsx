@@ -8,7 +8,8 @@ import NetworkSwitcher from '@/components/NetworkSwitcher';
 import { useState } from 'react';
 import { 
   Menu, X, Zap, Rocket, ChevronDown, Droplets, Lock, Gift, Flame, 
-  Coins, Clock, Landmark, Image as ImageIcon, Trophy, Sprout, Users
+  Coins, Clock, Landmark, Image as ImageIcon, Trophy, Sprout, Users,
+  MessageSquare, ShieldCheck, LayoutDashboard, Brain
 } from 'lucide-react';
 
 const Header = () => {
@@ -16,6 +17,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
   const [isEcosystemOpen, setIsEcosystemOpen] = useState(false);
+  const [isAIOpen, setIsAIOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === '/' && pathname === '/') return true;
@@ -40,6 +42,8 @@ const Header = () => {
     { href: '/revoke', label: 'Revoke Authority', icon: <Lock className="h-4 w-4" /> },
     { href: '/airdrop', label: 'Airdrop', icon: <Gift className="h-4 w-4" /> },
     { href: '/burn-lp', label: 'Burn LP', icon: <Flame className="h-4 w-4" /> },
+    { href: '/token-check', label: 'Token Checker', icon: <ShieldCheck className="h-4 w-4" /> },
+    { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   ];
 
   const ecosystemLinks = [
@@ -49,6 +53,11 @@ const Header = () => {
     { href: '/farming', label: 'Farming', icon: <Sprout className="h-4 w-4" /> },
     { href: '/liquidity', label: 'My Liquidity', icon: <Droplets className="h-4 w-4" /> },
     { href: '/affiliates', label: 'Affiliates', icon: <Users className="h-4 w-4" /> },
+  ];
+
+  const aiLinks = [
+    { href: '/ai/create', label: 'AI Token Generator', icon: <ImageIcon className="h-4 w-4" /> },
+    { href: '/ai-assistant', label: 'AI Assistant', icon: <MessageSquare className="h-4 w-4" /> },
   ];
 
   const otherLinks = [
@@ -136,6 +145,24 @@ const Header = () => {
               )}
             </div>
 
+            <div className="relative">
+              <button onClick={() => setIsAIOpen(!isAIOpen)} onMouseEnter={() => setIsAIOpen(true)}
+                className="flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-xl text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50 transition-all duration-200">
+                <Brain className="h-4 w-4 text-[#FF2D2D]" />AI<ChevronDown className={`h-3.5 w-3.5 transition-transform ${isAIOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isAIOpen && (
+                <div className="absolute top-full mt-2 left-0 w-56 bg-[#0D0D0D] border border-[#FF2D2D]/20 rounded-xl shadow-2xl shadow-[#FF2D2D]/10 overflow-hidden"
+                  onMouseLeave={() => setIsAIOpen(false)}>
+                  {aiLinks.map((link) => (
+                    <Link key={link.href} href={link.href} onClick={() => setIsAIOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-[#BDDBDB] hover:text-white hover:bg-[#FF2D2D]/10 transition">
+                      <span className="text-[#FF2D2D]">{link.icon}</span>{link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {otherLinks.map((link) => (
               <Link key={link.href} href={link.href}
                 className={`px-4 py-2 text-sm font-medium rounded-xl transition-all duration-200 ${
@@ -194,6 +221,17 @@ const Header = () => {
               <p className="px-4 text-xs text-[#BDDBDB] opacity-50 uppercase tracking-wider mb-2">Ecosystem</p>
               <div className="space-y-1">
                 {ecosystemLinks.map((link) => (
+                  <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50 rounded-xl transition">
+                    <span className="text-[#FF2D2D]">{link.icon}</span>{link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <div className="border-t border-[#1a1a1a] pt-3">
+              <p className="px-4 text-xs text-[#BDDBDB] opacity-50 uppercase tracking-wider mb-2">AI</p>
+              <div className="space-y-1">
+                {aiLinks.map((link) => (
                   <Link key={link.href} href={link.href} onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#BDDBDB] hover:text-white hover:bg-[#1a1a1a]/50 rounded-xl transition">
                     <span className="text-[#FF2D2D]">{link.icon}</span>{link.label}

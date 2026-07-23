@@ -27,7 +27,7 @@ export const RISK_DEFINITIONS: RiskDefinition[] = [
     check: (data) => {
       const top10Percentage = data.topHolders
         .slice(0, 10)
-        .reduce((sum: number, h) => sum + h.percentage, 0);
+        .reduce((sum: number, h: any) => sum + h.percentage, 0);
       return top10Percentage > 70;
     },
   },

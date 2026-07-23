@@ -227,6 +227,7 @@ const Footer = () => {
     💚 Charity
   </Link>
 </li>
+              <li><Link href="/careers" className="text-[#BDDBDB] hover:text-white text-sm transition">Careers</Link></li>
               <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/messenger" className="text-[#BDDBDB] hover:text-white text-sm transition">💬 Messenger</Link></li>

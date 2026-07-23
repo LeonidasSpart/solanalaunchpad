@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
     const cached = await redis.get(cacheKey);
 
     if (cached) {
-      // ✅ Fix: handle cached value safely
       const data = typeof cached === "string" ? JSON.parse(cached) : cached;
       return NextResponse.json({
         success: true,
@@ -41,7 +40,7 @@ export async function POST(req: NextRequest) {
     const result = await scanToken(address);
 
     // Cache for 1 hour
-    await redis.set(cacheKey, JSON.stringify(result), "EX", 3600);
+    await redis.set(cacheKey, JSON.stringify(result), { ex: 3600 });
 
     return NextResponse.json({
       success: true,

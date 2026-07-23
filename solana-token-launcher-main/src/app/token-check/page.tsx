@@ -104,24 +104,40 @@ export default function TokenCheckPage() {
 
       {result && (
         <div className="mt-8 bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] overflow-hidden">
-          {/* Header */}
+          {/* Header with Image */}
           <div className="p-6 border-b border-[#1a1a1a]">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  {result.name} ({result.symbol})
-                </h2>
-                <p className="text-[#BDDBDB] text-sm font-mono break-all">
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Token Image */}
+              {result.imageUrl ? (
+                <img
+                  src={result.imageUrl}
+                  alt={result.name}
+                  className="w-12 h-12 rounded-full border border-gray-700 object-cover flex-shrink-0"
+                  onError={(e) => {
+                    // If image fails, hide it
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-2xl flex-shrink-0">
+                  🪙
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-xl font-bold text-white truncate">
+                    {result.name} ({result.symbol})
+                  </h2>
+                  <div className={`inline-block px-3 py-0.5 rounded-full text-xs font-semibold border ${getRiskColor(result.riskLevel)}`}>
+                    {getRiskLabel(result.riskLevel)}
+                  </div>
+                  <div className="text-[#BDDBDB] text-xs">
+                    Score: {result.riskScore}
+                  </div>
+                </div>
+                <p className="text-[#BDDBDB] text-sm font-mono break-all mt-1">
                   {result.address}
                 </p>
-              </div>
-              <div className="text-right">
-                <div className={`inline-block px-4 py-1 rounded-full text-sm font-semibold border ${getRiskColor(result.riskLevel)}`}>
-                  {getRiskLabel(result.riskLevel)}
-                </div>
-                <div className="text-[#BDDBDB] text-xs mt-1">
-                  Score: {result.riskScore}
-                </div>
               </div>
             </div>
           </div>
@@ -179,6 +195,33 @@ export default function TokenCheckPage() {
               )}
             </div>
           </div>
+
+          {/* Liquidity Info */}
+          {result.liquidityInfo && (
+            <div className="p-6 border-b border-[#1a1a1a]">
+              <h3 className="text-white font-semibold mb-3">💧 Liquidity</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="bg-[#050505] rounded-lg p-3 text-center">
+                  <div className="text-[#BDDBDB] text-xs">Status</div>
+                  <div className={`font-semibold ${result.liquidityInfo.isLocked ? 'text-green-500' : 'text-red-500'}`}>
+                    {result.liquidityInfo.isLocked ? '✅ Locked' : '❌ Not Locked'}
+                  </div>
+                </div>
+                <div className="bg-[#050505] rounded-lg p-3 text-center">
+                  <div className="text-[#BDDBDB] text-xs">Total Liquidity</div>
+                  <div className="text-white font-semibold">
+                    {result.liquidityInfo.totalLiquidity > 0 ? `${result.liquidityInfo.totalLiquidity.toLocaleString()} SOL` : 'N/A'}
+                  </div>
+                </div>
+                <div className="bg-[#050505] rounded-lg p-3 text-center">
+                  <div className="text-[#BDDBDB] text-xs">Lock Duration</div>
+                  <div className="text-white font-semibold text-sm">
+                    {result.liquidityInfo.lockDuration || 'Unknown'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Risks */}
           {result.risks.length > 0 && (

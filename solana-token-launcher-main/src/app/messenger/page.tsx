@@ -35,7 +35,8 @@ export default function MessengerPage() {
       setRooms(rooms);
       if (rooms.length > 0) setRoomId(rooms[0].roomId);
 
-      matrixClient.on("Room.timeline", (event, room) => {
+      // ✅ Fixed event listener with type assertion
+      matrixClient.on("Room.timeline" as any, (event: any, room: any) => {
         if (event.getType() === "m.room.message") {
           setMessages((prev) => [...prev, event.getContent().body]);
         }

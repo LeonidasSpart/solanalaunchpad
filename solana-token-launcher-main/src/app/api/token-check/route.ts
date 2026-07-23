@@ -28,9 +28,11 @@ export async function POST(req: NextRequest) {
     const cached = await redis.get(cacheKey);
 
     if (cached) {
+      // ✅ Fix: handle cached value safely
+      const data = typeof cached === "string" ? JSON.parse(cached) : cached;
       return NextResponse.json({
         success: true,
-        data: JSON.parse(cached),
+        data,
         cached: true,
       });
     }

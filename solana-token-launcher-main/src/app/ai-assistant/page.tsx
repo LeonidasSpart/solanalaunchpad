@@ -35,7 +35,10 @@ export default function AIAssistantPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
-      <h1 className="text-3xl font-bold text-white mb-4">🧠 ZRP AI Assistant</h1>
+      <h1 className="text-3xl font-bold text-white mb-4 flex items-center gap-2">
+        <img src="/AIZRP.PNG" alt="ZRP AI" className="h-10 w-auto" />
+        ZRP AI Assistant
+      </h1>
       <p className="text-[#BDDBDB] mb-8">
         Ask me anything about launching tokens, staking, NFTs, or growing your project.
       </p>

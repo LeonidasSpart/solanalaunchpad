@@ -28,10 +28,8 @@ const plans = [
   {
     name: 'Basic',
     price: '0.15 SOL',
-    priceNote: '~$25 USD',
     description: 'Launch on mainnet with full branding and metadata.',
     features: [
-      { name: 'Devnet Testing', included: true },
       { name: 'Mainnet Launch', included: true },
       { name: 'Token Creation', included: true },
       { name: 'IPFS Image Storage', included: true },
@@ -48,7 +46,6 @@ const plans = [
   {
     name: 'Secure',
     price: '0.60 SOL',
-    priceNote: '~$100 USD',
     description: 'All authorities revoked. Maximum trust and security.',
     features: [
       { name: 'Everything in Basic', included: true },

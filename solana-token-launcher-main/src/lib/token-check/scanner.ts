@@ -15,16 +15,16 @@ const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ
 export async function scanToken(address: string): Promise<TokenCheckResult> {
   const mintAddress = new PublicKey(address);
 
-  // 1. Get token metadata (mint info)
+  // 1. Get token mint info
   const mintInfo = await getMint(connection, mintAddress);
 
-  // 2. Fetch name, symbol, image from Metaplex
+  // 2. Fetch metadata (name, symbol, image)
   const metadata = await fetchTokenMetadata(mintAddress);
 
-  // 3. Get holders (top 100, with accurate percentages)
+  // 3. Get holders (accurate count & percentages)
   const holders = await getTopHolders(mintAddress);
 
-  // 4. Get liquidity info (Birdeye → Jupiter → Raydium)
+  // 4. Get liquidity info
   const liquidityInfo = await getLiquidityInfo(mintAddress);
 
   // 5. Build raw data for risk calculation
@@ -37,7 +37,7 @@ export async function scanToken(address: string): Promise<TokenCheckResult> {
 
   const { score, level, risks } = calculateRiskScore(rawData);
 
-  // Calculate holder distribution (top 10 concentration)
+  // Calculate top 10 concentration
   const top10Percentage = holders
     .slice(0, 10)
     .reduce((sum: number, h) => sum + h.percentage, 0);
@@ -52,7 +52,7 @@ export async function scanToken(address: string): Promise<TokenCheckResult> {
     freezeAuthority: mintInfo.freezeAuthority?.toBase58() || null,
     mintAuthorityRevoked: mintInfo.mintAuthority === null,
     freezeAuthorityRevoked: mintInfo.freezeAuthority === null,
-    topHolders: holders.slice(0, 100), // Limit to top 100 for display
+    topHolders: holders.slice(0, 100), // Limit to top 100 for performance
     holderDistribution: top10Percentage,
     liquidityInfo,
     riskScore: score,
@@ -99,16 +99,16 @@ async function getTopHolders(mintAddress: PublicKey): Promise<TopHolder[]> {
     const mintInfo = await getMint(connection, mintAddress);
     const totalSupply = Number(mintInfo.supply);
 
-    // If total supply is zero, return empty
     if (totalSupply === 0) return [];
 
-    // Get all token accounts for this mint (limited to top 100 for performance)
+    // Get all token accounts for this mint
     const tokenAccounts = await connection.getTokenAccountsByOwner(
       TOKEN_PROGRAM_ID,
       { mint: mintAddress }
     );
 
     const holders: TopHolder[] = tokenAccounts.value.map((account) => {
+      // Parse balance from account data (offset 64 for U64 balance)
       const balance = Number(account.account.data.readBigUInt64LE(64)) / Math.pow(10, mintInfo.decimals);
       return {
         address: account.pubkey.toBase58(),
@@ -117,9 +117,9 @@ async function getTopHolders(mintAddress: PublicKey): Promise<TopHolder[]> {
       };
     });
 
-    // Sort by balance descending and return top 100
+    // Sort by balance descending
     holders.sort((a, b) => b.balance - a.balance);
-    return holders.slice(0, 100);
+    return holders.slice(0, 100); // Return top 100 only
   } catch (error) {
     console.warn("Failed to get holders:", error);
     return [];
@@ -127,44 +127,14 @@ async function getTopHolders(mintAddress: PublicKey): Promise<TopHolder[]> {
 }
 
 /**
- * Check liquidity using multiple sources:
- * 1. Birdeye API (covers all major DEXs)
- * 2. Jupiter price API (fallback)
- * 3. Raydium program accounts (last resort)
+ * Check liquidity using:
+ * 1. Jupiter price API (covers most DEXs)
+ * 2. Raydium program accounts (fallback)
  */
 async function getLiquidityInfo(mintAddress: PublicKey) {
   const mintStr = mintAddress.toBase58();
 
-  // 1. Try Birdeye API – provides liquidity data for most tokens
-  try {
-    const response = await fetch(
-      `https://public-api.birdeye.so/defi/v3/token/market-data?address=${mintStr}`,
-      {
-        headers: {
-          'x-chain': 'solana',
-        },
-      }
-    );
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.data && data.data.liquidity) {
-        const liquidity = data.data.liquidity || 0;
-        const isLocked = true; // Birdeye-listed tokens typically have locked liquidity
-        return {
-          totalLiquidity: liquidity,
-          isLocked,
-          lockedLiquidity: liquidity,
-          lockDuration: "DEX Listed",
-          lockExpiry: "N/A",
-        };
-      }
-    }
-  } catch (error) {
-    console.warn("Birdeye API failed:", error);
-  }
-
-  // 2. Try Jupiter price API (covers PumpSwap, Raydium, Orca, etc.)
+  // 1. Try Jupiter price API
   try {
     const response = await fetch(
       `https://quote-api.jup.ag/v6/price?ids=${mintStr}`,
@@ -177,7 +147,7 @@ async function getLiquidityInfo(mintAddress: PublicKey) {
         const price = data.data[mintStr].price;
         if (price && parseFloat(price) > 0) {
           return {
-            totalLiquidity: 1, // Actual amount not provided by this API
+            totalLiquidity: 1, // Actual amount not provided
             isLocked: true,
             lockedLiquidity: 1,
             lockDuration: "DEX Listed",
@@ -187,14 +157,12 @@ async function getLiquidityInfo(mintAddress: PublicKey) {
       }
     }
   } catch (error) {
-    console.warn("Jupiter price check failed:", error);
+    console.warn("Jupiter API failed:", error);
   }
 
-  // 3. Fallback: Check Raydium program accounts
+  // 2. Fallback: Check Raydium program accounts
   try {
-    const filters = [{ dataSize: 165 }]; // Raydium pool account size (approx)
     const programAccounts = await connection.getProgramAccounts(RAYDIUM_PROGRAM_ID, {
-      filters,
       commitment: "confirmed",
     });
 
@@ -226,7 +194,7 @@ async function getLiquidityInfo(mintAddress: PublicKey) {
       };
     }
   } catch (error) {
-    console.warn("Raydium liquidity fallback failed:", error);
+    console.warn("Raydium fallback failed:", error);
   }
 
   return null;

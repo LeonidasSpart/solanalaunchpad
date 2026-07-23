@@ -222,14 +222,12 @@ const Footer = () => {
               <li><Link href="/blog" className="text-[#BDDBDB] hover:text-white text-sm transition">Blog</Link></li>
               <li><Link href="/pricing" className="text-[#BDDBDB] hover:text-white text-sm transition">Creation Costs</Link></li>
               <li><Link href="/about" className="text-[#BDDBDB] hover:text-white text-sm transition">About Us</Link></li>
-              <li>
-  <Link href="/charity" className="text-[#BDDBDB] hover:text-white text-sm transition">
-    💚 Charity
-  </Link>
-</li>
+              <li><Link href="/charity" className="text-[#BDDBDB] hover:text-white text-sm transition"> 💚 Charity</Link></li>
               <li><Link href="/careers" className="text-[#BDDBDB] hover:text-white text-sm transition">Careers</Link></li>
               <li><Link href="/help" className="text-[#BDDBDB] hover:text-white text-sm transition">Help Center</Link></li>
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
+              <li><Link href="/ai-assistant" className="text-[#BDDBDB] hover:text-white text-sm transition flex items-center gap-1.5"><img src="/AIZRP.PNG" alt="ZRP AI" className="h-4 w-auto" /> AI Assistant</Link></li>
+              <li><Link href="/ai-assistant" className="text-[#BDDBDB] hover:text-white text-sm transition flex items-center gap-1.5"> <img src="/AIZRP.PNG" alt="ZRP AI" className="h-4 w-auto" />AI Assistant </Link></li>
               <li><Link href="/messenger" className="text-[#BDDBDB] hover:text-white text-sm transition">💬 Messenger</Link></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>
               <li><Link href="/status" className="text-[#BDDBDB] hover:text-white text-sm transition">Status</Link></li>

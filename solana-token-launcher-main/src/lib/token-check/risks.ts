@@ -1,5 +1,5 @@
 // src/lib/token-check/risks.ts
-import type { RiskDefinition, TokenCheckResult } from "@/types/token-check";
+import type { RiskDefinition, Risk, TokenCheckResult } from "@/types/token-check";
 
 export const RISK_DEFINITIONS: RiskDefinition[] = [
   {
@@ -27,7 +27,7 @@ export const RISK_DEFINITIONS: RiskDefinition[] = [
     check: (data) => {
       const top10Percentage = data.topHolders
         .slice(0, 10)
-        .reduce((sum, h) => sum + h.percentage, 0);
+        .reduce((sum: number, h) => sum + h.percentage, 0);
       return top10Percentage > 70;
     },
   },

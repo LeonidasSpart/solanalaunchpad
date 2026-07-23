@@ -8,7 +8,7 @@
     "start": "NODE_ENV=production next start -p ${PORT:-3000}",
     "lint": "next lint",
     "rebuild": "npm rebuild",
-    "postinstall": "npm run rebuild || true"
+    "postinstall": "echo '✅ Skipping rebuild for faster build'"
   },
   "dependencies": {
     "@langchain/openai": "^0.3.0",

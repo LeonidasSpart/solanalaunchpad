@@ -351,12 +351,28 @@ solanalaunchpad/
 │   │   ├── adding-liquidity/             # Liquidity guide
 │   │   ├── wallet-security/              # Wallet security
 │   │   ├── what-is-zrp/                  # Platform overview
-│   │   └── glossary/                     # Crypto glossary
+│   │   ├── glossary/                     # Crypto glossary
+│   │   ├── ai/create/                    # AI Token Generator
+│   │   ├── ai-assistant/                 # AI Assistant
+│   │   ├── token-check/                  # Token Checker
+│   │   ├── charity/                      # Charity page
+│   │   ├── careers/                      # Careers page
+│   │   ├── launchpad/                    # Launchpad
+│   │   ├── nft/                          # NFT creation
+│   │   ├── nft-staking/                  # NFT Staking
+│   │   ├── farming/                      # Farming
+│   │   ├── liquidity/                    # My Liquidity
+│   │   ├── dao/                          # DAO
+│   │   ├── dashboard/                    # Dashboard
+│   │   └── why-zrp/                      # Why ZRP
 │   ├── components/                       # React components
 │   │   ├── CreateToken/                  # Token creation form
 │   │   ├── Collection/                   # Token display
 │   │   ├── Home/                         # Homepage sections
-│   │   └── header.tsx                    # Navigation with wallet connect
+│   │   ├── NetworkSwitcher.tsx           # Network switcher
+│   │   ├── Footer.tsx                    # Footer
+│   │   ├── Header.tsx                    # Navigation with wallet connect
+│   │   └── HeaderWrapper.tsx             # Header wrapper
 │   ├── lib/                              # Utilities
 │   │   ├── create-token.ts               # Token creation logic
 │   │   ├── upload.ts                     # IPFS upload functions
@@ -364,16 +380,41 @@ solanalaunchpad/
 │   │   ├── vesting.ts                    # Vesting logic
 │   │   ├── staking.ts                    # Staking logic
 │   │   ├── validate-url.ts               # URL sanitization
-│   │   └── constants.ts                  # Configuration
+│   │   ├── constants.ts                  # Configuration
+│   │   ├── rate-limit.ts                 # Rate limiting
+│   │   ├── redis.ts                      # Redis client
+│   │   ├── token-check/                  # Token Checker logic
+│   │   │   ├── scanner.ts                # Token scanning
+│   │   │   └── risks.ts                  # Risk definitions
+│   │   ├── ai/                           # AI logic
+│   │   │   ├── token-generator.ts        # AI Token Generator
+│   │   │   └── image-generator.ts        # AI Image Generation
+│   │   └── wallet/                       # Wallet SDK
+│   │       └── index.ts                  # Wallet SDK
 │   ├── providers/                        # Wallet providers
+│   │   └── providers.tsx                 # Wallet providers
+│   ├── types/                            # TypeScript types
+│   │   └── token-check.ts                # Token Checker types
 │   └── content/                          # Help Center articles
 │       └── help/                         # 35+ TSX articles
 ├── public/                               # Static assets
-│   ├── sitemap.xml
-│   └── robots.txt
-├── .env.local
-├── package.json
-└── tsconfig.json
+│   ├── logo.png                          # ZRP Logo
+│   ├── AIZRP.PNG                         # ZRP AI Logo
+│   ├── sitemap.xml                       # Sitemap
+│   └── robots.txt                        # Robots.txt
+├── docker/                               # Docker
+│   └── Dockerfile                        # Dockerfile
+├── .env.local                            # Environment variables
+├── package.json                          # Dependencies
+├── tsconfig.json                         # TypeScript config
+├── tailwind.config.ts                    # Tailwind config
+├── next.config.ts                        # Next.js config
+├── postcss.config.mjs                    # PostCSS config
+├── eslint.config.mjs                     # ESLint config
+├── components.json                       # Components config
+├── railway.toml                          # Railway config
+├── docker-compose.yml                    # Docker Compose
+└── README.md                             # README
 ```
 
 ---

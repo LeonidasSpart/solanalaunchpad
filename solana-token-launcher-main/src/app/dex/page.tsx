@@ -1,9 +1,8 @@
-// src/app/dex/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, TrendingUp, TrendingDown, ChevronRight, Sparkles } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, ExternalLink, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { DexToken } from "@/lib/dex/types";
 
@@ -12,14 +11,16 @@ export default function DexPage() {
   const [tokens, setTokens] = useState<DexToken[]>([]);
   const [trending, setTrending] = useState<DexToken[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
-    // Fetch trending tokens on load
     const fetchTrending = async () => {
-      const response = await fetch("/api/dex/trending");
-      const data = await response.json();
-      if (data.success) {
-        setTrending(data.data);
+      try {
+        const response = await fetch("/api/dex/trending");
+        const data = await response.json();
+        if (data.success) setTrending(data.data);
+      } catch (error) {
+        console.error(error);
       }
     };
     fetchTrending();
@@ -27,17 +28,15 @@ export default function DexPage() {
 
   const searchTokens = async () => {
     if (!query.trim()) return;
-    setLoading(true);
+    setSearching(true);
     try {
       const response = await fetch(`/api/dex?q=${encodeURIComponent(query)}`);
       const data = await response.json();
-      if (data.success) {
-        setTokens(data.data);
-      }
+      if (data.success) setTokens(data.data);
     } catch (error) {
       console.error(error);
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   };
 
@@ -59,14 +58,14 @@ export default function DexPage() {
     <div className="max-w-7xl mx-auto px-4 py-20">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-          🚀 ZRP DEX Screener
+          📊 ZRP DEX Screener
         </h1>
         <p className="text-[#BDDBDB] text-lg max-w-2xl mx-auto">
-          Track Solana token prices, liquidity, and volume in real-time.
+          Real-time Solana token prices, liquidity, and volume.
         </p>
       </div>
 
-      {/* Search Bar */}
+      {/* Search */}
       <div className="max-w-xl mx-auto mb-12">
         <div className="flex gap-2">
           <input
@@ -74,12 +73,12 @@ export default function DexPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === "Enter" && searchTokens()}
-            placeholder="Search token by name or address..."
-            className="flex-1 p-3 bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#FF2D2D] focus:border-transparent transition"
+            placeholder="Search by name, symbol, or address..."
+            className="flex-1 p-3 bg-[#0D0D0D] border border-[#1a1a1a] rounded-xl text-white placeholder-gray-500 focus:ring-2 focus:ring-[#FF2D2D] focus:border-transparent"
           />
           <button
             onClick={searchTokens}
-            disabled={loading}
+            disabled={searching}
             className="px-6 py-3 bg-[#FF2D2D] hover:bg-[#B10000] text-white font-semibold rounded-xl transition disabled:opacity-50 flex items-center gap-2"
           >
             <Search className="h-4 w-4" />
@@ -90,92 +89,85 @@ export default function DexPage() {
 
       {/* Results */}
       {tokens.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] overflow-hidden mb-12"
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#1a1a1a]">
-                  <th className="px-4 py-3 text-left text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">Token</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">Price</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">24h Change</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">Volume</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">Liquidity</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">Market Cap</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase tracking-wider">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tokens.map((token) => (
-                  <tr key={token.address} className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        {token.image ? (
-                          <img src={token.image} alt={token.symbol} className="w-8 h-8 rounded-full" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-[#FF2D2D]/20 flex items-center justify-center text-[#FF2D2D] font-bold text-xs">
-                            {token.symbol.slice(0, 2)}
-                          </div>
-                        )}
-                        <div>
-                          <div className="text-white font-medium">{token.name}</div>
-                          <div className="text-[#BDDBDB] text-xs font-mono">${token.symbol}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right text-white font-mono">
-                      {formatPrice(token.price)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={token.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}>
-                        {token.priceChange24h >= 0 ? "+" : ""}{token.priceChange24h.toFixed(2)}%
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right text-[#BDDBDB]">
-                      {formatNumber(token.volume24h)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-[#BDDBDB]">
-                      {formatNumber(token.liquidity)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-[#BDDBDB]">
-                      {formatNumber(token.marketCap)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <Link
-                        href={`/dex/${token.address}`}
-                        className="text-[#FF2D2D] hover:text-white transition flex items-center justify-end gap-1"
-                      >
-                        View <ChevronRight className="h-4 w-4" />
-                      </Link>
-                    </td>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#1a1a1a]">
+                    <th className="px-4 py-3 text-left text-[#BDDBDB] text-xs font-medium uppercase">Token</th>
+                    <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Price</th>
+                    <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">24h Change</th>
+                    <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Volume</th>
+                    <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Liquidity</th>
+                    <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Market Cap</th>
+                    <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">DEX</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {tokens.map((token) => (
+                    <tr key={token.pairAddress} className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          {token.image ? (
+                            <img src={token.image} alt={token.symbol} className="w-8 h-8 rounded-full" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-[#FF2D2D]/20 flex items-center justify-center text-[#FF2D2D] font-bold text-xs">
+                              {token.symbol.slice(0, 2)}
+                            </div>
+                          )}
+                          <div>
+                            <div className="text-white font-medium">{token.name}</div>
+                            <div className="text-[#BDDBDB] text-xs font-mono">${token.symbol}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right text-white font-mono">
+                        ${formatPrice(token.price)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={token.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}>
+                          {token.priceChange24h >= 0 ? "+" : ""}{token.priceChange24h.toFixed(2)}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right text-[#BDDBDB]">
+                        {formatNumber(token.volume24h)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[#BDDBDB]">
+                        {formatNumber(token.liquidity)}
+                      </td>
+                      <td className="px-4 py-3 text-right text-[#BDDBDB]">
+                        {formatNumber(token.marketCap)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <a
+                          href={token.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#BDDBDB] hover:text-[#FF2D2D] transition"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </motion.div>
       )}
 
-      {/* Trending Section */}
+      {/* Trending */}
       {trending.length > 0 && !tokens.length && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
           <div className="flex items-center gap-2 mb-4">
             <Sparkles className="h-5 w-5 text-[#FF2D2D]" />
-            <h2 className="text-xl font-bold text-white">🔥 Trending Tokens</h2>
+            <h2 className="text-xl font-bold text-white">🔥 Trending on Solana</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {trending.slice(0, 6).map((token) => (
-              <div
-                key={token.address}
-                className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] p-4 hover:border-[#FF2D2D]/30 transition"
-              >
+              <div key={token.pairAddress} className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] p-4 hover:border-[#FF2D2D]/30 transition">
                 <div className="flex items-center gap-3 mb-2">
                   {token.image ? (
                     <img src={token.image} alt={token.symbol} className="w-10 h-10 rounded-full" />
@@ -190,7 +182,7 @@ export default function DexPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-white font-mono">{formatPrice(token.price)}</span>
+                  <span className="text-white font-mono">${formatPrice(token.price)}</span>
                   <span className={token.priceChange24h >= 0 ? "text-green-500" : "text-red-500"}>
                     {token.priceChange24h >= 0 ? "↑" : "↓"} {Math.abs(token.priceChange24h).toFixed(2)}%
                   </span>
@@ -203,6 +195,12 @@ export default function DexPage() {
             ))}
           </div>
         </motion.div>
+      )}
+
+      {!tokens.length && !trending.length && !searching && (
+        <div className="text-center text-[#BDDBDB] py-12">
+          <p>Search for any Solana token to get started.</p>
+        </div>
       )}
     </div>
   );

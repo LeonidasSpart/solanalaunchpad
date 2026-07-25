@@ -183,6 +183,7 @@ const Footer = () => {
               <li><Link href="/liquidity" className="text-[#BDDBDB] hover:text-white text-sm transition">My Liquidity</Link></li>
               <li><Link href="/affiliates" className="text-[#BDDBDB] hover:text-white text-sm transition">Affiliates</Link></li>
               <li><Link href="/token-check" className="text-[#BDDBDB] hover:text-white text-sm transition">🛡️ Token Checker</Link></li>
+              <li><Link href="/dex" className="text-[#BDDBDB] hover:text-white text-sm transition">📊 DEX Screener</Link></li>
               <li><Link href="/tokens" className="text-[#BDDBDB] hover:text-white text-sm transition">Token Explorer</Link></li>
               <li><Link href="/dashboard" className="text-[#BDDBDB] hover:text-white text-sm transition">Dashboard</Link></li>
             </ul>

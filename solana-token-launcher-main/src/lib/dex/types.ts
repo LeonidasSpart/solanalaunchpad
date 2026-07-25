@@ -3,6 +3,8 @@ export interface DexToken {
   address: string;
   name: string;
   symbol: string;
+  pairAddress: string;
+  dexId: string;
   price: number;
   priceChange1h: number;
   priceChange6h: number;
@@ -11,8 +13,8 @@ export interface DexToken {
   liquidity: number;
   marketCap: number;
   fdv: number;
-  holders: number;
-  image?: string;
+  image: string | null;
+  url?: string;
 }
 
 export interface DexTokenDetail extends DexToken {
@@ -21,13 +23,9 @@ export interface DexTokenDetail extends DexToken {
   trades24h: number;
   buys24h: number;
   sells24h: number;
-  topHolders: {
-    address: string;
-    percentage: number;
-  }[];
-  socials?: {
-    website?: string;
-    twitter?: string;
-    telegram?: string;
+  socials: {
+    website: string | null;
+    twitter: string | null;
+    telegram: string | null;
   };
 }

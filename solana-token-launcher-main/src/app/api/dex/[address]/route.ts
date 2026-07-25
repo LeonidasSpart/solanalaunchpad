@@ -3,12 +3,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTokenDetail } from '@/lib/dex/client';
 
 export async function GET(
-  req: NextRequest,
-  context: { params: Promise<{ address: string }> | { address: string } }
+  request: NextRequest,
+  { params }: { params: Promise<{ address: string }> }
 ) {
-  const { address } = await context.params;
-
   try {
+    const { address } = await params;
+
     const token = await getTokenDetail(address);
     if (!token) {
       return NextResponse.json(
@@ -16,6 +16,7 @@ export async function GET(
         { status: 404 }
       );
     }
+
     return NextResponse.json({ success: true, data: token });
   } catch (error) {
     console.error('Token detail error:', error);

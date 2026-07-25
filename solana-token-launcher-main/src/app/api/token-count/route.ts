@@ -1,12 +1,24 @@
 // src/app/api/token-count/route.ts
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Count total tokens from your database
-    const result = await db.query("SELECT COUNT(*) FROM tokens");
-    const count = parseInt(result.rows[0].count, 10);
+    // Fetch tokens from the existing API
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/tokens`, {
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch tokens');
+    }
+
+    const data = await response.json();
+
+    // data is expected to be an array of tokens
+    const count = Array.isArray(data) ? data.length : 0;
 
     return NextResponse.json({
       success: true,

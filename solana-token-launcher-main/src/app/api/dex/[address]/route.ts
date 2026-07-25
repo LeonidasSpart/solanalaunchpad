@@ -1,12 +1,15 @@
+// src/app/api/dex/[address]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getTokenDetail } from '@/lib/dex/client';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { address: string } }
+  context: { params: Promise<{ address: string }> | { address: string } }
 ) {
+  const { address } = await context.params;
+
   try {
-    const token = await getTokenDetail(params.address);
+    const token = await getTokenDetail(address);
     if (!token) {
       return NextResponse.json(
         { success: false, error: 'Token not found' },

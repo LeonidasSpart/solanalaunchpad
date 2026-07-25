@@ -146,14 +146,14 @@ export default function TokenFeed() {
             <div className="col-span-2 sm:col-span-1 text-right">View</div>
           </div>
 
-          {/* Table Body */}
-          {tokens.length === 0 ? (
-            <div className="px-6 py-8 text-center text-[#BDDBDB]">
-              No tokens created yet. Be the first!
-            </div>
-          ) : (
-            <div className="divide-y divide-[#1a1a1a]/50">
-              {tokens.map((token, index) => (
+          {/* Table Body – ONLY 5 LATEST TOKENS */}
+          <div className="divide-y divide-[#1a1a1a]/50">
+            {tokens.slice(0, 5).length === 0 ? (
+              <div className="px-6 py-8 text-center text-[#BDDBDB]">
+                No tokens created yet. Be the first!
+              </div>
+            ) : (
+              tokens.slice(0, 5).map((token, index) => (
                 <motion.div
                   key={token.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -226,9 +226,9 @@ export default function TokenFeed() {
                     </div>
                   </div>
                 </motion.div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
 
           {/* Table Footer */}
           <div className="px-6 py-4 bg-[#1a1a1a]/30 border-t border-[#1a1a1a]">

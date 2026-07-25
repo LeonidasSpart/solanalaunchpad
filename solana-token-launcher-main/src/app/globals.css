@@ -50,17 +50,17 @@ html {
 
 /* Chrome, Edge, Safari */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0D0D0D;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #FF2D2D;
-  border-radius: 4px;
+  border-radius: 10px;
   transition: background 0.3s ease;
 }
 
@@ -71,5 +71,5 @@ html {
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #FF2D2D #0D0D0D;
+  scrollbar-color: #FF2D2D transparent;
 }

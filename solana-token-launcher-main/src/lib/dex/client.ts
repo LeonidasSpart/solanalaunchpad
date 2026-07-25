@@ -1,5 +1,5 @@
 // src/lib/dex/client.ts
-import type { DexToken, DexTokenDetail, DexPair } from './types';
+import type { DexToken, DexTokenDetail } from './types';
 
 const DEXSCREENER_API = 'https://api.dexscreener.com/latest/dex';
 

@@ -1,4 +1,6 @@
 // src/lib/dex/client.ts
+import type { DexToken, DexTokenDetail } from './types'; // ✅ Added
+
 export async function searchTokens(query: string): Promise<DexToken[]> {
   // Use Birdeye or Jupiter API
   const response = await fetch(

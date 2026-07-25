@@ -2,225 +2,154 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDown, 
-  HelpCircle, 
-  MessageCircle, 
-  Rocket, 
-  Settings, 
-  DollarSign, 
-  TrendingUp, 
-  Shield, 
-  BarChart3, 
-  Wrench, 
-  Sparkles,
-  Clock,
-  Coins,
-  Users,
-  Image,
-  Zap
-} from 'lucide-react';
+import { ChevronDown, HelpCircle, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 
-// ─── FAQ Data with `frontPage` flag ──────────────────────────────
-const faqData = [
-  // ─── 1. Getting Started ──────────────────────────────────────────
+const frontPageFAQs = [
   {
-    category: 'Getting Started',
-    icon: Rocket,
-    iconColor: 'text-[#FF2D2D]',
-    bgColor: 'bg-[#FF2D2D]/10',
-    borderColor: 'border-[#FF2D2D]/20',
-    questions: [
-      {
-        q: 'What is a Solana token creator?',
-        a: 'A Solana token creator is a no-code platform that helps you create SPL tokens by handling wallet connection, token parameters, metadata, and on-chain minting in one guided flow.',
-        frontPage: true, // ✅ Show on front page
-      },
-      {
-        q: 'What is a Solana SPL token?',
-        a: 'An SPL token is a fungible digital asset created on the Solana blockchain using the Solana Program Library (SPL) token standard — analogous to ERC-20 tokens on Ethereum.',
-        frontPage: true, // ✅ Show on front page
-      },
-      {
-        q: 'How do I create a token on Solana?',
-        a: 'With ZRP: (1) connect your wallet, (2) enter your token details, (3) upload a logo, (4) confirm the transaction. No coding required.',
-        frontPage: true, // ✅ Show on front page
-      },
-      {
-        q: 'Do I need to know how to code?',
-        a: 'No. ZRP is a completely no-code Solana token creator. Fill in a form, connect your wallet, and click mint.',
-        frontPage: true, // ✅ Show on front page
-      },
-      {
-        q: 'Which wallet do I need?',
-        a: 'ZRP supports Phantom, Solflare, Backpack, and Ledger.',
-        frontPage: false,
-      },
-      {
-        q: 'How much SOL do I need before I start?',
-        a: 'Devnet testing is FREE. Mainnet starts from 0.15 SOL. All fees are transparent.',
-        frontPage: false,
-      },
-      {
-        q: 'What token templates does ZRP offer?',
-        a: 'Meme Coin, Governance DAO, Utility Token, and Simple Token. You can also start from scratch.',
-        frontPage: false,
-      },
-      {
-        q: 'How long does minting take?',
-        a: 'Typically under 60 seconds from confirming the transaction.',
-        frontPage: false,
-      }
-    ]
+    q: 'What is a Solana token creator?',
+    a: 'A Solana token creator is a no-code platform that helps you create SPL tokens by handling wallet connection, token parameters, metadata, and on-chain minting in one guided flow.',
   },
-  // ─── 2. Token Setup & Configuration ──────────────────────────────
   {
-    category: 'Token Setup & Configuration',
-    icon: Settings,
-    iconColor: 'text-[#FF2D2D]',
-    bgColor: 'bg-[#FF2D2D]/10',
-    borderColor: 'border-[#FF2D2D]/20',
-    questions: [
-      {
-        q: 'What are token decimals and what should I choose?',
-        a: 'Decimals determine the smallest divisible unit. 9 decimals (Solana default) allows fractions as small as 0.000000001. Memecoins often use 6 decimals.',
-        frontPage: false,
-      },
-      {
-        q: 'How do I decide on token supply?',
-        a: 'Memecoins typically use 1 billion to 1 trillion tokens. Utility tokens often use more modest amounts.',
-        frontPage: false,
-      },
-      {
-        q: 'What are Mint, Freeze, and Update authorities?',
-        a: 'Mint authority controls who can create additional tokens. Freeze authority can lock token accounts. Update authority controls who can modify the on-chain metadata.',
-        frontPage: false,
-      },
-      {
-        q: 'Should I revoke my token authorities?',
-        a: 'Revoking Mint authority prevents future inflation — a strong trust signal. Revoking Freeze authority reassures holders. These decisions are irreversible.',
-        frontPage: false,
-      },
-      {
-        q: 'What is token metadata on Solana?',
-        a: 'Token metadata is the on-chain data describing your token: name, symbol, logo URI, description, website, and social links.',
-        frontPage: false,
-      },
-      {
-        q: 'Where is my logo and metadata stored?',
-        a: 'Your logo and JSON metadata are uploaded to IPFS via NFT.Storage — decentralized and permanent.',
-        frontPage: false,
-      },
-      {
-        q: 'Can I update my token name or logo after minting?',
-        a: 'Yes, as long as you have not revoked the Update authority. Once revoked, metadata is permanently locked.',
-        frontPage: false,
-      }
-    ]
+    q: 'What is a Solana SPL token?',
+    a: 'An SPL token is a fungible digital asset created on the Solana blockchain using the Solana Program Library (SPL) token standard — analogous to ERC-20 tokens on Ethereum.',
   },
-  // ─── 3. Costs & Fees ──────────────────────────────────────────────
   {
-    category: 'Costs & Fees',
-    icon: DollarSign,
-    iconColor: 'text-[#FF2D2D]',
-    bgColor: 'bg-[#FF2D2D]/10',
-    borderColor: 'border-[#FF2D2D]/20',
-    questions: [
-      {
-        q: 'How much does it cost to create a Solana token?',
-        a: 'Devnet testing is FREE. Mainnet costs 0.15 SOL for a basic token. Each authority revocation adds 0.15 SOL, so the maximum is 0.60 SOL.',
-        frontPage: false,
-      },
-      {
-        q: 'What is rent-exemption on Solana?',
-        a: 'Solana requires accounts to hold a minimum SOL balance to remain open on-chain — this is "rent-exemption." It is embedded in the creation cost.',
-        frontPage: false,
-      },
-      {
-        q: 'What happens if my transaction fails?',
-        a: 'No charges apply. You can safely retry. Common causes: insufficient SOL balance or network congestion.',
-        frontPage: false,
-      },
-      {
-        q: 'Are there any hidden fees?',
-        a: 'No. The pricing is fully transparent. No subscriptions, withdrawal fees, or royalty charges.',
-        frontPage: false,
-      }
-    ]
+    q: 'How do I create a token on Solana?',
+    a: 'With ZRP: (1) connect your wallet, (2) enter your token details, (3) upload a logo, (4) confirm the transaction. No coding required.',
   },
-  // ─── 4. After Minting - Trading & Listing ────────────────────────
   {
-    category: 'After Minting - Trading & Listing',
-    icon: TrendingUp,
-    iconColor: 'text-[#FF2D2D]',
-    bgColor: 'bg-[#FF2D2D]/10',
-    borderColor: 'border-[#FF2D2D]/20',
-    questions: [
-      {
-        q: 'Can I add liquidity after minting?',
-        a: 'Yes. You can pair your token with SOL on Raydium or Jupiter. Once the pool is live, your token is tradeable.',
-        frontPage: false,
-      },
-      // ... (other questions with frontPage: false)
-      // I'll include only a few for brevity; the full file will have all.
-    ]
+    q: 'Do I need to know how to code?',
+    a: 'No. ZRP is a completely no-code Solana token creator. Fill in a form, connect your wallet, and click mint.',
   },
-  // ... (other categories similarly, but I'll provide a complete file in the final answer)
+  {
+    q: 'How much does it cost to create a Solana token?',
+    a: 'Devnet testing is FREE. Mainnet costs 0.15 SOL for a basic token. Each authority revocation adds 0.15 SOL, so the maximum is 0.60 SOL.',
+  },
 ];
 
-// ─── Component ──────────────────────────────────────────────────────
-interface FAQProps {
-  frontPage?: boolean; // if true, only show questions with `frontPage: true`
-}
+export default function FAQ() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-export default function FAQ({ frontPage = false }: FAQProps) {
-  const [openIndex, setOpenIndex] = useState<string | null>(null);
-
-  const toggleQuestion = (key: string) => {
-    setOpenIndex((prev) => (prev === key ? null : key));
+  const toggleQuestion = (index: number) => {
+    setOpenIndex((prev) => (prev === index ? null : index));
   };
-
-  const isOpen = (key: string) => openIndex === key;
-
-  // Filter categories and questions based on frontPage prop
-  const filteredData = frontPage
-    ? faqData
-        .map((category) => ({
-          ...category,
-          questions: category.questions.filter((q) => q.frontPage === true),
-        }))
-        .filter((category) => category.questions.length > 0)
-    : faqData;
 
   return (
     <section id="faq" className="py-24 bg-[#050505] relative overflow-hidden">
-      {/* ... (background and header) ... */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
-        {/* ... (section header) ... */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#FF2D2D]/[0.02] rounded-full blur-3xl" />
+      </div>
 
-        <div className="space-y-10">
-          {filteredData.map((category, catIndex) => {
-            const Icon = category.icon;
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-2 bg-[#FF2D2D]/10 border border-[#FF2D2D]/20 rounded-full px-4 py-1.5 mb-4">
+            <HelpCircle className="h-3.5 w-3.5 text-[#FF2D2D]" />
+            <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">FAQ</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+            Frequently Asked <span className="text-[#FF2D2D]">Questions</span>
+          </h2>
+          <p className="text-[#BDDBDB]">
+            Quick answers to the most common questions.
+          </p>
+        </motion.div>
+
+        <div className="space-y-3">
+          {frontPageFAQs.map((faq, index) => {
+            const isOpen = openIndex === index;
             return (
-              <motion.div key={catIndex} ...>
-                {/* ... (category header) ... */}
-                <div className="space-y-3">
-                  {category.questions.map((faq, qIndex) => {
-                    const key = `${catIndex}-${qIndex}`;
-                    const isExpanded = isOpen(key);
-                    return (
-                      <div key={qIndex} ...>
-                        {/* ... (question item) ... */}
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08, duration: 0.4 }}
+                viewport={{ once: true }}
+                className={`bg-[#0D0D0D]/40 backdrop-blur-sm rounded-xl border transition-all duration-300 overflow-hidden ${
+                  isOpen
+                    ? 'border-[#FF2D2D]/40 shadow-lg shadow-[#FF2D2D]/5'
+                    : 'border-[#1a1a1a] hover:border-[#FF2D2D]/30'
+                }`}
+              >
+                <button
+                  className="w-full px-5 sm:px-6 py-4 flex items-center justify-between text-left hover:bg-[#1a1a1a]/30 transition-colors"
+                  onClick={() => toggleQuestion(index)}
+                >
+                  <span className="text-white font-medium text-sm sm:text-base pr-4">
+                    {faq.q}
+                  </span>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                      isOpen ? 'bg-[#FF2D2D]/20 rotate-180' : 'bg-[#0D0D0D]'
+                    }`}
+                  >
+                    <ChevronDown
+                      className={`h-4 w-4 transition-colors duration-300 ${
+                        isOpen ? 'text-[#FF2D2D]' : 'text-[#BDDBDB]'
+                      }`}
+                    />
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-5 sm:px-6 pb-5 text-[#BDDBDB] text-sm sm:text-base leading-relaxed border-t border-[#1a1a1a] pt-4">
+                        {faq.a}
                       </div>
-                    );
-                  })}
-                </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
         </div>
 
-        {/* ... (contact us section) ... */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          viewport={{ once: true }}
+          className="text-center mt-8"
+        >
+          <Link
+            href="/faq"
+            className="inline-flex items-center gap-2 text-[#FF2D2D] hover:text-[#B10000] font-medium transition-colors group"
+          >
+            View all FAQs →
+          </Link>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+          viewport={{ once: true }}
+          className="mt-8 text-center"
+        >
+          <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-[#FF2D2D]/20 via-[#FF2D2D]/10 to-[#FF2D2D]/20 border border-[#FF2D2D]/20 rounded-2xl px-6 py-4 backdrop-blur-sm">
+            <MessageCircle className="h-5 w-5 text-[#FF2D2D]" />
+            <span className="text-[#BDDBDB] text-sm">Still have questions?</span>
+            <a
+              href="/contact"
+              className="bg-[#FF2D2D] hover:bg-[#B10000] text-white text-sm font-semibold px-5 py-2 rounded-xl transition-all duration-300 shadow-lg shadow-[#FF2D2D]/25 hover:shadow-[#FF2D2D]/40"
+            >
+              Contact Us
+            </a>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

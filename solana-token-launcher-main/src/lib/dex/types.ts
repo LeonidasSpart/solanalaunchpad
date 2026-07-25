@@ -15,6 +15,9 @@ export interface DexToken {
   fdv: number;
   image: string | null;
   url?: string;
+  age?: string;
+  txns24h?: number;
+  traders24h?: number;
 }
 
 export interface DexTokenDetail extends DexToken {

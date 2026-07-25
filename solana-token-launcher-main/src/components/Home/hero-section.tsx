@@ -36,7 +36,7 @@ export default function HeroSection() {
             <span className="text-xs font-semibold text-[#FF2D2D] uppercase tracking-wider">No-Code Solana Token Creator</span>
           </motion.div>
 
-          {/* FREE Devnet Badge - GREEN BACKGROUND */}
+          {/* FREE Devnet Badge */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -52,7 +52,7 @@ export default function HeroSection() {
             <span className="text-emerald-300/70 text-sm">Zero cost, zero risk</span>
           </motion.div>
 
-          {/* Main Heading - Solana Token with Solana gradient */}
+          {/* Main Heading */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -165,16 +165,19 @@ export default function HeroSection() {
             </div>
           </motion.div>
 
-          {/* Scroll indicator */}
+          {/* Scroll indicator – UPDATED with better styling */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 0.5 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2"
           >
-            <a href="#how-it-works" className="flex flex-col items-center gap-2 text-[#1a1a1a] hover:text-[#BDDBDB] transition-colors">
-              <span className="text-xs uppercase tracking-wider">Scroll</span>
-              <ChevronDown className="h-5 w-5 animate-bounce" />
+            <a
+              href="#how-it-works"
+              className="flex flex-col items-center gap-2 text-[#BDDBDB]/30 hover:text-[#FF2D2D] transition-all duration-300 group"
+            >
+              <span className="text-[10px] uppercase tracking-[0.2em] font-medium">Scroll to explore</span>
+              <ChevronDown className="h-5 w-5 animate-bounce group-hover:text-[#FF2D2D] transition-colors" />
             </a>
           </motion.div>
         </motion.div>

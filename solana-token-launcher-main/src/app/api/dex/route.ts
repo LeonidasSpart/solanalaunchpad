@@ -1,4 +1,3 @@
-// src/app/api/dex/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { searchTokens } from '@/lib/dex/client';
 
@@ -7,7 +6,7 @@ export async function GET(req: NextRequest) {
   const query = searchParams.get('q');
 
   if (!query || query.length < 2) {
-    return NextResponse.json({ data: [] });
+    return NextResponse.json({ success: true, data: [] });
   }
 
   try {

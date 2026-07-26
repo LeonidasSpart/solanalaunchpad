@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, TrendingUp, TrendingDown, ExternalLink, Sparkles, Flame } from "lucide-react";
+import Link from "next/link";
 
 interface DexToken {
   address: string;
@@ -33,12 +34,13 @@ export default function DexPage() {
   const [totalVolume, setTotalVolume] = useState(0);
   const [totalTxns, setTotalTxns] = useState(0);
 
-  // Fetch trending tokens from Dexscreener directly
+  // Fetch trending tokens directly from Dexscreener
   const fetchTrending = async () => {
     setLoading(true);
     try {
       const response = await fetch("https://api.dexscreener.com/latest/dex/tokens/trending");
       const data = await response.json();
+      
       if (data.tokens) {
         const solanaTokens = data.tokens
           .filter((token: any) => token.chainId === "solana")
@@ -62,7 +64,9 @@ export default function DexPage() {
             txns24h: (token.txns?.h24?.buys || 0) + (token.txns?.h24?.sells || 0),
             traders24h: token.traders?.h24 || 0,
           }));
+        
         setTokens(solanaTokens);
+        
         // Calculate totals
         let vol = 0;
         let txns = 0;
@@ -80,7 +84,6 @@ export default function DexPage() {
     }
   };
 
-  // Search tokens
   const searchTokens = async () => {
     if (!query.trim()) {
       fetchTrending();
@@ -92,6 +95,7 @@ export default function DexPage() {
         `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
+      
       if (data.pairs) {
         const results = data.pairs
           .filter((pair: any) => pair.chainId === "solana")
@@ -112,8 +116,9 @@ export default function DexPage() {
             image: pair.info?.imageUrl || null,
             url: pair.url || "",
           }));
+        
         setTokens(results);
-        // Recalculate totals for results
+        
         let vol = 0;
         let txns = 0;
         results.forEach((t: DexToken) => {
@@ -164,7 +169,6 @@ export default function DexPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-white">
@@ -186,7 +190,6 @@ export default function DexPage() {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className="flex gap-2 mb-8">
         <input
           type="text"
@@ -206,7 +209,6 @@ export default function DexPage() {
         </button>
       </div>
 
-      {/* Stats Bar */}
       <div className="flex items-center gap-2 mb-6 text-sm text-[#BDDBDB]">
         <Flame className="h-4 w-4 text-[#FF2D2D]" />
         <span>Live data from DexScreener</span>
@@ -220,7 +222,6 @@ export default function DexPage() {
         )}
       </div>
 
-      {/* Token Table */}
       {tokens.length > 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -295,7 +296,7 @@ export default function DexPage() {
         </motion.div>
       ) : (
         <div className="text-center text-[#BDDBDB] py-12">
-          <p>No tokens found. Try a different search.</p>
+          <p>No Solana tokens found. Try refreshing or searching.</p>
         </div>
       )}
     </div>

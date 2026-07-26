@@ -8,6 +8,8 @@ interface DexToken {
   address: string;
   name: string;
   symbol: string;
+  chain: string;
+  dex: string;
   price: number;
   priceChange24h: number;
   volume24h: number;
@@ -15,7 +17,9 @@ interface DexToken {
   marketCap: number;
   fdv: number;
   holders: number;
-  image?: string | null; // ✅ Allow null
+  image?: string | null;
+  url?: string;
+  pairAddress?: string;
 }
 
 export default function DexPage() {
@@ -26,56 +30,22 @@ export default function DexPage() {
   const [query, setQuery] = useState("");
   const [totalVolume, setTotalVolume] = useState(0);
 
-  const fetchRealData = async () => {
+  const fetchTrending = async () => {
     setLoading(true);
     setError(null);
     try {
-      const dexRes = await fetch("https://api.dexscreener.com/latest/dex/tokens/trending");
-      if (!dexRes.ok) throw new Error("Dexscreener API failed");
-      const dexData = await dexRes.json();
-      
-      const solanaTrending = dexData.tokens
-        ?.filter((t: any) => t.chainId === "solana")
-        .map((t: any) => t.baseToken.address) || [];
-      
-      if (solanaTrending.length === 0) throw new Error("No trending tokens found");
+      // ✅ Use your server-side API route (no CORS issues)
+      const response = await fetch("/api/dex/trending");
+      if (!response.ok) throw new Error("API failed");
+      const data = await response.json();
 
-      const tokenListRes = await fetch("https://tokens.jup.ag/tokens?tags=verified");
-      if (!tokenListRes.ok) throw new Error("Jupiter token list failed");
-      const tokenList = await tokenListRes.json();
-      
-      const tokenMap: Record<string, any> = {};
-      tokenList.forEach((t: any) => {
-        tokenMap[t.address] = { name: t.name, symbol: t.symbol, logo: t.logoURI };
-      });
-
-      const ids = solanaTrending.slice(0, 50).join(",");
-      const priceRes = await fetch(`https://quote-api.jup.ag/v6/price?ids=${ids}`);
-      if (!priceRes.ok) throw new Error("Jupiter price API failed");
-      const priceData = await priceRes.json();
-
-      const tokenData: DexToken[] = solanaTrending.slice(0, 50).map((address: string) => {
-        const meta = tokenMap[address] || { name: "Unknown", symbol: "?", logo: null };
-        const priceInfo = priceData.data?.[address] || { price: 0 };
-        const dexToken = dexData.tokens.find((t: any) => t.baseToken.address === address);
-        return {
-          address,
-          name: meta.name || dexToken?.baseToken?.name || "Unknown",
-          symbol: meta.symbol || dexToken?.baseToken?.symbol || "?",
-          price: parseFloat(priceInfo.price) || parseFloat(dexToken?.priceUsd) || 0,
-          priceChange24h: dexToken?.priceChange?.h24 || 0,
-          volume24h: dexToken?.volume?.h24 || 0,
-          liquidity: dexToken?.liquidity?.usd || 0,
-          marketCap: dexToken?.marketCap || 0,
-          fdv: dexToken?.fdv || 0,
-          holders: 0,
-          image: meta.logo || null,
-        };
-      });
-
-      setTokens(tokenData);
-      const vol = tokenData.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
-      setTotalVolume(vol);
+      if (data.success && data.data.length > 0) {
+        setTokens(data.data);
+        const vol = data.data.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
+        setTotalVolume(vol);
+      } else {
+        throw new Error("No data returned");
+      }
     } catch (err: any) {
       console.error("Fetch error:", err);
       setError(err.message || "Failed to load data. Please try again.");
@@ -87,33 +57,19 @@ export default function DexPage() {
 
   const searchTokens = async () => {
     if (!query.trim()) {
-      fetchRealData();
+      fetchTrending();
       return;
     }
     setSearching(true);
     setError(null);
     try {
-      const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`);
-      if (!dexRes.ok) throw new Error("Search failed");
-      const data = await dexRes.json();
-      const results: DexToken[] = data.pairs
-        ?.filter((p: any) => p.chainId === "solana")
-        .map((p: any) => ({
-          address: p.baseToken.address,
-          name: p.baseToken.name || "Unknown",
-          symbol: p.baseToken.symbol || "?",
-          price: parseFloat(p.priceUsd) || 0,
-          priceChange24h: p.priceChange?.h24 || 0,
-          volume24h: p.volume?.h24 || 0,
-          liquidity: p.liquidity?.usd || 0,
-          marketCap: p.marketCap || 0,
-          fdv: p.fdv || 0,
-          holders: 0,
-          image: null,
-        })) || [];
-      setTokens(results);
-      const vol = results.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
-      setTotalVolume(vol);
+      const response = await fetch(`/api/dex/search?q=${encodeURIComponent(query)}`);
+      const data = await response.json();
+      if (data.success) {
+        setTokens(data.data);
+        const vol = data.data.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
+        setTotalVolume(vol);
+      }
     } catch (err: any) {
       setError(err.message || "Search failed");
     } finally {
@@ -122,7 +78,7 @@ export default function DexPage() {
   };
 
   useEffect(() => {
-    fetchRealData();
+    fetchTrending();
   }, []);
 
   const formatNumber = (num: number) => {
@@ -148,10 +104,23 @@ export default function DexPage() {
     return num.toString();
   };
 
+  const getChainColor = (chain: string) => {
+    const colors: Record<string, string> = {
+      solana: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+      ethereum: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      bsc: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+      polygon: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
+      arbitrum: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+      avalanche: "bg-red-500/20 text-red-400 border-red-500/30",
+      base: "bg-blue-600/20 text-blue-400 border-blue-600/30",
+    };
+    return colors[chain.toLowerCase()] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <div className="animate-pulse text-[#BDDBDB]">Loading real DEX data...</div>
+        <div className="animate-pulse text-[#BDDBDB]">Loading DEX data...</div>
       </div>
     );
   }
@@ -163,7 +132,7 @@ export default function DexPage() {
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <p className="text-red-400 font-medium">{error}</p>
           <button
-            onClick={fetchRealData}
+            onClick={fetchTrending}
             className="mt-4 px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition flex items-center gap-2 mx-auto"
           >
             <RefreshCw className="h-4 w-4" /> Retry
@@ -175,6 +144,7 @@ export default function DexPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
@@ -182,7 +152,7 @@ export default function DexPage() {
             <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">LIVE</span>
           </h1>
           <p className="text-[#BDDBDB] text-sm mt-1">
-            Real-time Solana data from Jupiter & Dexscreener
+            Multi-chain data from Dexscreener & GeckoTerminal
           </p>
         </div>
         <div className="flex gap-4 text-sm">
@@ -197,6 +167,7 @@ export default function DexPage() {
         </div>
       </div>
 
+      {/* Search */}
       <div className="flex gap-2 mb-8">
         <input
           type="text"
@@ -215,7 +186,7 @@ export default function DexPage() {
           Search
         </button>
         <button
-          onClick={fetchRealData}
+          onClick={fetchTrending}
           className="px-4 py-3 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-[#BDDBDB] rounded-xl border border-[#1a1a1a] transition"
           title="Refresh"
         >
@@ -223,6 +194,7 @@ export default function DexPage() {
         </button>
       </div>
 
+      {/* Stats */}
       <div className="flex items-center gap-2 mb-6 text-sm text-[#BDDBDB]">
         <Flame className="h-4 w-4 text-[#FF2D2D]" />
         <span>Live data</span>
@@ -236,6 +208,7 @@ export default function DexPage() {
         )}
       </div>
 
+      {/* Table */}
       {tokens.length > 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -248,17 +221,18 @@ export default function DexPage() {
                 <tr className="border-b border-[#1a1a1a]">
                   <th className="px-4 py-3 text-left text-[#BDDBDB] text-xs font-medium uppercase">#</th>
                   <th className="px-4 py-3 text-left text-[#BDDBDB] text-xs font-medium uppercase">Token</th>
+                  <th className="px-4 py-3 text-left text-[#BDDBDB] text-xs font-medium uppercase">Chain</th>
+                  <th className="px-4 py-3 text-left text-[#BDDBDB] text-xs font-medium uppercase">DEX</th>
                   <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Price</th>
                   <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">24h</th>
                   <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Market Cap</th>
                   <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Volume</th>
                   <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Liquidity</th>
-                  <th className="px-4 py-3 text-right text-[#BDDBDB] text-xs font-medium uppercase">Holders</th>
                 </tr>
               </thead>
               <tbody>
                 {tokens.slice(0, 100).map((token, index) => (
-                  <tr key={token.address} className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition">
+                  <tr key={token.pairAddress || token.address} className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition">
                     <td className="px-4 py-3 text-[#BDDBDB] text-sm">{index + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -274,6 +248,14 @@ export default function DexPage() {
                           <div className="text-[#BDDBDB] text-xs font-mono">${token.symbol}</div>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs border ${getChainColor(token.chain)}`}>
+                        {token.chain || 'Unknown'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[#BDDBDB] text-sm">
+                      {token.dex || 'Unknown'}
                     </td>
                     <td className="px-4 py-3 text-right text-white font-mono text-sm">
                       ${formatPrice(token.price)}
@@ -291,9 +273,6 @@ export default function DexPage() {
                     </td>
                     <td className="px-4 py-3 text-right text-[#BDDBDB] text-sm">
                       {formatNumber(token.liquidity)}
-                    </td>
-                    <td className="px-4 py-3 text-right text-[#BDDBDB] text-sm">
-                      {formatNumberShort(token.holders)}
                     </td>
                   </tr>
                 ))}

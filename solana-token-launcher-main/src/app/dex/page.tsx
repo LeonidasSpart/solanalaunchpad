@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, TrendingUp, TrendingDown, ExternalLink, Sparkles, Flame, Shield, Zap } from "lucide-react";
-import Link from "next/link";
 
 interface DexToken {
   address: string;
@@ -25,25 +24,21 @@ export default function DexPage() {
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
   const [totalVolume, setTotalVolume] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [source, setSource] = useState<string>("");
 
   const fetchTrending = async () => {
     setLoading(true);
-    setError(null);
     try {
       const response = await fetch("/api/dex/trending");
       const data = await response.json();
-      
       if (data.success && data.data.length > 0) {
         setTokens(data.data);
+        setSource(data.source || "unknown");
         const vol = data.data.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
         setTotalVolume(vol);
-      } else {
-        setError("No data available. Please try again.");
       }
     } catch (err) {
-      console.error("Error:", err);
-      setError("Failed to load data.");
+      console.error("Error fetching data:", err);
     } finally {
       setLoading(false);
     }
@@ -116,6 +111,7 @@ export default function DexPage() {
           </h1>
           <p className="text-[#BDDBDB] text-sm mt-1">
             Powered by Jupiter, Birdeye & Solana
+            {source && <span className="ml-2 text-xs opacity-50">(source: {source})</span>}
           </p>
         </div>
         <div className="flex gap-4 text-sm">
@@ -149,12 +145,6 @@ export default function DexPage() {
           Search
         </button>
       </div>
-
-      {error && (
-        <div className="bg-yellow-900/20 border border-yellow-500/30 rounded-xl p-4 text-yellow-400 text-sm mb-6">
-          {error}
-        </div>
-      )}
 
       {/* Stats */}
       <div className="flex items-center gap-2 mb-6 text-sm text-[#BDDBDB]">
@@ -192,7 +182,7 @@ export default function DexPage() {
                 </tr>
               </thead>
               <tbody>
-                {tokens.slice(0, 50).map((token, index) => (
+                {tokens.slice(0, 100).map((token, index) => (
                   <tr key={token.address} className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition">
                     <td className="px-4 py-3 text-[#BDDBDB] text-sm">{index + 1}</td>
                     <td className="px-4 py-3">
@@ -238,7 +228,7 @@ export default function DexPage() {
         </motion.div>
       ) : (
         <div className="text-center text-[#BDDBDB] py-12">
-          <p>No tokens found.</p>
+          <p>No tokens found. Please refresh.</p>
         </div>
       )}
     </div>

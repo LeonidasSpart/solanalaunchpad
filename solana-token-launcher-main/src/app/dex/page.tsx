@@ -59,7 +59,7 @@ export default function DexPage() {
       const priceData = await priceRes.json();
 
       // 4. Build token objects
-      const tokenData = solanaTrending.slice(0, 50).map((address: string) => {
+      const tokenData: DexToken[] = solanaTrending.slice(0, 50).map((address: string) => {
         const meta = tokenMap[address] || { name: "Unknown", symbol: "?", logo: null };
         const priceInfo = priceData.data?.[address] || { price: 0 };
         const dexToken = dexData.tokens.find((t: any) => t.baseToken.address === address);
@@ -79,7 +79,7 @@ export default function DexPage() {
       });
 
       setTokens(tokenData);
-      const vol = tokenData.reduce((sum: number, t) => sum + (t.volume24h || 0), 0);
+      const vol = tokenData.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
       setTotalVolume(vol);
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -116,9 +116,9 @@ export default function DexPage() {
           fdv: p.fdv || 0,
           holders: 0,
           image: null,
-        })) || [];
+        } as DexToken)) || [];
       setTokens(results);
-      const vol = results.reduce((sum: number, t) => sum + (t.volume24h || 0), 0);
+      const vol = results.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
       setTotalVolume(vol);
     } catch (err: any) {
       setError(err.message || "Search failed");

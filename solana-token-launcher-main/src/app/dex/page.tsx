@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, Flame, ExternalLink, RefreshCw, AlertCircle } from "lucide-react";
 
@@ -23,6 +24,7 @@ interface DexToken {
 }
 
 export default function DexPage() {
+  const router = useRouter();
   const [tokens, setTokens] = useState<DexToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -115,6 +117,12 @@ export default function DexPage() {
       base: "bg-blue-600/20 text-blue-400 border-blue-600/30",
     };
     return colors[chain.toLowerCase()] || "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  };
+
+  const goToCoin = (token: DexToken) => {
+    const address = token.pairAddress || token.address;
+    if (!token.chain || !address) return;
+    router.push(`/dex/${token.chain}/${address}`);
   };
 
   if (loading) {
@@ -232,7 +240,16 @@ export default function DexPage() {
               </thead>
               <tbody>
                 {tokens.slice(0, 100).map((token, index) => (
-                  <tr key={token.pairAddress || token.address} className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition">
+                  <tr
+                    key={token.pairAddress || token.address}
+                    onClick={() => goToCoin(token)}
+                    role="link"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") goToCoin(token);
+                    }}
+                    className="border-b border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition cursor-pointer"
+                  >
                     <td className="px-4 py-3 text-[#BDDBDB] text-sm">{index + 1}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">

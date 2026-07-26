@@ -108,6 +108,7 @@ export async function GET(
       fdv: parseFloat(attr.fdv_usd) || 0,
       liquidity: parseFloat(attr.reserve_in_usd) || 0,
       poolCreatedAt: attr.pool_created_at || null,
+      tokenAddress: baseTokenAddress || null,
 
       description: tokenInfo?.description || null,
       websites: tokenInfo?.websites || [],

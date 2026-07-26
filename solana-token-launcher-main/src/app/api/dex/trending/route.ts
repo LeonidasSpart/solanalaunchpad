@@ -1,11 +1,11 @@
 // src/app/api/dex/trending/route.ts
 import { NextResponse } from 'next/server';
-import { getTrendingTokens } from '@/lib/dex/client';
+import { getTrendingTokens } from '@/lib/dex/aggregator';
 import { redis } from '@/lib/redis';
 
 export async function GET() {
   try {
-    // Try cache first
+    // Check cache
     const cached = await redis.get('dex:trending');
     if (cached) {
       const data = typeof cached === 'string' ? JSON.parse(cached) : cached;
@@ -19,9 +19,9 @@ export async function GET() {
     
     return NextResponse.json({ success: true, data: tokens, cached: false });
   } catch (error) {
-    console.error('Trending error:', error);
+    console.error('Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch trending tokens' },
+      { success: false, error: 'Failed to fetch data' },
       { status: 500 }
     );
   }

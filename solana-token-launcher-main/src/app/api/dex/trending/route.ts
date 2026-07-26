@@ -1,22 +1,15 @@
 // src/app/api/dex/trending/route.ts
 import { NextResponse } from 'next/server';
-import { redis } from '@/lib/redis';
-
-const CACHE_TTL = 60; // 1 minute
 
 export async function GET() {
   try {
-    // Clear cache to force fresh data
-    await redis.del('dex:trending');
-
-    // Use CORS proxy to fetch real data
-    const proxy = 'https://corsproxy.io/?';
-    const url = 'https://api.dexscreener.com/latest/dex/tokens/trending';
-    
-    const response = await fetch(proxy + encodeURIComponent(url), {
+    // Fetch trending tokens from Dexscreener via server (no CORS issues)
+    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/trending', {
       headers: {
         'Accept': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (compatible; ZRP-Bot/1.0)',
       },
+      next: { revalidate: 60 }, // Cache for 60 seconds
     });
 
     if (!response.ok) {
@@ -25,13 +18,9 @@ export async function GET() {
 
     const data = await response.json();
 
-    if (!data.tokens || data.tokens.length === 0) {
-      throw new Error('No tokens from Dexscreener');
-    }
-
-    // Process Solana tokens
-    const tokens = data.tokens
-      .filter((t: any) => t.chainId === 'solana')
+    // Filter only Solana tokens
+    const solanaTokens = data.tokens
+      ?.filter((t: any) => t.chainId === 'solana')
       .map((t: any) => ({
         address: t.baseToken.address,
         name: t.baseToken.name || 'Unknown',
@@ -44,67 +33,32 @@ export async function GET() {
         fdv: t.fdv || 0,
         holders: 0,
         image: null,
-      }));
-
-    // Cache fresh data
-    await redis.set('dex:trending', JSON.stringify(tokens), { ex: CACHE_TTL });
+      })) || [];
 
     return NextResponse.json({ 
       success: true, 
-      data: tokens, 
-      source: 'dexscreener-real',
-      count: tokens.length 
+      data: solanaTokens,
+      count: solanaTokens.length,
+      source: 'dexscreener',
     });
 
   } catch (error) {
-    console.error('Error fetching real data:', error);
-    
-    // Try Jupiter as backup
-    try {
-      const jupiterRes = await fetch('https://tokens.jup.ag/tokens?tags=verified');
-      const list = await jupiterRes.json();
-      const top = list.slice(0, 20);
-      const ids = top.map((t: any) => t.address).join(',');
-      const priceRes = await fetch(`https://quote-api.jup.ag/v6/price?ids=${ids}`);
-      const prices = await priceRes.json();
+    console.error('Error fetching trending:', error);
 
-      const tokens = top.map((t: any) => ({
-        address: t.address,
-        name: t.name,
-        symbol: t.symbol,
-        price: parseFloat(prices.data?.[t.address]?.price) || 0,
-        priceChange24h: 0,
-        volume24h: 0,
-        liquidity: 0,
-        marketCap: 0,
-        fdv: 0,
-        holders: 0,
-        image: t.logoURI || null,
-      }));
-
-      await redis.set('dex:trending', JSON.stringify(tokens), { ex: CACHE_TTL });
-
-      return NextResponse.json({ 
-        success: true, 
-        data: tokens, 
-        source: 'jupiter-real',
-        count: tokens.length 
-      });
-    } catch (jupError) {
-      console.error('Jupiter backup also failed:', jupError);
-    }
-
-    // If all fails, return fallback
+    // Fallback: Return popular Solana tokens with hardcoded data
     const fallback = [
       { address: 'So11111111111111111111111111111111111111112', name: 'Solana', symbol: 'SOL', price: 142.50, priceChange24h: -1.2, volume24h: 1500000000, liquidity: 50000000, marketCap: 65000000000, fdv: 65000000000, holders: 1000000, image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png' },
       { address: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', name: 'USDC', symbol: 'USDC', price: 1.00, priceChange24h: 0.01, volume24h: 50000000, liquidity: 10000000, marketCap: 25000000000, fdv: 25000000000, holders: 500000, image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png' },
+      { address: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', name: 'USDT', symbol: 'USDT', price: 1.00, priceChange24h: 0.00, volume24h: 40000000, liquidity: 8000000, marketCap: 10000000000, fdv: 10000000000, holders: 300000, image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB/logo.png' },
+      { address: 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So', name: 'Marinade staked SOL', symbol: 'mSOL', price: 155.00, priceChange24h: -1.0, volume24h: 20000000, liquidity: 10000000, marketCap: 2000000000, fdv: 2000000000, holders: 100000, image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So/logo.png' },
+      { address: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn', name: 'Jito Staked SOL', symbol: 'JitoSOL', price: 150.00, priceChange24h: -1.3, volume24h: 15000000, liquidity: 8000000, marketCap: 1500000000, fdv: 1500000000, holders: 80000, image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn/logo.png' },
     ];
-    
-    return NextResponse.json({ 
-      success: true, 
-      data: fallback, 
+
+    return NextResponse.json({
+      success: true,
+      data: fallback,
+      count: fallback.length,
       source: 'fallback',
-      count: fallback.length 
     });
   }
 }

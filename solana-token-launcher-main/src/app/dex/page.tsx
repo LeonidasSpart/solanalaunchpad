@@ -1,66 +1,138 @@
-// src/app/dex/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, TrendingUp, TrendingDown, ExternalLink, Sparkles, Flame } from "lucide-react";
-import Link from "next/link";
-import type { DexToken } from "@/lib/dex/types";
+
+interface DexToken {
+  address: string;
+  name: string;
+  symbol: string;
+  pairAddress: string;
+  dexId: string;
+  price: number;
+  priceChange1h: number;
+  priceChange6h: number;
+  priceChange24h: number;
+  volume24h: number;
+  liquidity: number;
+  marketCap: number;
+  fdv: number;
+  image: string | null;
+  url?: string;
+  age?: string;
+  txns24h?: number;
+  traders24h?: number;
+}
 
 export default function DexPage() {
   const [tokens, setTokens] = useState<DexToken[]>([]);
-  const [trending, setTrending] = useState<DexToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
   const [totalVolume, setTotalVolume] = useState(0);
   const [totalTxns, setTotalTxns] = useState(0);
 
-  useEffect(() => {
-    const fetchTrending = async () => {
-      try {
-        const response = await fetch("/api/dex/trending");
-        const data = await response.json();
-        if (data.success) {
-          setTrending(data.data);
-          setTokens(data.data);
-          // Calculate totals
-          let vol = 0;
-          let txns = 0;
-          data.data.forEach((t: DexToken) => {
-            vol += t.volume24h || 0;
-            txns += t.txns24h || 0;
-          });
-          setTotalVolume(vol);
-          setTotalTxns(txns);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+  // Fetch trending tokens from Dexscreener directly
+  const fetchTrending = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("https://api.dexscreener.com/latest/dex/tokens/trending");
+      const data = await response.json();
+      if (data.tokens) {
+        const solanaTokens = data.tokens
+          .filter((token: any) => token.chainId === "solana")
+          .map((token: any) => ({
+            address: token.baseToken.address,
+            name: token.baseToken.name || "Unknown",
+            symbol: token.baseToken.symbol || "?",
+            pairAddress: token.pairAddress,
+            dexId: token.dexId || "Unknown",
+            price: parseFloat(token.priceUsd) || 0,
+            priceChange1h: token.priceChange?.h1 || 0,
+            priceChange6h: token.priceChange?.h6 || 0,
+            priceChange24h: token.priceChange?.h24 || 0,
+            volume24h: token.volume?.h24 || 0,
+            liquidity: token.liquidity?.usd || 0,
+            marketCap: token.marketCap || 0,
+            fdv: token.fdv || 0,
+            image: token.info?.imageUrl || null,
+            url: token.url || "",
+            age: token.createdAt || "Unknown",
+            txns24h: (token.txns?.h24?.buys || 0) + (token.txns?.h24?.sells || 0),
+            traders24h: token.traders?.h24 || 0,
+          }));
+        setTokens(solanaTokens);
+        // Calculate totals
+        let vol = 0;
+        let txns = 0;
+        solanaTokens.forEach((t: DexToken) => {
+          vol += t.volume24h || 0;
+          txns += t.txns24h || 0;
+        });
+        setTotalVolume(vol);
+        setTotalTxns(txns);
       }
-    };
-    fetchTrending();
-  }, []);
+    } catch (error) {
+      console.error("Error fetching trending:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Search tokens
   const searchTokens = async () => {
     if (!query.trim()) {
-      setTokens(trending);
+      fetchTrending();
       return;
     }
     setSearching(true);
     try {
-      const response = await fetch(`/api/dex/search?q=${encodeURIComponent(query)}`);
+      const response = await fetch(
+        `https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`
+      );
       const data = await response.json();
-      if (data.success) {
-        setTokens(data.data);
+      if (data.pairs) {
+        const results = data.pairs
+          .filter((pair: any) => pair.chainId === "solana")
+          .map((pair: any) => ({
+            address: pair.baseToken.address,
+            name: pair.baseToken.name || "Unknown",
+            symbol: pair.baseToken.symbol || "?",
+            pairAddress: pair.pairAddress,
+            dexId: pair.dexId || "Unknown",
+            price: parseFloat(pair.priceUsd) || 0,
+            priceChange1h: pair.priceChange?.h1 || 0,
+            priceChange6h: pair.priceChange?.h6 || 0,
+            priceChange24h: pair.priceChange?.h24 || 0,
+            volume24h: pair.volume?.h24 || 0,
+            liquidity: pair.liquidity?.usd || 0,
+            marketCap: pair.marketCap || 0,
+            fdv: pair.fdv || 0,
+            image: pair.info?.imageUrl || null,
+            url: pair.url || "",
+          }));
+        setTokens(results);
+        // Recalculate totals for results
+        let vol = 0;
+        let txns = 0;
+        results.forEach((t: DexToken) => {
+          vol += t.volume24h || 0;
+          txns += t.txns24h || 0;
+        });
+        setTotalVolume(vol);
+        setTotalTxns(txns);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Search error:", error);
     } finally {
       setSearching(false);
     }
   };
+
+  useEffect(() => {
+    fetchTrending();
+  }, []);
 
   const formatNumber = (num: number) => {
     if (num >= 1e9) return `$${(num / 1e9).toFixed(2)}B`;

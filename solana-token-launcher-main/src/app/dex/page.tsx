@@ -15,7 +15,7 @@ interface DexToken {
   marketCap: number;
   fdv: number;
   holders: number;
-  image?: string;
+  image?: string | null; // ✅ Allow null
 }
 
 export default function DexPage() {
@@ -26,12 +26,10 @@ export default function DexPage() {
   const [query, setQuery] = useState("");
   const [totalVolume, setTotalVolume] = useState(0);
 
-  // Fetch real data from Jupiter + Dexscreener
   const fetchRealData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch trending token addresses from Dexscreener
       const dexRes = await fetch("https://api.dexscreener.com/latest/dex/tokens/trending");
       if (!dexRes.ok) throw new Error("Dexscreener API failed");
       const dexData = await dexRes.json();
@@ -42,7 +40,6 @@ export default function DexPage() {
       
       if (solanaTrending.length === 0) throw new Error("No trending tokens found");
 
-      // 2. Fetch token metadata from Jupiter token list
       const tokenListRes = await fetch("https://tokens.jup.ag/tokens?tags=verified");
       if (!tokenListRes.ok) throw new Error("Jupiter token list failed");
       const tokenList = await tokenListRes.json();
@@ -52,13 +49,11 @@ export default function DexPage() {
         tokenMap[t.address] = { name: t.name, symbol: t.symbol, logo: t.logoURI };
       });
 
-      // 3. Fetch prices, volume, liquidity from Jupiter price API
       const ids = solanaTrending.slice(0, 50).join(",");
       const priceRes = await fetch(`https://quote-api.jup.ag/v6/price?ids=${ids}`);
       if (!priceRes.ok) throw new Error("Jupiter price API failed");
       const priceData = await priceRes.json();
 
-      // 4. Build token objects
       const tokenData: DexToken[] = solanaTrending.slice(0, 50).map((address: string) => {
         const meta = tokenMap[address] || { name: "Unknown", symbol: "?", logo: null };
         const priceInfo = priceData.data?.[address] || { price: 0 };
@@ -90,7 +85,6 @@ export default function DexPage() {
     }
   };
 
-  // Search tokens
   const searchTokens = async () => {
     if (!query.trim()) {
       fetchRealData();
@@ -102,7 +96,7 @@ export default function DexPage() {
       const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`);
       if (!dexRes.ok) throw new Error("Search failed");
       const data = await dexRes.json();
-      const results = data.pairs
+      const results: DexToken[] = data.pairs
         ?.filter((p: any) => p.chainId === "solana")
         .map((p: any) => ({
           address: p.baseToken.address,
@@ -116,7 +110,7 @@ export default function DexPage() {
           fdv: p.fdv || 0,
           holders: 0,
           image: null,
-        } as DexToken)) || [];
+        })) || [];
       setTokens(results);
       const vol = results.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
       setTotalVolume(vol);
@@ -181,7 +175,6 @@ export default function DexPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-20">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
@@ -204,7 +197,6 @@ export default function DexPage() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="flex gap-2 mb-8">
         <input
           type="text"
@@ -231,7 +223,6 @@ export default function DexPage() {
         </button>
       </div>
 
-      {/* Stats */}
       <div className="flex items-center gap-2 mb-6 text-sm text-[#BDDBDB]">
         <Flame className="h-4 w-4 text-[#FF2D2D]" />
         <span>Live data</span>
@@ -245,7 +236,6 @@ export default function DexPage() {
         )}
       </div>
 
-      {/* Table */}
       {tokens.length > 0 ? (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

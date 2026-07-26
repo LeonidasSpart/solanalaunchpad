@@ -2,6 +2,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import PriceChart from './PriceChart';
+import CopyAddress from './CopyAddress';
 
 interface PoolDetail {
   address: string;
@@ -24,6 +25,7 @@ interface PoolDetail {
   fdv: number;
   liquidity: number;
   poolCreatedAt: string | null;
+  tokenAddress: string | null;
   description: string | null;
   websites: string[];
   twitter: string | null;
@@ -225,10 +227,15 @@ export default async function PoolDetailPage({
           </div>
         )}
 
-        {/* Contract address */}
-        <div className="rounded-2xl border border-white/5 bg-white/[0.02] p-6">
-          <p className="mb-2 text-xs text-white/40">Pool address ({pool.chain})</p>
-          <p className="break-all font-mono text-sm text-white/70">{pool.address}</p>
+        {/* Addresses */}
+        <div className="space-y-4">
+          {pool.tokenAddress && (
+            <CopyAddress
+              label={`Token contract address (CA) · ${pool.chain}`}
+              value={pool.tokenAddress}
+            />
+          )}
+          <CopyAddress label={`Pool address · ${pool.chain}`} value={pool.address} />
         </div>
       </div>
     </main>

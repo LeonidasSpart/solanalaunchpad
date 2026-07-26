@@ -1,46 +1,48 @@
 // src/app/api/dex/trending/route.ts
 import { NextResponse } from 'next/server';
 
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+const SOLANA_TOKEN_IDS = [
+  'solana', 'usd-coin', 'tether', 'chainlink', 'raydium', 
+  'orca', 'step-finance', 'jito-governance-token', 'marinade-staked-sol'
+];
+
 export async function GET() {
   try {
-    const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/trending', {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; ZRP-Bot/1.0)',
-      },
-      next: { revalidate: 60 },
-    });
-
-    if (!response.ok) throw new Error(`Dexscreener returned ${response.status}`);
-
+    const response = await fetch(
+      `${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${SOLANA_TOKEN_IDS.join(',')}&order=market_cap_desc&per_page=20&page=1&sparkline=false`
+    );
+    
+    if (!response.ok) {
+      throw new Error(`CoinGecko API error: ${response.status}`);
+    }
+    
     const data = await response.json();
-
-    const solanaTokens = data.tokens
-      ?.filter((t: any) => t.chainId === 'solana')
-      .map((t: any) => ({
-        address: t.baseToken.address,
-        name: t.baseToken.name || 'Unknown',
-        symbol: t.baseToken.symbol || '?',
-        price: parseFloat(t.priceUsd) || 0,
-        priceChange24h: t.priceChange?.h24 || 0,
-        volume24h: t.volume?.h24 || 0,
-        liquidity: t.liquidity?.usd || 0,
-        marketCap: t.marketCap || 0,
-        fdv: t.fdv || 0,
-        holders: 0,
-        image: null,
-      })) || [];
-
-    return NextResponse.json({ success: true, data: solanaTokens });
-
+    
+    const tokens = data.map((coin: any) => ({
+      address: coin.id,
+      name: coin.name,
+      symbol: coin.symbol.toUpperCase(),
+      price: coin.current_price || 0,
+      priceChange24h: coin.price_change_percentage_24h || 0,
+      volume24h: coin.total_volume || 0,
+      liquidity: 0, // Not provided by CoinGecko
+      marketCap: coin.market_cap || 0,
+      fdv: coin.fully_diluted_valuation || 0,
+      holders: 0, // Not provided by CoinGecko
+      image: coin.image || null,
+    }));
+    
+    return NextResponse.json({ success: true, data: tokens, count: tokens.length, source: 'coingecko' });
   } catch (error) {
-    console.error('Error fetching trending:', error);
-    // Return a fallback list of tokens so the page never breaks
+    console.error('Error fetching from CoinGecko:', error);
+    
+    // Fallback: Use hardcoded data
     const fallback = [
-      { address: 'So11111111111111111111111111111111111111112', name: 'Solana', symbol: 'SOL', price: 142.50, priceChange24h: -1.2, volume24h: 1500000000, liquidity: 50000000, marketCap: 65000000000, fdv: 65000000000, holders: 1000000, image: 'https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png' },
-      // ... add more fallback tokens
+      { address: 'solana', name: 'Solana', symbol: 'SOL', price: 142.50, priceChange24h: -1.2, volume24h: 1500000000, liquidity: 0, marketCap: 65000000000, fdv: 65000000000, holders: 0, image: 'https://assets.coingecko.com/coins/images/4128/small/solana.png' },
+      { address: 'usd-coin', name: 'USD Coin', symbol: 'USDC', price: 1.00, priceChange24h: 0.01, volume24h: 50000000, liquidity: 0, marketCap: 25000000000, fdv: 25000000000, holders: 0, image: 'https://assets.coingecko.com/coins/images/6319/small/usdc.png' },
     ];
-
-    return NextResponse.json({ success: true, data: fallback });
+    
+    return NextResponse.json({ success: true, data: fallback, count: fallback.length, source: 'fallback' });
   }
 }

@@ -1,66 +1,117 @@
 // src/app/api/dex/trending/route.ts
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+const GT_PAGE_SIZE = 20; // GeckoTerminal returns max 20 pools per page
+const GT_MAX_PAGES = 10; // Free-tier pagination cap (paid plans go further)
+const MAX_ITEMS = GT_PAGE_SIZE * GT_MAX_PAGES; // 200 pools is the ceiling on free tier
+
+async function fetchGtPage(page: number) {
+  const response = await fetch(
+    `https://api.geckoterminal.com/api/v2/networks/trending_pools?include=base_token,dex,network&page=${page}`,
+    {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
+    }
+  );
+  if (!response.ok) {
+    throw new Error(`GeckoTerminal returned ${response.status} (page ${page})`);
+  }
+  return response.json();
+}
+
+function mapPool(pool: any, findIncluded: (type: string, id: string) => any) {
+  const attr = pool.attributes || {};
+  const rel = pool.relationships || {};
+
+  const networkId = rel?.network?.data?.id || 'unknown';
+  const dexId = rel?.dex?.data?.id;
+  const dexResource = dexId ? findIncluded('dex', dexId) : null;
+  const dexName = dexResource?.attributes?.name || dexId || 'Unknown';
+
+  const baseTokenId = rel?.base_token?.data?.id;
+  const baseTokenResource = baseTokenId ? findIncluded('token', baseTokenId) : null;
+  const symbol = baseTokenResource?.attributes?.symbol || '?';
+  const tokenName = baseTokenResource?.attributes?.name || attr.name || 'Unknown';
+  const image = baseTokenResource?.attributes?.image_url || null;
+
+  const volume24h = parseFloat(attr.volume_usd?.h24) || 0;
+  const priceChange24h = parseFloat(attr.price_change_percentage?.h24) || 0;
+  const marketCap = parseFloat(attr.market_cap_usd) || parseFloat(attr.fdv_usd) || 0;
+
+  return {
+    address: attr.address || 'Unknown',
+    name: tokenName,
+    pairName: attr.name || 'Unknown',
+    symbol,
+    chain: networkId,
+    dex: dexName,
+    price: parseFloat(attr.base_token_price_usd) || 0,
+    priceChange24h,
+    volume24h,
+    liquidity: parseFloat(attr.reserve_in_usd) || 0,
+    marketCap,
+    fdv: parseFloat(attr.fdv_usd) || 0,
+    image,
+    pairAddress: attr.address || '',
+    url: `https://www.geckoterminal.com/${networkId}/pools/${attr.address}`,
+  };
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1);
+  const limit = Math.min(200, Math.max(1, parseInt(searchParams.get('limit') || '100', 10) || 100));
+
   try {
-    // include=base_token,dex,network resolves symbol/name/image and dex/network
-    // names via the top-level "included" array (JSON:API side-loading).
-    const response = await fetch(
-      'https://api.geckoterminal.com/api/v2/networks/trending_pools?include=base_token,dex,network',
-      {
-        headers: { Accept: 'application/json' },
-        next: { revalidate: 60 },
-      }
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    // Past what the free-tier API can ever return
+    if (startIndex >= MAX_ITEMS) {
+      return NextResponse.json({
+        success: true,
+        data: [],
+        count: 0,
+        page,
+        limit,
+        totalAvailable: MAX_ITEMS,
+        totalPages: Math.ceil(MAX_ITEMS / limit),
+        source: 'geckoterminal',
+      });
+    }
+
+    // Figure out which upstream GeckoTerminal pages (20/each) cover this window
+    const firstGtPage = Math.floor(startIndex / GT_PAGE_SIZE) + 1;
+    const lastGtPage = Math.min(GT_MAX_PAGES, Math.ceil(endIndex / GT_PAGE_SIZE));
+    const gtPageNumbers = Array.from(
+      { length: lastGtPage - firstGtPage + 1 },
+      (_, i) => firstGtPage + i
     );
-    if (!response.ok) throw new Error(`GeckoTerminal returned ${response.status}`);
 
-    const data = await response.json();
-    const included: any[] = data.included || [];
+    const gtResponses = await Promise.all(gtPageNumbers.map(fetchGtPage));
 
-    // Build lookup maps from the "included" side-loaded resources
-    const findIncluded = (type: string, id: string) =>
-      included.find((r) => r.type === type && r.id === id);
+    const allPools: any[] = [];
+    const includedMap = new Map<string, any>();
+    for (const data of gtResponses) {
+      (data.data || []).forEach((p: any) => allPools.push(p));
+      (data.included || []).forEach((r: any) => includedMap.set(`${r.type}:${r.id}`, r));
+    }
+    const findIncluded = (type: string, id: string) => includedMap.get(`${type}:${id}`);
 
-    const tokens =
-      data.data?.map((pool: any) => {
-        const attr = pool.attributes || {};
-        const rel = pool.relationships || {};
+    const mapped = allPools.map((pool) => mapPool(pool, findIncluded));
 
-        const networkId = rel?.network?.data?.id || 'unknown';
-        const dexId = rel?.dex?.data?.id;
-        const dexResource = dexId ? findIncluded('dex', dexId) : null;
-        const dexName = dexResource?.attributes?.name || dexId || 'Unknown';
+    // De-dupe (overlapping GT pages can occasionally repeat a pool)
+    const seen = new Set<string>();
+    const deduped = mapped.filter((t) => {
+      if (seen.has(t.pairAddress)) return false;
+      seen.add(t.pairAddress);
+      return true;
+    });
 
-        const baseTokenId = rel?.base_token?.data?.id;
-        const baseTokenResource = baseTokenId ? findIncluded('token', baseTokenId) : null;
-        const symbol = baseTokenResource?.attributes?.symbol || '?';
-        const tokenName = baseTokenResource?.attributes?.name || attr.name || 'Unknown';
-        const image = baseTokenResource?.attributes?.image_url || null;
+    const windowStart = startIndex - (firstGtPage - 1) * GT_PAGE_SIZE;
+    const pageItems = deduped.slice(windowStart, windowStart + limit);
 
-        const volume24h = parseFloat(attr.volume_usd?.h24) || 0;
-        const priceChange24h = parseFloat(attr.price_change_percentage?.h24) || 0;
-        const marketCap = parseFloat(attr.market_cap_usd) || parseFloat(attr.fdv_usd) || 0;
-
-        return {
-          address: attr.address || 'Unknown',
-          name: tokenName,
-          pairName: attr.name || 'Unknown', // e.g. "$WIF / SOL"
-          symbol,
-          chain: networkId,
-          dex: dexName,
-          price: parseFloat(attr.base_token_price_usd) || 0,
-          priceChange24h,
-          volume24h,
-          liquidity: parseFloat(attr.reserve_in_usd) || 0,
-          marketCap,
-          fdv: parseFloat(attr.fdv_usd) || 0,
-          image,
-          pairAddress: attr.address || '',
-          url: `https://www.geckoterminal.com/${networkId}/pools/${attr.address}`,
-        };
-      }) || [];
-
-    if (tokens.length === 0) {
+    if (pageItems.length === 0 && page === 1) {
       return NextResponse.json(
         { success: false, error: 'No data returned from GeckoTerminal' },
         { status: 500 }
@@ -69,8 +120,12 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      data: tokens,
-      count: tokens.length,
+      data: pageItems,
+      count: pageItems.length,
+      page,
+      limit,
+      totalAvailable: MAX_ITEMS,
+      totalPages: Math.ceil(MAX_ITEMS / limit),
       source: 'geckoterminal',
     });
   } catch (error) {
@@ -117,6 +172,10 @@ export async function GET() {
       success: true,
       data: fallback,
       count: fallback.length,
+      page,
+      limit,
+      totalAvailable: fallback.length,
+      totalPages: 1,
       source: 'fallback',
     });
   }

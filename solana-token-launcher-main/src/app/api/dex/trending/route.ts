@@ -3,49 +3,68 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    // Fetch from GeckoTerminal
+    // include=base_token,dex,network resolves symbol/name/image and dex/network
+    // names via the top-level "included" array (JSON:API side-loading).
     const response = await fetch(
-      'https://api.geckoterminal.com/api/v2/networks/trending_pools',
+      'https://api.geckoterminal.com/api/v2/networks/trending_pools?include=base_token,dex,network',
       {
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         next: { revalidate: 60 },
       }
     );
-
     if (!response.ok) throw new Error(`GeckoTerminal returned ${response.status}`);
 
     const data = await response.json();
+    const included: any[] = data.included || [];
 
-    // Safely map tokens with fallbacks
-    const tokens = data.data?.map((pool: any) => {
-      const attr = pool.attributes || {};
-      const rel = pool.relationships || {};
-      const networkId = rel?.network?.data?.id || 'unknown';
-      
-      return {
-        address: attr.address || 'Unknown',
-        name: attr.name || 'Unknown',
-        symbol: attr.symbol || '?',
-        chain: networkId,
-        dex: attr.dex || 'Unknown',
-        price: parseFloat(attr.price_usd) || 0,
-        priceChange24h: attr.price_change_percentage_24h || 0,
-        volume24h: attr.volume_usd_24h || 0,
-        liquidity: attr.reserve_in_usd || 0,
-        marketCap: attr.market_cap_usd || 0,
-        fdv: attr.fully_diluted_valuation_usd || 0,
-        image: null, // GeckoTerminal doesn't provide images
-        pairAddress: attr.address || '',
-        url: `https://www.geckoterminal.com/${networkId}/pools/${attr.address}`,
-      };
-    }) || [];
+    // Build lookup maps from the "included" side-loaded resources
+    const findIncluded = (type: string, id: string) =>
+      included.find((r) => r.type === type && r.id === id);
 
-    // Add fallback for empty results
+    const tokens =
+      data.data?.map((pool: any) => {
+        const attr = pool.attributes || {};
+        const rel = pool.relationships || {};
+
+        const networkId = rel?.network?.data?.id || 'unknown';
+        const dexId = rel?.dex?.data?.id;
+        const dexResource = dexId ? findIncluded('dex', dexId) : null;
+        const dexName = dexResource?.attributes?.name || dexId || 'Unknown';
+
+        const baseTokenId = rel?.base_token?.data?.id;
+        const baseTokenResource = baseTokenId ? findIncluded('token', baseTokenId) : null;
+        const symbol = baseTokenResource?.attributes?.symbol || '?';
+        const tokenName = baseTokenResource?.attributes?.name || attr.name || 'Unknown';
+        const image = baseTokenResource?.attributes?.image_url || null;
+
+        const volume24h = parseFloat(attr.volume_usd?.h24) || 0;
+        const priceChange24h = parseFloat(attr.price_change_percentage?.h24) || 0;
+        const marketCap = parseFloat(attr.market_cap_usd) || parseFloat(attr.fdv_usd) || 0;
+
+        return {
+          address: attr.address || 'Unknown',
+          name: tokenName,
+          pairName: attr.name || 'Unknown', // e.g. "$WIF / SOL"
+          symbol,
+          chain: networkId,
+          dex: dexName,
+          price: parseFloat(attr.base_token_price_usd) || 0,
+          priceChange24h,
+          volume24h,
+          liquidity: parseFloat(attr.reserve_in_usd) || 0,
+          marketCap,
+          fdv: parseFloat(attr.fdv_usd) || 0,
+          image,
+          pairAddress: attr.address || '',
+          url: `https://www.geckoterminal.com/${networkId}/pools/${attr.address}`,
+        };
+      }) || [];
+
     if (tokens.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'No data returned from GeckoTerminal',
-      }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: 'No data returned from GeckoTerminal' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
@@ -54,19 +73,18 @@ export async function GET() {
       count: tokens.length,
       source: 'geckoterminal',
     });
-
   } catch (error) {
     console.error('Error fetching from GeckoTerminal:', error);
-    
-    // Hardcoded fallback with realistic data and images
+
     const fallback = [
       {
         address: 'So11111111111111111111111111111111111111112',
         name: 'Solana',
+        pairName: 'SOL / USDC',
         symbol: 'SOL',
         chain: 'solana',
         dex: 'Raydium',
-        price: 142.50,
+        price: 142.5,
         priceChange24h: -1.2,
         volume24h: 1500000000,
         liquidity: 50000000,
@@ -79,6 +97,7 @@ export async function GET() {
       {
         address: '0x...',
         name: 'Ethereum',
+        pairName: 'ETH / USDC',
         symbol: 'ETH',
         chain: 'ethereum',
         dex: 'Uniswap',
@@ -92,7 +111,6 @@ export async function GET() {
         pairAddress: '0x...',
         url: 'https://dexscreener.com/ethereum/eth',
       },
-      // Add more if needed
     ];
 
     return NextResponse.json({

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, TrendingUp, TrendingDown, ExternalLink, Sparkles, Flame, Shield, Zap } from "lucide-react";
+import { Search, Flame, ExternalLink, RefreshCw, AlertCircle } from "lucide-react";
 
 interface DexToken {
   address: string;
@@ -21,52 +21,116 @@ interface DexToken {
 export default function DexPage() {
   const [tokens, setTokens] = useState<DexToken[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
   const [totalVolume, setTotalVolume] = useState(0);
-  const [source, setSource] = useState<string>("");
 
-  const fetchTrending = async () => {
+  // Fetch real data from Jupiter + Dexscreener
+  const fetchRealData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await fetch("/api/dex/trending");
-      const data = await response.json();
-      if (data.success && data.data.length > 0) {
-        setTokens(data.data);
-        setSource(data.source || "unknown");
-        const vol = data.data.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
-        setTotalVolume(vol);
-      }
-    } catch (err) {
-      console.error("Error fetching data:", err);
+      // 1. Fetch trending token addresses from Dexscreener
+      const dexRes = await fetch("https://api.dexscreener.com/latest/dex/tokens/trending");
+      if (!dexRes.ok) throw new Error("Dexscreener API failed");
+      const dexData = await dexRes.json();
+      
+      const solanaTrending = dexData.tokens
+        ?.filter((t: any) => t.chainId === "solana")
+        .map((t: any) => t.baseToken.address) || [];
+      
+      if (solanaTrending.length === 0) throw new Error("No trending tokens found");
+
+      // 2. Fetch token metadata from Jupiter token list
+      const tokenListRes = await fetch("https://tokens.jup.ag/tokens?tags=verified");
+      if (!tokenListRes.ok) throw new Error("Jupiter token list failed");
+      const tokenList = await tokenListRes.json();
+      
+      const tokenMap: Record<string, any> = {};
+      tokenList.forEach((t: any) => {
+        tokenMap[t.address] = { name: t.name, symbol: t.symbol, logo: t.logoURI };
+      });
+
+      // 3. Fetch prices, volume, liquidity from Jupiter price API
+      const ids = solanaTrending.slice(0, 50).join(",");
+      const priceRes = await fetch(`https://quote-api.jup.ag/v6/price?ids=${ids}`);
+      if (!priceRes.ok) throw new Error("Jupiter price API failed");
+      const priceData = await priceRes.json();
+
+      // 4. Build token objects
+      const tokenData = solanaTrending.slice(0, 50).map((address: string) => {
+        const meta = tokenMap[address] || { name: "Unknown", symbol: "?", logo: null };
+        const priceInfo = priceData.data?.[address] || { price: 0 };
+        // Note: priceChange24h, volume, liquidity are not in Jupiter price API.
+        // We'll get these from Dexscreener response for the same tokens.
+        const dexToken = dexData.tokens.find((t: any) => t.baseToken.address === address);
+        return {
+          address,
+          name: meta.name || dexToken?.baseToken?.name || "Unknown",
+          symbol: meta.symbol || dexToken?.baseToken?.symbol || "?",
+          price: parseFloat(priceInfo.price) || parseFloat(dexToken?.priceUsd) || 0,
+          priceChange24h: dexToken?.priceChange?.h24 || 0,
+          volume24h: dexToken?.volume?.h24 || 0,
+          liquidity: dexToken?.liquidity?.usd || 0,
+          marketCap: dexToken?.marketCap || 0,
+          fdv: dexToken?.fdv || 0,
+          holders: 0,
+          image: meta.logo || null,
+        };
+      });
+
+      setTokens(tokenData);
+      const vol = tokenData.reduce((sum, t) => sum + (t.volume24h || 0), 0);
+      setTotalVolume(vol);
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      setError(err.message || "Failed to load data. Please try again.");
+      setTokens([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Search tokens
   const searchTokens = async () => {
     if (!query.trim()) {
-      fetchTrending();
+      fetchRealData();
       return;
     }
     setSearching(true);
+    setError(null);
     try {
-      const response = await fetch(`/api/dex/search?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-      if (data.success) {
-        setTokens(data.data);
-        const vol = data.data.reduce((sum: number, t: DexToken) => sum + (t.volume24h || 0), 0);
-        setTotalVolume(vol);
-      }
-    } catch (error) {
-      console.error("Search error:", error);
+      const dexRes = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`);
+      if (!dexRes.ok) throw new Error("Search failed");
+      const data = await dexRes.json();
+      const results = data.pairs
+        ?.filter((p: any) => p.chainId === "solana")
+        .map((p: any) => ({
+          address: p.baseToken.address,
+          name: p.baseToken.name || "Unknown",
+          symbol: p.baseToken.symbol || "?",
+          price: parseFloat(p.priceUsd) || 0,
+          priceChange24h: p.priceChange?.h24 || 0,
+          volume24h: p.volume?.h24 || 0,
+          liquidity: p.liquidity?.usd || 0,
+          marketCap: p.marketCap || 0,
+          fdv: p.fdv || 0,
+          holders: 0,
+          image: null,
+        })) || [];
+      setTokens(results);
+      const vol = results.reduce((sum, t) => sum + (t.volume24h || 0), 0);
+      setTotalVolume(vol);
+    } catch (err: any) {
+      setError(err.message || "Search failed");
     } finally {
       setSearching(false);
     }
   };
 
   useEffect(() => {
-    fetchTrending();
+    fetchRealData();
   }, []);
 
   const formatNumber = (num: number) => {
@@ -95,7 +159,24 @@ export default function DexPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <div className="animate-pulse text-[#BDDBDB]">Loading DEX data...</div>
+        <div className="animate-pulse text-[#BDDBDB]">Loading real DEX data...</div>
+      </div>
+    );
+  }
+
+  if (error && tokens.length === 0) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-6 max-w-lg mx-auto">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-400 font-medium">{error}</p>
+          <button
+            onClick={fetchRealData}
+            className="mt-4 px-6 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white rounded-xl transition flex items-center gap-2 mx-auto"
+          >
+            <RefreshCw className="h-4 w-4" /> Retry
+          </button>
+        </div>
       </div>
     );
   }
@@ -107,11 +188,10 @@ export default function DexPage() {
         <div>
           <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
             📊 ZRP DEX Screener
-            <span className="text-xs bg-[#FF2D2D]/20 text-[#FF2D2D] px-2 py-1 rounded-full">BETA</span>
+            <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">LIVE</span>
           </h1>
           <p className="text-[#BDDBDB] text-sm mt-1">
-            Powered by Jupiter, Birdeye & Solana
-            {source && <span className="ml-2 text-xs opacity-50">(source: {source})</span>}
+            Real-time Solana data from Jupiter & Dexscreener
           </p>
         </div>
         <div className="flex gap-4 text-sm">
@@ -143,6 +223,13 @@ export default function DexPage() {
         >
           <Search className="h-4 w-4" />
           Search
+        </button>
+        <button
+          onClick={fetchRealData}
+          className="px-4 py-3 bg-[#0D0D0D] hover:bg-[#1a1a1a] text-[#BDDBDB] rounded-xl border border-[#1a1a1a] transition"
+          title="Refresh"
+        >
+          <RefreshCw className="h-4 w-4" />
         </button>
       </div>
 
@@ -228,7 +315,7 @@ export default function DexPage() {
         </motion.div>
       ) : (
         <div className="text-center text-[#BDDBDB] py-12">
-          <p>No tokens found. Please refresh.</p>
+          <p>No tokens found. Try refreshing or searching.</p>
         </div>
       )}
     </div>

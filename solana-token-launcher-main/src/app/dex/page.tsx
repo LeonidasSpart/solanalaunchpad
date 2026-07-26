@@ -23,6 +23,62 @@ interface DexToken {
   pairAddress?: string;
 }
 
+const CHAIN_LOGOS: Record<string, string> = {
+  solana: "https://icons.llamao.fi/icons/chains/rsz_solana.jpg",
+  sol: "https://icons.llamao.fi/icons/chains/rsz_solana.jpg",
+  eth: "https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg",
+  ethereum: "https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg",
+  bsc: "https://icons.llamao.fi/icons/chains/rsz_binance.jpg",
+  "binance-smart-chain": "https://icons.llamao.fi/icons/chains/rsz_binance.jpg",
+  polygon: "https://icons.llamao.fi/icons/chains/rsz_polygon.jpg",
+  polygon_pos: "https://icons.llamao.fi/icons/chains/rsz_polygon.jpg",
+  matic: "https://icons.llamao.fi/icons/chains/rsz_polygon.jpg",
+  arbitrum: "https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg",
+  arbitrum_one: "https://icons.llamao.fi/icons/chains/rsz_arbitrum.jpg",
+  avalanche: "https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg",
+  avax: "https://icons.llamao.fi/icons/chains/rsz_avalanche.jpg",
+  base: "https://icons.llamao.fi/icons/chains/rsz_base.jpg",
+  optimism: "https://icons.llamao.fi/icons/chains/rsz_optimism.jpg",
+  op: "https://icons.llamao.fi/icons/chains/rsz_optimism.jpg",
+  ton: "https://icons.llamao.fi/icons/chains/rsz_ton.jpg",
+  "the-open-network": "https://icons.llamao.fi/icons/chains/rsz_ton.jpg",
+  tron: "https://icons.llamao.fi/icons/chains/rsz_tron.jpg",
+  sui: "https://icons.llamao.fi/icons/chains/rsz_sui.jpg",
+  near: "https://icons.llamao.fi/icons/chains/rsz_near.jpg",
+  fantom: "https://icons.llamao.fi/icons/chains/rsz_fantom.jpg",
+  ftm: "https://icons.llamao.fi/icons/chains/rsz_fantom.jpg",
+  cronos: "https://icons.llamao.fi/icons/chains/rsz_cronos.jpg",
+  cro: "https://icons.llamao.fi/icons/chains/rsz_cronos.jpg",
+  starknet: "https://icons.llamao.fi/icons/chains/rsz_starknet.jpg",
+  blast: "https://icons.llamao.fi/icons/chains/rsz_blast.jpg",
+  linea: "https://icons.llamao.fi/icons/chains/rsz_linea.jpg",
+  scroll: "https://icons.llamao.fi/icons/chains/rsz_scroll.jpg",
+  mantle: "https://icons.llamao.fi/icons/chains/rsz_mantle.jpg",
+  celo: "https://icons.llamao.fi/icons/chains/rsz_celo.jpg",
+};
+
+function ChainIcon({ chain }: { chain: string }) {
+  const [errored, setErrored] = useState(false);
+  const logo = CHAIN_LOGOS[chain?.toLowerCase()];
+
+  if (!logo || errored) {
+    return (
+      <span className="w-3.5 h-3.5 rounded-full bg-white/10 flex items-center justify-center text-[8px] font-bold text-white/60 shrink-0">
+        {chain ? chain.slice(0, 1).toUpperCase() : "?"}
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={logo}
+      alt=""
+      className="w-3.5 h-3.5 rounded-full shrink-0"
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 export default function DexPage() {
   const router = useRouter();
   const [tokens, setTokens] = useState<DexToken[]>([]);
@@ -160,7 +216,7 @@ export default function DexPage() {
             <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">LIVE</span>
           </h1>
           <p className="text-[#BDDBDB] text-sm mt-1">
-            Multi-chain data from Dexscreener & GeckoTerminal
+            Multi-chain data
           </p>
         </div>
         <div className="flex gap-4 text-sm">
@@ -267,7 +323,8 @@ export default function DexPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs border ${getChainColor(token.chain)}`}>
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs border ${getChainColor(token.chain)}`}>
+                        <ChainIcon chain={token.chain} />
                         {token.chain || 'Unknown'}
                       </span>
                     </td>

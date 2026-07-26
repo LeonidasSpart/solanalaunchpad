@@ -135,14 +135,6 @@ export default async function PoolDetailPage({
             </div>
           </div>
 
-          <a
-            href={pool.geckoTerminalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-lg border border-white/10 px-3 py-2 text-xs text-white/60 hover:bg-white/5"
-          >
-            View on GeckoTerminal ↗
-          </a>
         </div>
 
         {/* Price block */}

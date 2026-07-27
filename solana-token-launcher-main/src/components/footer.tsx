@@ -229,6 +229,7 @@ const Footer = () => {
               <li><Link href="/faq" className="text-[#BDDBDB] hover:text-white text-sm transition">FAQ</Link></li>
               <li><Link href="/ai-assistant" className="text-[#BDDBDB] hover:text-white text-sm transition flex items-center gap-1.5"> <img src="/AIZRP.PNG" alt="ZRP AI" className="h-4 w-auto" />AI Assistant </Link></li>
               <li><Link href="/messenger" className="text-[#BDDBDB] hover:text-white text-sm transition">💬 Messenger</Link></li>
+              <li><a href="https://t.me/ZRPAIBOT" target="_blank" rel="noopener noreferrer" className="text-[#BDDBDB] hover:text-white text-sm transition flex items-center gap-1.5" >🤖 ZRP AI Bot </a></li>
               <li><Link href="/contact" className="text-[#BDDBDB] hover:text-white text-sm transition">Contact</Link></li>
               <li><Link href="/status" className="text-[#BDDBDB] hover:text-white text-sm transition">Status</Link></li>
 

@@ -6,7 +6,6 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
   Keypair,
-  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
@@ -24,6 +23,7 @@ import {
   DataV2,
   PROGRAM_ID as METADATA_PROGRAM_ID,
 } from "@metaplex-foundation/mpl-token-metadata";
+import { createToken } from "@/lib/create-token";
 
 // ─── Constants ────────────────────────────────────────────────────
 

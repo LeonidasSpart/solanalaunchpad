@@ -17,9 +17,6 @@ import {
 } from "@solana/spl-token";
 import {
   createCreateMetadataAccountV3Instruction,
-  CreateMetadataAccountV3InstructionAccounts,
-  CreateMetadataAccountV3InstructionArgs,
-  DataV2,
   PROGRAM_ID as METADATA_PROGRAM_ID,
 } from "@metaplex-foundation/mpl-token-metadata";
 
@@ -134,8 +131,8 @@ export async function POST(req: NextRequest) {
       )
     );
 
-    // Create metadata
-    const metadataData: DataV2 = {
+    // Create metadata account (Metaplex)
+    const metadataData = {
       name,
       symbol,
       uri: "",
@@ -144,18 +141,21 @@ export async function POST(req: NextRequest) {
       collection: null,
       uses: null,
     };
-    const args: CreateMetadataAccountV3InstructionArgs = {
-      data: metadataData,
-      isMutable: true,
-      collectionDetails: null,
-    };
-    const accounts: CreateMetadataAccountV3InstructionAccounts = {
+
+    const accounts = {
       metadata: metadataPDA,
       mint: mintPublicKey,
       mintAuthority: userPublicKey,
       payer: userPublicKey,
       updateAuthority: userPublicKey,
     };
+
+    const args = {
+      data: metadataData,
+      isMutable: true,
+      collectionDetails: null,
+    };
+
     transaction.add(
       createCreateMetadataAccountV3Instruction(accounts, args)
     );

@@ -15,7 +15,6 @@ import { ChatService } from './chat.service';
   namespace: '/chat',
   cors: {
     origin: process.env.FRONTEND_URL || '*',
-    credentials: true,
   },
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {

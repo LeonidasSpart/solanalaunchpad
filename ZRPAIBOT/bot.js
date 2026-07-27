@@ -23,7 +23,7 @@ function formatPrice(price) {
   return price.toFixed(4);
 }
 
-// ─── Dexscreener API with fallback ──────────────────────────────
+// ─── Dexscreener API ─────────────────────────────────────────────
 
 async function fetchTrending() {
   try {
@@ -49,9 +49,32 @@ async function fetchToken(address) {
   }
 }
 
-// ─── Fallback Data (hardcoded popular tokens) ───────────────────
+async function searchTokens(query) {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error('Dexscreener search failed');
+    const data = await res.json();
+    return data.pairs || [];
+  } catch {
+    return [];
+  }
+}
 
-const FALLBACK_TRENDING = [
+async function fetchMarketData() {
+  try {
+    const res = await fetch('https://api.dexscreener.com/latest/dex/tokens/trending');
+    if (!res.ok) throw new Error('Dexscreener failed');
+    const data = await res.json();
+    if (data.tokens && data.tokens.length > 0) return data.tokens;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Fallback Data ───────────────────────────────────────────────
+
+const FALLBACK_DATA = [
   { baseToken: { name: 'Solana', symbol: 'SOL' }, priceUsd: '142.50', priceChange: { h24: -1.2 }, volume: { h24: 1500000000 }, liquidity: { usd: 50000000 }, chainId: 'solana', dexId: 'Raydium' },
   { baseToken: { name: 'Ethereum', symbol: 'ETH' }, priceUsd: '3200', priceChange: { h24: 0.5 }, volume: { h24: 1000000000 }, liquidity: { usd: 50000000 }, chainId: 'ethereum', dexId: 'Uniswap' },
   { baseToken: { name: 'BNB', symbol: 'BNB' }, priceUsd: '580', priceChange: { h24: 0.8 }, volume: { h24: 800000000 }, liquidity: { usd: 40000000 }, chainId: 'bsc', dexId: 'PancakeSwap' },
@@ -93,26 +116,26 @@ Select a button below 👇`,
 
 // ─── Callback Query Handler ─────────────────────────────────────
 
-bot.on('callback_query', (query) => {
+bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
 
   if (data === 'price') {
-    bot.sendMessage(chatId, '📊 Send /price [address] to get token price.');
+    bot.sendMessage(chatId, '📊 Send /price [address] to get token price.\nExample: `/price So111...`');
   } else if (data === 'trending') {
-    handleTrending(chatId);
+    await handleTrending(chatId);
   } else if (data === 'gainers') {
-    handleGainers(chatId);
+    await handleGainers(chatId);
   } else if (data === 'losers') {
-    handleLosers(chatId);
+    await handleLosers(chatId);
   } else if (data === 'search') {
-    bot.sendMessage(chatId, '🔍 Send /search [name] to search tokens.');
+    bot.sendMessage(chatId, '🔍 Send /search [name] to search tokens.\nExample: `/search solana`');
   } else if (data === 'rugcheck') {
-    bot.sendMessage(chatId, '🛡️ Send /rugcheck [address] to check token risks.');
+    bot.sendMessage(chatId, '🛡️ Send /rugcheck [address] to check token risks.\nExample: `/rugcheck So111...`');
   } else if (data === 'charity') {
     handleCharity(chatId);
   } else if (data === 'ai') {
-    bot.sendMessage(chatId, '🤖 Send /ai [question] to ask ZRP AI Assistant.');
+    bot.sendMessage(chatId, '🤖 Send /ai [question] to ask ZRP AI Assistant.\nExample: `/ai What is Solana?`');
   } else if (data === 'help') {
     handleHelp(chatId);
   }
@@ -127,7 +150,7 @@ bot.onText(/\/price(?:\s+(\S+))?/, async (msg, match) => {
   const address = match[1];
 
   if (!address) {
-    bot.sendMessage(chatId, '❌ Please provide a token address.\nExample: `/price So111...`');
+    bot.sendMessage(chatId, '❌ Please provide a token address.\nExample: `/price So11111111111111111111111111111111111111112`');
     return;
   }
 
@@ -152,26 +175,21 @@ bot.onText(/\/price(?:\s+(\S+))?/, async (msg, match) => {
 
 // ─── /trending ──────────────────────────────────────────────────
 
-bot.onText(/\/trending/, (msg) => {
-  handleTrending(msg.chat.id);
+bot.onText(/\/trending/, async (msg) => {
+  await handleTrending(msg.chat.id);
 });
 
 async function handleTrending(chatId) {
   try {
     let tokens = await fetchTrending();
-    if (!tokens) tokens = FALLBACK_TRENDING;
-
-    if (tokens.length === 0) {
-      bot.sendMessage(chatId, '❌ No trending tokens found. Try again later.');
-      return;
-    }
+    if (!tokens || tokens.length === 0) tokens = FALLBACK_DATA;
 
     let message = '🔥 Top Trending Tokens:\n\n';
     tokens.slice(0, 5).forEach((t, i) => {
       message += `${i+1}. ${t.baseToken.name} (${t.baseToken.symbol})\n`;
       message += `   💰 $${t.priceUsd}\n`;
       message += `   📈 24h: ${t.priceChange?.h24 || 0}%\n`;
-      message += `   📊 Vol: $${t.volume?.h24 || 0}\n\n`;
+      message += `   📊 Vol: ${formatNumber(t.volume?.h24 || 0)}\n\n`;
     });
     bot.sendMessage(chatId, message);
   } catch {
@@ -181,14 +199,14 @@ async function handleTrending(chatId) {
 
 // ─── /gainers ────────────────────────────────────────────────────
 
-bot.onText(/\/gainers/, (msg) => {
-  handleGainers(msg.chat.id);
+bot.onText(/\/gainers/, async (msg) => {
+  await handleGainers(msg.chat.id);
 });
 
 async function handleGainers(chatId) {
   try {
-    let tokens = await fetchTrending();
-    if (!tokens) tokens = FALLBACK_TRENDING;
+    let tokens = await fetchMarketData();
+    if (!tokens || tokens.length === 0) tokens = FALLBACK_DATA;
 
     const sorted = tokens.slice().sort((a, b) => (b.priceChange?.h24 || 0) - (a.priceChange?.h24 || 0));
     const top = sorted.slice(0, 5);
@@ -200,7 +218,9 @@ async function handleGainers(chatId) {
 
     let message = '📈 Top Gainers (24h):\n\n';
     top.forEach((t, i) => {
-      message += `${i+1}. ${t.baseToken.symbol}: +${t.priceChange?.h24 || 0}%\n`;
+      const change = t.priceChange?.h24 || 0;
+      message += `${i+1}. ${t.baseToken.symbol}: ${change > 0 ? '+' : ''}${change}%\n`;
+      message += `   💰 $${t.priceUsd}\n`;
     });
     bot.sendMessage(chatId, message);
   } catch {
@@ -210,14 +230,14 @@ async function handleGainers(chatId) {
 
 // ─── /losers ────────────────────────────────────────────────────
 
-bot.onText(/\/losers/, (msg) => {
-  handleLosers(msg.chat.id);
+bot.onText(/\/losers/, async (msg) => {
+  await handleLosers(msg.chat.id);
 });
 
 async function handleLosers(chatId) {
   try {
-    let tokens = await fetchTrending();
-    if (!tokens) tokens = FALLBACK_TRENDING;
+    let tokens = await fetchMarketData();
+    if (!tokens || tokens.length === 0) tokens = FALLBACK_DATA;
 
     const sorted = tokens.slice().sort((a, b) => (a.priceChange?.h24 || 0) - (b.priceChange?.h24 || 0));
     const bottom = sorted.slice(0, 5);
@@ -229,7 +249,9 @@ async function handleLosers(chatId) {
 
     let message = '📉 Top Losers (24h):\n\n';
     bottom.forEach((t, i) => {
-      message += `${i+1}. ${t.baseToken.symbol}: ${t.priceChange?.h24 || 0}%\n`;
+      const change = t.priceChange?.h24 || 0;
+      message += `${i+1}. ${t.baseToken.symbol}: ${change}%\n`;
+      message += `   💰 $${t.priceUsd}\n`;
     });
     bot.sendMessage(chatId, message);
   } catch {
@@ -239,7 +261,7 @@ async function handleLosers(chatId) {
 
 // ─── /search ────────────────────────────────────────────────────
 
-bot.onText(/\/search (?:\s+(\S+))?/, async (msg, match) => {
+bot.onText(/\/search(?:\s+(.+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
   const query = match[1];
 
@@ -249,17 +271,16 @@ bot.onText(/\/search (?:\s+(\S+))?/, async (msg, match) => {
   }
 
   try {
-    const res = await fetch(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`);
-    const data = await res.json();
-    const pairs = data.pairs?.slice(0, 5) || [];
+    const pairs = await searchTokens(query);
+    const results = pairs.slice(0, 5);
 
-    if (pairs.length === 0) {
+    if (results.length === 0) {
       bot.sendMessage(chatId, '❌ No tokens found.');
       return;
     }
 
     let message = `🔍 Results for "${query}":\n\n`;
-    pairs.forEach((p, i) => {
+    results.forEach((p, i) => {
       message += `${i+1}. ${p.baseToken.name} (${p.baseToken.symbol})\n`;
       message += `   💰 $${p.priceUsd}\n`;
       message += `   📈 24h: ${p.priceChange?.h24 || 0}%\n`;
@@ -273,43 +294,67 @@ bot.onText(/\/search (?:\s+(\S+))?/, async (msg, match) => {
 
 // ─── /rugcheck ──────────────────────────────────────────────────
 
-bot.onText(/\/rugcheck (?:\s+(\S+))?/, async (msg, match) => {
+bot.onText(/\/rugcheck(?:\s+(\S+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
   const address = match[1];
 
   if (!address) {
-    bot.sendMessage(chatId, '❌ Please provide a token address.\nExample: `/rugcheck So111...`');
+    bot.sendMessage(chatId, '❌ Please provide a token address.\nExample: `/rugcheck So11111111111111111111111111111111111111112`');
     return;
   }
 
   try {
     const pair = await fetchToken(address);
     if (!pair) {
-      bot.sendMessage(chatId, '❌ Token not found.');
+      bot.sendMessage(chatId, '❌ Token not found. Check the address.');
       return;
     }
 
     const liquidity = pair.liquidity?.usd || 0;
     const priceChange = pair.priceChange?.h24 || 0;
-    let risk = '🟢 Low Risk';
-    if (liquidity < 10000) risk = '🔴 High Risk (Low Liquidity)';
-    else if (priceChange < -50) risk = '🟡 Medium Risk (High Volatility)';
+    const volume = pair.volume?.h24 || 0;
 
-    const message = `🛡️ Rug Check Report: ${pair.baseToken.name} (${pair.baseToken.symbol})
+    // Risk scoring
+    let risk = '🟢 Low Risk';
+    let riskFactors = [];
+
+    if (liquidity < 10000) {
+      risk = '🔴 High Risk';
+      riskFactors.push('⚠️ Low liquidity (< $10K)');
+    } else if (liquidity < 50000) {
+      risk = '🟡 Medium Risk';
+      riskFactors.push('⚠️ Moderate liquidity');
+    }
+
+    if (priceChange < -50) {
+      risk = '🔴 High Risk';
+      riskFactors.push('⚠️ Extreme volatility (-50%+ in 24h)');
+    }
+
+    if (volume < 10000) {
+      riskFactors.push('⚠️ Low trading volume');
+    }
+
+    let riskMessage = `🛡️ Rug Check Report: ${pair.baseToken.name} (${pair.baseToken.symbol})
 
 💰 Price: $${pair.priceUsd}
 📈 24h Change: ${priceChange}%
-📊 Volume: $${pair.volume?.h24 || 0}
-💧 Liquidity: $${liquidity}
+📊 Volume: ${formatNumber(volume)}
+💧 Liquidity: ${formatNumber(liquidity)}
 🔗 Chain: ${pair.chainId}
 🏦 DEX: ${pair.dexId}
 
-Risk Level: ${risk}
+Risk Level: ${risk}`;
 
-⚠️ Always DYOR before investing.`;
-    bot.sendMessage(chatId, message);
+    if (riskFactors.length > 0) {
+      riskMessage += `\n\n⚠️ Risk Factors:\n${riskFactors.join('\n')}`;
+    }
+
+    riskMessage += `\n\n⚠️ Always DYOR before investing.`;
+
+    bot.sendMessage(chatId, riskMessage);
   } catch {
-    bot.sendMessage(chatId, '❌ Error checking token.');
+    bot.sendMessage(chatId, '❌ Error checking token. Please try again.');
   }
 });
 
@@ -340,12 +385,12 @@ No borders. No discrimination. Just help.`
 
 // ─── /ai ────────────────────────────────────────────────────────
 
-bot.onText(/\/ai (?:\s+(.+))?/, async (msg, match) => {
+bot.onText(/\/ai(?:\s+(.+))?/, async (msg, match) => {
   const chatId = msg.chat.id;
   const question = match[1];
 
   if (!question) {
-    bot.sendMessage(chatId, '❌ Please ask a question.\nExample: `/ai How do I create a token?`');
+    bot.sendMessage(chatId, '❌ Please ask a question.\nExample: `/ai How do I create a token on Solana?`');
     return;
   }
 
@@ -355,11 +400,21 @@ bot.onText(/\/ai (?:\s+(.+))?/, async (msg, match) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: question })
     });
+
+    if (!response.ok) {
+      throw new Error('API returned error');
+    }
+
     const data = await response.json();
-    const reply = data.reply || '❌ AI Assistant is temporarily unavailable. Please try again later.';
+    const reply = data.reply || data.response || data.message || '🤖 I\'m not sure how to answer that. Please try rephrasing your question.';
+
     bot.sendMessage(chatId, `🤖 ZRP AI:\n\n${reply}`);
   } catch {
-    bot.sendMessage(chatId, '❌ AI Assistant is temporarily unavailable.');
+    // Fallback when API is unavailable
+    bot.sendMessage(
+      chatId,
+      `🤖 ZRP AI:\n\nI'm currently unable to connect to my AI service. Please try again in a few moments. In the meantime, you can check out the ZRP ecosystem at zrp.one 🧡`
+    );
   }
 });
 

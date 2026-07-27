@@ -9,7 +9,6 @@ import {
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
   createInitializeMintInstruction,
   createAssociatedTokenAccountInstruction,
@@ -23,7 +22,6 @@ import {
   DataV2,
   PROGRAM_ID as METADATA_PROGRAM_ID,
 } from "@metaplex-foundation/mpl-token-metadata";
-import { createToken } from "@/lib/create-token";
 
 // ─── Constants ────────────────────────────────────────────────────
 
@@ -80,11 +78,11 @@ export async function POST(req: NextRequest) {
 
     // ─── Build Token Creation Transaction ────────────────────────
 
-    // 1. Generate a new mint keypair (the mint account will be created)
+    // 1. Generate a new mint keypair
     const mintKeypair = Keypair.generate();
     const mintPublicKey = mintKeypair.publicKey;
 
-    // 2. Get the metadata PDA for the mint
+    // 2. Get metadata PDA
     const [metadataPDA] = await PublicKey.findProgramAddress(
       [
         Buffer.from("metadata"),
@@ -94,7 +92,7 @@ export async function POST(req: NextRequest) {
       METADATA_PROGRAM_ID
     );
 
-    // 3. Get the associated token account address for the user
+    // 3. Get associated token account address for user
     const ataAddress = await getAssociatedTokenAddress(
       mintPublicKey,
       userPublicKey
@@ -103,7 +101,7 @@ export async function POST(req: NextRequest) {
     // 4. Get rent exemption for mint account
     const rentExemption = await getMinimumBalanceForRentExemptMint(connection);
 
-    // 5. Create the transaction and add instructions
+    // 5. Create the transaction
     const transaction = new Transaction();
 
     // Instruction 1: Create mint account
@@ -120,17 +118,17 @@ export async function POST(req: NextRequest) {
     const initMintIx = createInitializeMintInstruction(
       mintPublicKey,
       decimalsNum,
-      userPublicKey, // mint authority
-      userPublicKey  // freeze authority
+      userPublicKey,
+      userPublicKey
     );
     transaction.add(initMintIx);
 
     // Instruction 3: Create associated token account for user
     const createAtaIx = createAssociatedTokenAccountInstruction(
-      userPublicKey, // payer
-      ataAddress,    // associated token account address
-      userPublicKey, // owner
-      mintPublicKey  // mint
+      userPublicKey,
+      ataAddress,
+      userPublicKey,
+      mintPublicKey
     );
     transaction.add(createAtaIx);
 
@@ -138,12 +136,12 @@ export async function POST(req: NextRequest) {
     const mintTokensIx = createMintToInstruction(
       mintPublicKey,
       ataAddress,
-      userPublicKey, // authority
+      userPublicKey,
       supplyNum * Math.pow(10, decimalsNum)
     );
     transaction.add(mintTokensIx);
 
-    // Instruction 5: Create metadata account (Metaplex)
+    // Instruction 5: Create metadata account
     const metadataData: DataV2 = {
       name,
       symbol,
@@ -171,7 +169,7 @@ export async function POST(req: NextRequest) {
     );
     transaction.add(createMetadataIx);
 
-    // Instruction 6: Optional – transfer service fee to your wallet
+    // Instruction 6: Transfer service fee to your wallet
     if (FEE_RECIPIENT && SERVICE_FEE_SOL > 0) {
       const feeLamports = SERVICE_FEE_SOL * LAMPORTS_PER_SOL;
       const transferIx = SystemProgram.transfer({
@@ -187,10 +185,10 @@ export async function POST(req: NextRequest) {
     const blockhash = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash.blockhash;
 
-    // ─── Partially sign with the mint keypair (server side) ──────
+    // ─── Partially sign with the mint keypair ──────────────────────
     transaction.partialSign(mintKeypair);
 
-    // ─── Serialize without requiring all signatures ──────────────
+    // ─── Serialize ──────────────────────────────────────────────
     const serializedTx = transaction.serialize({
       requireAllSignatures: false,
     }).toString('base64');

@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import bs58 from "bs58";
 import { useState } from "react";
 
+// Set this in your frontend's env vars once the chat service is deployed on Railway,
+// e.g. NEXT_PUBLIC_CHAT_API_URL=https://zrp-chat-service-production.up.railway.app
+const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || "";
+
 export default function MessengerLogin() {
   const { publicKey, signMessage } = useWallet();
   const router = useRouter();
@@ -18,6 +22,11 @@ export default function MessengerLogin() {
       return;
     }
 
+    if (!CHAT_API_URL) {
+      setError("Chat service is not configured yet (missing NEXT_PUBLIC_CHAT_API_URL).");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -25,7 +34,7 @@ export default function MessengerLogin() {
       const message = `Login to ZRP Messenger at ${Date.now()}`;
       const signature = await signMessage(new TextEncoder().encode(message));
 
-      const response = await fetch("/api/matrix/login", {
+      const response = await fetch(`${CHAT_API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -38,15 +47,15 @@ export default function MessengerLogin() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed.");
+        throw new Error(data.message || data.error || "Login failed.");
       }
 
-      localStorage.setItem("zrp_matrix_token", data.access_token);
-      localStorage.setItem("zrp_matrix_user", data.user_id);
+      localStorage.setItem("zrp_chat_token", data.accessToken);
+      localStorage.setItem("zrp_chat_user", JSON.stringify(data.user));
 
       router.push("/messenger");
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Login failed.");
     } finally {
       setLoading(false);
     }

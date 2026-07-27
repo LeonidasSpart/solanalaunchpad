@@ -1,12 +1,13 @@
 {
   "name": "zrp-telegram-bot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"
   },
   "dependencies": {
     "dotenv": "^16.0.0",
+    "node-fetch": "^2.6.7",
     "node-telegram-bot-api": "^0.61.0"
   }
 }

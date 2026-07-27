@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
     transaction.add(
       SystemProgram.createAccount({
         fromPubkey: userPublicKey,
-        newAccountPubkey: mintPublicKey,
+        newAccountPubkey: mintKeypair.publicKey,
         lamports: rentExemption,
         space: 82,
         programId: TOKEN_PROGRAM_ID,
@@ -150,17 +150,20 @@ export async function POST(req: NextRequest) {
       updateAuthority: userPublicKey,
     };
 
+    // Correct arguments for CreateMetadataAccountV3
     const args = {
-      data: metadataData,
-      isMutable: true,
-      collectionDetails: null,
+      createMetadataAccountArgsV3: {
+        data: metadataData,
+        isMutable: true,
+        collectionDetails: null,
+      },
     };
 
     transaction.add(
       createCreateMetadataAccountV3Instruction(accounts, args)
     );
 
-    // Service fee transfer (if any)
+    // Service fee transfer
     if (FEE_RECIPIENT && SERVICE_FEE_SOL > 0) {
       transaction.add(
         SystemProgram.transfer({

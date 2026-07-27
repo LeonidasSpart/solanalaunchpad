@@ -1,4 +1,4 @@
-// bot.js – ZRP Telegram Bot (Fully Fixed)
+// bot.js – ZRP Telegram Bot (Fully Fixed + Token Creation)
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -13,14 +13,6 @@ function formatNumber(num) {
   if (num >= 1e6) return `$${(num / 1e6).toFixed(2)}M`;
   if (num >= 1e3) return `$${(num / 1e3).toFixed(2)}K`;
   return `$${num.toFixed(2)}`;
-}
-
-function formatPrice(price) {
-  if (!price) return '$0.00';
-  if (price < 0.000001) return price.toExponential(6);
-  if (price < 0.0001) return price.toFixed(8);
-  if (price < 0.01) return price.toFixed(6);
-  return price.toFixed(4);
 }
 
 // ─── Dexscreener API ─────────────────────────────────────────────
@@ -93,7 +85,7 @@ bot.onText(/\/start/, (msg) => {
         [{ text: '📈 Top Gainers', callback_data: 'gainers' }, { text: '📉 Top Losers', callback_data: 'losers' }],
         [{ text: '🔍 Search', callback_data: 'search' }, { text: '🛡️ Rug Check', callback_data: 'rugcheck' }],
         [{ text: '💚 Charity', callback_data: 'charity' }, { text: '🤖 AI', callback_data: 'ai' }],
-        [{ text: '📋 Help', callback_data: 'help' }]
+        [{ text: '✨ Create Token', callback_data: 'create' }, { text: '📋 Help', callback_data: 'help' }]
       ]
     }
   };
@@ -105,6 +97,7 @@ bot.onText(/\/start/, (msg) => {
 🔍 Search tokens by name
 📈 Top gainers & losers
 🛡️ Rug check (Token Checker)
+✨ Create your own SPL token
 💚 35% of ZRP profits go to charity
 🤖 AI Assistant
 🌐 zrp.one
@@ -136,6 +129,8 @@ bot.on('callback_query', async (query) => {
     handleCharity(chatId);
   } else if (data === 'ai') {
     bot.sendMessage(chatId, '🤖 Send /ai [question] to ask ZRP AI Assistant.\nExample: `/ai What is Solana?`');
+  } else if (data === 'create') {
+    bot.sendMessage(chatId, '✨ Type /create to start the token creation wizard!');
   } else if (data === 'help') {
     handleHelp(chatId);
   }
@@ -314,7 +309,6 @@ bot.onText(/\/rugcheck(?:\s+(\S+))?/, async (msg, match) => {
     const priceChange = pair.priceChange?.h24 || 0;
     const volume = pair.volume?.h24 || 0;
 
-    // Risk scoring
     let risk = '🟢 Low Risk';
     let riskFactors = [];
 
@@ -410,7 +404,6 @@ bot.onText(/\/ai(?:\s+(.+))?/, async (msg, match) => {
 
     bot.sendMessage(chatId, `🤖 ZRP AI:\n\n${reply}`);
   } catch {
-    // Fallback when API is unavailable
     bot.sendMessage(
       chatId,
       `🤖 ZRP AI:\n\nI'm currently unable to connect to my AI service. Please try again in a few moments. In the meantime, you can check out the ZRP ecosystem at zrp.one 🧡`
@@ -438,6 +431,7 @@ function handleHelp(chatId) {
 🔹 /rugcheck [address] – Token risk check
 🔹 /charity – Charity fund info
 🔹 /ai [question] – Ask ZRP AI
+🔹 /create – Create your own SPL token
 🔹 /help – Show this message
 
 🧡 Built with purpose.
@@ -446,6 +440,133 @@ function handleHelp(chatId) {
 🌐 zrp.one`
   );
 }
+
+// ─── /create – Token Creation Wizard ────────────────────────────
+
+// Store temporary user states (in-memory – upgrade to Redis later)
+const userStates = {};
+
+bot.onText(/\/create/, (msg) => {
+  const chatId = msg.chat.id;
+  
+  if (userStates[chatId] && userStates[chatId].step) {
+    bot.sendMessage(chatId, '❌ You already have a token creation in progress. Type /cancel to abort.');
+    return;
+  }
+
+  userStates[chatId] = { step: 1 };
+  bot.sendMessage(
+    chatId,
+    `🧡 Welcome to the ZRP Token Creator!
+
+Step 1/4: What's the **name** of your token?
+(e.g., "My Awesome Token")
+
+Type /cancel to quit.`
+  );
+});
+
+bot.onText(/\/cancel/, (msg) => {
+  const chatId = msg.chat.id;
+  delete userStates[chatId];
+  bot.sendMessage(chatId, '✅ Token creation cancelled. Type /create to start over.');
+});
+
+// Handle text messages during creation flow
+bot.on('text', async (msg) => {
+  const chatId = msg.chat.id;
+  const text = msg.text;
+  const state = userStates[chatId];
+
+  if (!state || text.startsWith('/')) return;
+
+  switch (state.step) {
+    case 1:
+      state.name = text;
+      state.step = 2;
+      bot.sendMessage(chatId, `✅ Name set: "${text}"
+
+Step 2/4: What's the **symbol**? (max 10 chars)
+(e.g., "MTK")`);
+      break;
+
+    case 2:
+      if (text.length > 10) {
+        bot.sendMessage(chatId, '❌ Symbol must be 10 characters or less. Try again.');
+        return;
+      }
+      state.symbol = text.toUpperCase();
+      state.step = 3;
+      bot.sendMessage(chatId, `✅ Symbol set: "${state.symbol}"
+
+Step 3/4: What's the **total supply**? (e.g., 1000000)`);
+      break;
+
+    case 3:
+      const supply = Number(text);
+      if (isNaN(supply) || supply <= 0 || !Number.isInteger(supply)) {
+        bot.sendMessage(chatId, '❌ Please enter a valid positive integer. Try again.');
+        return;
+      }
+      state.supply = supply;
+      state.step = 4;
+      bot.sendMessage(chatId, `✅ Supply set: ${supply.toLocaleString()}
+
+Step 4/4: **Decimals**? (Press 9 for default, or enter 0-9)`);
+      break;
+
+    case 4:
+      let decimals = parseInt(text);
+      if (text.toLowerCase() === 'skip') decimals = 9;
+      if (isNaN(decimals) || decimals < 0 || decimals > 9) {
+        bot.sendMessage(chatId, '❌ Decimals must be between 0 and 9. Type "skip" for default (9).');
+        return;
+      }
+      state.decimals = decimals;
+
+      bot.sendMessage(chatId, '⏳ Creating your token... This may take a moment.');
+
+      try {
+        const response = await fetch('https://zrp.one/api/token/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: state.name,
+            symbol: state.symbol,
+            supply: state.supply,
+            decimals: state.decimals,
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.mintAddress) {
+          const message = `✅ **Token Created Successfully!**
+
+📊 Name: ${state.name} (${state.symbol})
+💎 Supply: ${state.supply.toLocaleString()}
+🔢 Decimals: ${state.decimals}
+📍 Address: \`${data.mintAddress}\`
+🔗 [View on Solscan](https://solscan.io/token/${data.mintAddress})
+
+💚 35% of creation fees go to charity.
+🌐 Manage your token at zrp.one
+
+Thank you for building with ZRP! 🧡`;
+
+          bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
+        } else {
+          bot.sendMessage(chatId, `❌ Creation failed: ${data.error || 'Unknown error'}. Please try again later.`);
+        }
+      } catch (error) {
+        bot.sendMessage(chatId, '❌ Error connecting to token creation service. Please try again later.');
+        console.error('Token creation error:', error);
+      }
+
+      delete userStates[chatId];
+      break;
+  }
+});
 
 // ─── Fallback for unknown commands ─────────────────────────────
 

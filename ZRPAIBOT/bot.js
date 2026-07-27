@@ -1,4 +1,4 @@
-// bot.js – ZRP Telegram Bot (Fully Fixed + Token Creation)
+// bot.js – ZRP Telegram Bot (Fully Fixed + Token Creation with User Wallet)
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -441,9 +441,9 @@ function handleHelp(chatId) {
   );
 }
 
-// ─── /create – Token Creation Wizard ────────────────────────────
+// ─── /create – Token Creation Wizard with Wallet Input ──────────
 
-// Store temporary user states (in-memory – upgrade to Redis later)
+// Store temporary user states
 const userStates = {};
 
 bot.onText(/\/create/, (msg) => {
@@ -454,13 +454,14 @@ bot.onText(/\/create/, (msg) => {
     return;
   }
 
-  userStates[chatId] = { step: 1 };
+  // Step 0: ask for wallet address
+  userStates[chatId] = { step: 0 };
   bot.sendMessage(
     chatId,
     `🧡 Welcome to the ZRP Token Creator!
 
-Step 1/4: What's the **name** of your token?
-(e.g., "My Awesome Token")
+**Step 0/5:** Enter your Solana wallet address.
+(You will pay the gas fees and service fee from this wallet.)
 
 Type /cancel to quit.`
   );
@@ -481,16 +482,30 @@ bot.on('text', async (msg) => {
   if (!state || text.startsWith('/')) return;
 
   switch (state.step) {
-    case 1:
+    case 0: // Wallet address
+      // Basic validation: check if it's a valid base58 string (simple length check)
+      if (text.length < 32 || text.length > 44) {
+        bot.sendMessage(chatId, '❌ Invalid Solana address. Please enter a valid address (base58, 32-44 chars).');
+        return;
+      }
+      state.walletAddress = text;
+      state.step = 1;
+      bot.sendMessage(chatId, `✅ Wallet set: \`${text}\`
+
+Step 1/5: What's the **name** of your token?
+(e.g., "My Awesome Token")`, { parse_mode: 'Markdown' });
+      break;
+
+    case 1: // Name
       state.name = text;
       state.step = 2;
       bot.sendMessage(chatId, `✅ Name set: "${text}"
 
-Step 2/4: What's the **symbol**? (max 10 chars)
+Step 2/5: What's the **symbol**? (max 10 chars)
 (e.g., "MTK")`);
       break;
 
-    case 2:
+    case 2: // Symbol
       if (text.length > 10) {
         bot.sendMessage(chatId, '❌ Symbol must be 10 characters or less. Try again.');
         return;
@@ -499,10 +514,10 @@ Step 2/4: What's the **symbol**? (max 10 chars)
       state.step = 3;
       bot.sendMessage(chatId, `✅ Symbol set: "${state.symbol}"
 
-Step 3/4: What's the **total supply**? (e.g., 1000000)`);
+Step 3/5: What's the **total supply**? (e.g., 1000000)`);
       break;
 
-    case 3:
+    case 3: // Supply
       const supply = Number(text);
       if (isNaN(supply) || supply <= 0 || !Number.isInteger(supply)) {
         bot.sendMessage(chatId, '❌ Please enter a valid positive integer. Try again.');
@@ -512,10 +527,10 @@ Step 3/4: What's the **total supply**? (e.g., 1000000)`);
       state.step = 4;
       bot.sendMessage(chatId, `✅ Supply set: ${supply.toLocaleString()}
 
-Step 4/4: **Decimals**? (Press 9 for default, or enter 0-9)`);
+Step 4/5: **Decimals**? (Press 9 for default, or enter 0-9)`);
       break;
 
-    case 4:
+    case 4: // Decimals
       let decimals = parseInt(text);
       if (text.toLowerCase() === 'skip') decimals = 9;
       if (isNaN(decimals) || decimals < 0 || decimals > 9) {
@@ -524,10 +539,11 @@ Step 4/4: **Decimals**? (Press 9 for default, or enter 0-9)`);
       }
       state.decimals = decimals;
 
-      bot.sendMessage(chatId, '⏳ Creating your token... This may take a moment.');
+      // All info collected – now call the API to get unsigned transaction
+      bot.sendMessage(chatId, '⏳ Preparing your token creation transaction... This may take a moment.');
 
       try {
-        const response = await fetch('https://zrp.one/api/token/create', {
+        const response = await fetch('https://zrp.one/api/bot/token/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -535,28 +551,44 @@ Step 4/4: **Decimals**? (Press 9 for default, or enter 0-9)`);
             symbol: state.symbol,
             supply: state.supply,
             decimals: state.decimals,
+            walletAddress: state.walletAddress
           })
         });
 
         const data = await response.json();
 
-        if (data.success && data.mintAddress) {
-          const message = `✅ **Token Created Successfully!**
+        if (data.success && data.unsignedTransaction && data.mintAddress) {
+          // Build Phantom deep link
+          const txBase64 = data.unsignedTransaction;
+          const appUrl = 'https://zrp.one'; // Change to your app URL
+          const signUrl = `https://phantom.app/ul/v1/signAndSendTransaction?transaction=${encodeURIComponent(txBase64)}&app_url=${encodeURIComponent(appUrl)}`;
 
-📊 Name: ${state.name} (${state.symbol})
+          const message = `✅ **Transaction Prepared!**
+
+📊 Token: ${state.name} (${state.symbol})
 💎 Supply: ${state.supply.toLocaleString()}
 🔢 Decimals: ${state.decimals}
-📍 Address: \`${data.mintAddress}\`
-🔗 [View on Solscan](https://solscan.io/token/${data.mintAddress})
+📍 Mint Address: \`${data.mintAddress}\`
 
-💚 35% of creation fees go to charity.
-🌐 Manage your token at zrp.one
+💰 Service Fee: 0.15 SOL (included in transaction)
 
-Thank you for building with ZRP! 🧡`;
+**Now sign the transaction:**
+
+Click the link below to open Phantom and sign the transaction:
+
+[🔗 Sign Transaction](${signUrl})
+
+⚠️ **Important:**
+- You will pay gas fees and the service fee (0.15 SOL) from your wallet.
+- Your wallet must have enough SOL for rent, gas, and the service fee.
+
+After signing, your token will be created on Solana. 🎉
+
+[View on Solscan](${`https://solscan.io/token/${data.mintAddress}`})`;
 
           bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
         } else {
-          bot.sendMessage(chatId, `❌ Creation failed: ${data.error || 'Unknown error'}. Please try again later.`);
+          bot.sendMessage(chatId, `❌ Failed to prepare transaction: ${data.error || 'Unknown error'}. Please try again.`);
         }
       } catch (error) {
         bot.sendMessage(chatId, '❌ Error connecting to token creation service. Please try again later.');

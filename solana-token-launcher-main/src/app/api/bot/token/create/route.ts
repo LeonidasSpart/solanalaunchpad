@@ -6,20 +6,24 @@ import {
   SystemProgram,
   LAMPORTS_PER_SOL,
   Keypair,
+  SYSVAR_RENT_PUBKEY,
 } from "@solana/web3.js";
 import {
-  getOrCreateAssociatedTokenAccount,
-  createMint,
-  mintTo,
   TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddress,
+  createInitializeMintInstruction,
+  createAssociatedTokenAccountInstruction,
+  createMintToInstruction,
+  getMinimumBalanceForRentExemptMint,
 } from "@solana/spl-token";
 import {
   createCreateMetadataAccountV3Instruction,
   CreateMetadataAccountV3InstructionAccounts,
   CreateMetadataAccountV3InstructionArgs,
   DataV2,
+  PROGRAM_ID as METADATA_PROGRAM_ID,
 } from "@metaplex-foundation/mpl-token-metadata";
-import { PROGRAM_ID as METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 
 // ─── Constants ────────────────────────────────────────────────────
 
@@ -90,38 +94,19 @@ export async function POST(req: NextRequest) {
       METADATA_PROGRAM_ID
     );
 
-    // 3. Get the associated token account (ATA) for the user to receive minted tokens
-    const ata = await getOrCreateAssociatedTokenAccount(
-      connection,
-      // We don't have a payer yet; we'll use the user as payer and signer later.
-      // For building the transaction, we just need the address.
-      userPublicKey, // payer (will be the user)
-      mintPublicKey,
-      userPublicKey
-    );
-    // But we don't want to create it now, we'll include the instruction in the transaction.
-    // So we just compute the address:
-    const ataAddress = await getOrCreateAssociatedTokenAccount(
-      connection,
-      userPublicKey, // payer (will be the user)
-      mintPublicKey,
-      userPublicKey
-    ).then(acc => acc.address); // This will fail if not exists, but we can't create it now.
-    // Better: compute ATA address manually:
-    const { TOKEN_PROGRAM_ID } = require("@solana/spl-token");
-    const { ASSOCIATED_TOKEN_PROGRAM_ID } = require("@solana/spl-token");
-    const getAssociatedTokenAddress = require("@solana/spl-token").getAssociatedTokenAddress;
+    // 3. Get the associated token account address for the user
     const ataAddress = await getAssociatedTokenAddress(
       mintPublicKey,
       userPublicKey
     );
 
-    // 4. Create the transaction and add instructions
+    // 4. Get rent exemption for mint account
+    const rentExemption = await getMinimumBalanceForRentExemptMint(connection);
 
+    // 5. Create the transaction and add instructions
     const transaction = new Transaction();
 
-    // Instruction 1: Create mint account (system program: allocate and assign)
-    const rentExemption = await connection.getMinimumBalanceForRentExemption(82); // mint account size
+    // Instruction 1: Create mint account
     const createAccountIx = SystemProgram.createAccount({
       fromPubkey: userPublicKey,
       newAccountPubkey: mintPublicKey,
@@ -132,59 +117,37 @@ export async function POST(req: NextRequest) {
     transaction.add(createAccountIx);
 
     // Instruction 2: Initialize mint
-    const initMintIx = createMint(
-      connection,
-      userPublicKey,
-      mintPublicKey,
-      userPublicKey, // mint authority
-      userPublicKey, // freeze authority (optional)
-      decimalsNum
-    );
-    // createMint returns a transaction? Actually it returns a Promise<Transaction>.
-    // We'll use the simpler method: manually construct instruction.
-    // For simplicity, we can use the `createInitializeMintInstruction` from @solana/spl-token.
-    const { createInitializeMintInstruction } = require("@solana/spl-token");
-    const initMintIx2 = createInitializeMintInstruction(
+    const initMintIx = createInitializeMintInstruction(
       mintPublicKey,
       decimalsNum,
-      userPublicKey,
-      userPublicKey
+      userPublicKey, // mint authority
+      userPublicKey  // freeze authority
     );
-    transaction.add(initMintIx2);
+    transaction.add(initMintIx);
 
-    // Instruction 3: Create associated token account for user (if not exists)
+    // Instruction 3: Create associated token account for user
     const createAtaIx = createAssociatedTokenAccountInstruction(
       userPublicKey, // payer
-      ataAddress,
+      ataAddress,    // associated token account address
       userPublicKey, // owner
-      mintPublicKey
+      mintPublicKey  // mint
     );
     transaction.add(createAtaIx);
 
     // Instruction 4: Mint tokens to user's ATA
-    const mintTokensIx = mintTo(
-      connection,
-      userPublicKey,
+    const mintTokensIx = createMintToInstruction(
       mintPublicKey,
       ataAddress,
       userPublicKey, // authority
       supplyNum * Math.pow(10, decimalsNum)
     );
-    // mintTo returns a transaction? Actually we can use createMintToInstruction.
-    const { createMintToInstruction } = require("@solana/spl-token");
-    const mintToIx = createMintToInstruction(
-      mintPublicKey,
-      ataAddress,
-      userPublicKey,
-      supplyNum * Math.pow(10, decimalsNum)
-    );
-    transaction.add(mintToIx);
+    transaction.add(mintTokensIx);
 
     // Instruction 5: Create metadata account (Metaplex)
     const metadataData: DataV2 = {
       name,
       symbol,
-      uri: "", // optional URI
+      uri: "",
       sellerFeeBasisPoints: 0,
       creators: null,
       collection: null,
@@ -208,7 +171,7 @@ export async function POST(req: NextRequest) {
     );
     transaction.add(createMetadataIx);
 
-    // ─── Optional: Add service fee transfer ──────────────────────
+    // Instruction 6: Optional – transfer service fee to your wallet
     if (FEE_RECIPIENT && SERVICE_FEE_SOL > 0) {
       const feeLamports = SERVICE_FEE_SOL * LAMPORTS_PER_SOL;
       const transferIx = SystemProgram.transfer({
@@ -224,34 +187,19 @@ export async function POST(req: NextRequest) {
     const blockhash = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash.blockhash;
 
-    // ─── Serialize without signing ──────────────────────────────
-    // We need to partially sign with the mint keypair? Actually the mint keypair must sign
-    // because it's a new account. The user's wallet will sign for the transaction, but the
-    // mint keypair is not the user's – it's generated by the server. So the server must sign
-    // for the mint account creation. That means we cannot completely avoid server signing.
-    // The user signs for the transfer and the mint authority, but the mint keypair must be signed
-    // by the server. So we have two options:
-    // 1. Server signs the transaction partially and sends it to user to sign the rest (partial signing).
-    // 2. Server creates the mint account and sends the mint address to user to sign for the rest.
-    // For simplicity, we can have the server sign the mint account creation and then send the
-    // transaction to the user to sign the rest. But the user still pays gas.
-    // This is common: the server partially signs, user completes signing.
-
-    // We'll sign the transaction with the mint keypair (server side).
-    // The user will sign for the rest (fee payer, authority).
+    // ─── Partially sign with the mint keypair (server side) ──────
     transaction.partialSign(mintKeypair);
 
-    // Serialize the transaction (without the user's signature)
+    // ─── Serialize without requiring all signatures ──────────────
     const serializedTx = transaction.serialize({
       requireAllSignatures: false,
     }).toString('base64');
 
-    // Also send the mint address for display
+    // ─── Return to bot ────────────────────────────────────────────
     return NextResponse.json({
       success: true,
       mintAddress: mintPublicKey.toBase58(),
       unsignedTransaction: serializedTx,
-      // The user will need to sign this with their wallet
     });
 
   } catch (error: any) {

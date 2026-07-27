@@ -1,4 +1,4 @@
-// bot.js – ZRP Telegram Bot (Fully Fixed + Token Creation with User Wallet)
+// bot.js – ZRP Telegram Bot (Without Token Creation)
 require('dotenv').config();
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -85,7 +85,7 @@ bot.onText(/\/start/, (msg) => {
         [{ text: '📈 Top Gainers', callback_data: 'gainers' }, { text: '📉 Top Losers', callback_data: 'losers' }],
         [{ text: '🔍 Search', callback_data: 'search' }, { text: '🛡️ Rug Check', callback_data: 'rugcheck' }],
         [{ text: '💚 Charity', callback_data: 'charity' }, { text: '🤖 AI', callback_data: 'ai' }],
-        [{ text: '✨ Create Token', callback_data: 'create' }, { text: '📋 Help', callback_data: 'help' }]
+        [{ text: '📋 Help', callback_data: 'help' }]
       ]
     }
   };
@@ -97,7 +97,6 @@ bot.onText(/\/start/, (msg) => {
 🔍 Search tokens by name
 📈 Top gainers & losers
 🛡️ Rug check (Token Checker)
-✨ Create your own SPL token
 💚 35% of ZRP profits go to charity
 🤖 AI Assistant
 🌐 zrp.one
@@ -129,8 +128,6 @@ bot.on('callback_query', async (query) => {
     handleCharity(chatId);
   } else if (data === 'ai') {
     bot.sendMessage(chatId, '🤖 Send /ai [question] to ask ZRP AI Assistant.\nExample: `/ai What is Solana?`');
-  } else if (data === 'create') {
-    bot.sendMessage(chatId, '✨ Type /create to start the token creation wizard!');
   } else if (data === 'help') {
     handleHelp(chatId);
   }
@@ -431,7 +428,6 @@ function handleHelp(chatId) {
 🔹 /rugcheck [address] – Token risk check
 🔹 /charity – Charity fund info
 🔹 /ai [question] – Ask ZRP AI
-🔹 /create – Create your own SPL token
 🔹 /help – Show this message
 
 🧡 Built with purpose.
@@ -440,165 +436,6 @@ function handleHelp(chatId) {
 🌐 zrp.one`
   );
 }
-
-// ─── /create – Token Creation Wizard with Wallet Input ──────────
-
-// Store temporary user states
-const userStates = {};
-
-bot.onText(/\/create/, (msg) => {
-  const chatId = msg.chat.id;
-  
-  if (userStates[chatId] && userStates[chatId].step) {
-    bot.sendMessage(chatId, '❌ You already have a token creation in progress. Type /cancel to abort.');
-    return;
-  }
-
-  // Step 0: ask for wallet address
-  userStates[chatId] = { step: 0 };
-  bot.sendMessage(
-    chatId,
-    `🧡 Welcome to the ZRP Token Creator!
-
-**Step 0/5:** Enter your Solana wallet address.
-(You will pay the gas fees and service fee from this wallet.)
-
-Type /cancel to quit.`
-  );
-});
-
-bot.onText(/\/cancel/, (msg) => {
-  const chatId = msg.chat.id;
-  delete userStates[chatId];
-  bot.sendMessage(chatId, '✅ Token creation cancelled. Type /create to start over.');
-});
-
-// Handle text messages during creation flow
-bot.on('text', async (msg) => {
-  const chatId = msg.chat.id;
-  const text = msg.text;
-  const state = userStates[chatId];
-
-  if (!state || text.startsWith('/')) return;
-
-  switch (state.step) {
-    case 0: // Wallet address
-      // Basic validation: check if it's a valid base58 string (simple length check)
-      if (text.length < 32 || text.length > 44) {
-        bot.sendMessage(chatId, '❌ Invalid Solana address. Please enter a valid address (base58, 32-44 chars).');
-        return;
-      }
-      state.walletAddress = text;
-      state.step = 1;
-      bot.sendMessage(chatId, `✅ Wallet set: \`${text}\`
-
-Step 1/5: What's the **name** of your token?
-(e.g., "My Awesome Token")`, { parse_mode: 'Markdown' });
-      break;
-
-    case 1: // Name
-      state.name = text;
-      state.step = 2;
-      bot.sendMessage(chatId, `✅ Name set: "${text}"
-
-Step 2/5: What's the **symbol**? (max 10 chars)
-(e.g., "MTK")`);
-      break;
-
-    case 2: // Symbol
-      if (text.length > 10) {
-        bot.sendMessage(chatId, '❌ Symbol must be 10 characters or less. Try again.');
-        return;
-      }
-      state.symbol = text.toUpperCase();
-      state.step = 3;
-      bot.sendMessage(chatId, `✅ Symbol set: "${state.symbol}"
-
-Step 3/5: What's the **total supply**? (e.g., 1000000)`);
-      break;
-
-    case 3: // Supply
-      const supply = Number(text);
-      if (isNaN(supply) || supply <= 0 || !Number.isInteger(supply)) {
-        bot.sendMessage(chatId, '❌ Please enter a valid positive integer. Try again.');
-        return;
-      }
-      state.supply = supply;
-      state.step = 4;
-      bot.sendMessage(chatId, `✅ Supply set: ${supply.toLocaleString()}
-
-Step 4/5: **Decimals**? (Press 9 for default, or enter 0-9)`);
-      break;
-
-    case 4: // Decimals
-      let decimals = parseInt(text);
-      if (text.toLowerCase() === 'skip') decimals = 9;
-      if (isNaN(decimals) || decimals < 0 || decimals > 9) {
-        bot.sendMessage(chatId, '❌ Decimals must be between 0 and 9. Type "skip" for default (9).');
-        return;
-      }
-      state.decimals = decimals;
-
-      // All info collected – now call the API to get unsigned transaction
-      bot.sendMessage(chatId, '⏳ Preparing your token creation transaction... This may take a moment.');
-
-      try {
-        const response = await fetch('https://zrp.one/api/bot/token/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: state.name,
-            symbol: state.symbol,
-            supply: state.supply,
-            decimals: state.decimals,
-            walletAddress: state.walletAddress
-          })
-        });
-
-        const data = await response.json();
-
-        if (data.success && data.unsignedTransaction && data.mintAddress) {
-          // Build Phantom deep link
-          const txBase64 = data.unsignedTransaction;
-          const appUrl = 'https://zrp.one'; // Change to your app URL
-          const signUrl = `https://phantom.app/ul/v1/signAndSendTransaction?transaction=${encodeURIComponent(txBase64)}&app_url=${encodeURIComponent(appUrl)}`;
-
-          const message = `✅ **Transaction Prepared!**
-
-📊 Token: ${state.name} (${state.symbol})
-💎 Supply: ${state.supply.toLocaleString()}
-🔢 Decimals: ${state.decimals}
-📍 Mint Address: \`${data.mintAddress}\`
-
-💰 Service Fee: 0.15 SOL (included in transaction)
-
-**Now sign the transaction:**
-
-Click the link below to open Phantom and sign the transaction:
-
-[🔗 Sign Transaction](${signUrl})
-
-⚠️ **Important:**
-- You will pay gas fees and the service fee (0.15 SOL) from your wallet.
-- Your wallet must have enough SOL for rent, gas, and the service fee.
-
-After signing, your token will be created on Solana. 🎉
-
-[View on Solscan](${`https://solscan.io/token/${data.mintAddress}`})`;
-
-          bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-        } else {
-          bot.sendMessage(chatId, `❌ Failed to prepare transaction: ${data.error || 'Unknown error'}. Please try again.`);
-        }
-      } catch (error) {
-        bot.sendMessage(chatId, '❌ Error connecting to token creation service. Please try again later.');
-        console.error('Token creation error:', error);
-      }
-
-      delete userStates[chatId];
-      break;
-  }
-});
 
 // ─── Fallback for unknown commands ─────────────────────────────
 

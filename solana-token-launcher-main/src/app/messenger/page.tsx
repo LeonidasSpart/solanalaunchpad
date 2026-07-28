@@ -28,6 +28,22 @@ export default function MessengerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentWallet, setCurrentWallet] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [newRoomName, setNewRoomName] = useState("");
+  const [roomActionError, setRoomActionError] = useState("");
+  const tokenRef = useRef<string>("");
+
+  const authHeaders = () => ({
+    Authorization: `Bearer ${tokenRef.current}`,
+  });
+
+  const refreshRooms = async () => {
+    const res = await fetch(`${CHAT_API_URL}/rooms`, { headers: authHeaders() });
+    if (!res.ok) return;
+    const roomList: Room[] = await res.json();
+    setRooms(roomList);
+    return roomList;
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("zrp_chat_token");
@@ -37,11 +53,12 @@ export default function MessengerPage() {
       window.location.href = "/messenger/login";
       return;
     }
+    tokenRef.current = token;
 
     try {
       setCurrentWallet(JSON.parse(userRaw).walletAddress);
     } catch {
-      // ignore malformed cache, sender highlighting just won't work
+      // ignore malformed cache
     }
 
     if (!CHAT_API_URL) {
@@ -54,15 +71,20 @@ export default function MessengerPage() {
 
     const init = async () => {
       try {
-        const roomsRes = await fetch(`${CHAT_API_URL}/rooms`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (roomsRes.status === 401) {
+        // Check admin status fresh from the server (not just trusting local cache)
+        const meRes = await fetch(`${CHAT_API_URL}/auth/me`, { headers: authHeaders() });
+        if (meRes.status === 401) {
           localStorage.removeItem("zrp_chat_token");
           localStorage.removeItem("zrp_chat_user");
           window.location.href = "/messenger/login";
           return;
         }
+        if (meRes.ok) {
+          const me = await meRes.json();
+          if (active) setIsAdmin(!!me.isAdmin);
+        }
+
+        const roomsRes = await fetch(`${CHAT_API_URL}/rooms`, { headers: authHeaders() });
         const roomList: Room[] = await roomsRes.json();
         if (!active) return;
 
@@ -123,6 +145,55 @@ export default function MessengerPage() {
     setInput("");
   };
 
+  const createRoom = async () => {
+    setRoomActionError("");
+    const trimmed = newRoomName.trim();
+    if (!trimmed) return;
+
+    try {
+      const res = await fetch(`${CHAT_API_URL}/rooms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ name: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to create room");
+
+      setNewRoomName("");
+      const updated = await refreshRooms();
+      if (updated) {
+        const created = updated.find((r) => r.name === trimmed);
+        if (created) switchRoom(created.id);
+      }
+    } catch (err: any) {
+      setRoomActionError(err.message || "Failed to create room");
+    }
+  };
+
+  const deleteRoom = async (id: string, name: string) => {
+    if (name === "general") return;
+    if (!confirm(`Delete room "${name}"? This cannot be undone.`)) return;
+
+    setRoomActionError("");
+    try {
+      const res = await fetch(`${CHAT_API_URL}/rooms/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to delete room");
+      }
+
+      const updated = await refreshRooms();
+      if (id === roomId && updated && updated[0]) {
+        switchRoom(updated[0].id);
+      }
+    } catch (err: any) {
+      setRoomActionError(err.message || "Failed to delete room");
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
@@ -150,22 +221,62 @@ export default function MessengerPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Room List */}
-        <div className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] p-4 h-[500px] overflow-y-auto">
+        <div className="bg-[#0D0D0D] rounded-xl border border-[#1a1a1a] p-4 h-[500px] overflow-y-auto flex flex-col">
           <p className="text-[#BDDBDB] text-sm font-semibold mb-3">Rooms</p>
-          {rooms.length === 0 ? (
-            <p className="text-gray-500 text-sm">No rooms yet</p>
-          ) : (
-            rooms.map((room) => (
-              <div
-                key={room.id}
-                onClick={() => switchRoom(room.id)}
-                className={`p-2 rounded-lg cursor-pointer hover:bg-gray-800 transition ${
-                  roomId === room.id ? "bg-gray-800" : ""
-                }`}
-              >
-                <p className="text-white text-sm">{room.name}</p>
+
+          <div className="flex-1">
+            {rooms.length === 0 ? (
+              <p className="text-gray-500 text-sm">No rooms yet</p>
+            ) : (
+              rooms.map((room) => (
+                <div
+                  key={room.id}
+                  className={`flex items-center justify-between rounded-lg hover:bg-gray-800 transition ${
+                    roomId === room.id ? "bg-gray-800" : ""
+                  }`}
+                >
+                  <div
+                    onClick={() => switchRoom(room.id)}
+                    className="flex-1 p-2 cursor-pointer"
+                  >
+                    <p className="text-white text-sm">{room.name}</p>
+                  </div>
+                  {isAdmin && room.name !== "general" && (
+                    <button
+                      onClick={() => deleteRoom(room.id, room.name)}
+                      className="px-2 text-gray-500 hover:text-red-400 text-xs"
+                      title="Delete room"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {isAdmin && (
+            <div className="mt-3 pt-3 border-t border-[#1a1a1a]">
+              {roomActionError && (
+                <p className="text-red-400 text-xs mb-2">{roomActionError}</p>
+              )}
+              <div className="flex gap-1">
+                <input
+                  type="text"
+                  value={newRoomName}
+                  onChange={(e) => setNewRoomName(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && createRoom()}
+                  placeholder="New room name"
+                  className="flex-1 min-w-0 p-2 bg-gray-900 border border-gray-700 rounded-lg text-white text-xs"
+                />
+                <button
+                  onClick={createRoom}
+                  className="px-3 py-2 bg-[#FF2D2D] hover:bg-[#B10000] text-white text-xs font-semibold rounded-lg transition"
+                >
+                  +
+                </button>
               </div>
-            ))
+            </div>
           )}
         </div>
 

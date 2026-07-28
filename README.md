@@ -455,8 +455,8 @@ Pricing
 
 Plan Cost Features
 Free $0 Devnet testing, token creation, IPFS storage, social links & branding
-Basic 0.15 SOL (~$25) Everything in Free + Mainnet launch
-Secure 0.60 SOL (~$100) Everything in Basic + Revoke all authorities + Immutable metadata
+Basic 0.15 SOL  Everything in Free + Mainnet launch
+Secure 0.60 SOL Everything in Basic + Revoke all authorities + Immutable metadata
 
 Authority revocations (add-on): 0.15 SOL each
 

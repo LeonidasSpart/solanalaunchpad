@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https: ipfs: nftstorage: dweb:",
-              "connect-src 'self' https://api.devnet.solana.com https://api.mainnet-beta.solana.com https://api.mainnet.solana.com https://api.testnet.solana.com https://*.solana.com https://nft.storage https://*.nftstorage.link https://*.ipfs.io https://*.dweb.link https://*.cloudflare-ipfs.com https://*.jup.ag wss://*.solana.com",
+              "connect-src 'self' https://api.devnet.solana.com https://api.mainnet-beta.solana.com https://api.mainnet.solana.com https://api.testnet.solana.com https://*.solana.com https://nft.storage https://*.nftstorage.link https://*.ipfs.io https://*.dweb.link https://*.cloudflare-ipfs.com https://*.jup.ag wss://*.solana.com https://loving-tranquility-production-5a39.up.railway.app wss://loving-tranquility-production-5a39.up.railway.app",
               "frame-src 'self' https://*.phantom.app https://*.solflare.com",
               "media-src 'self' blob: https:",
               "manifest-src 'self'",

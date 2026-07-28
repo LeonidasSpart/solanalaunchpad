@@ -11,6 +11,14 @@ interface LoginDto {
   message: string;
 }
 
+function isAdminWallet(walletAddress: string): boolean {
+  const admins = (process.env.ADMIN_WALLETS || '')
+    .split(',')
+    .map((w) => w.trim())
+    .filter(Boolean);
+  return admins.includes(walletAddress);
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -24,7 +32,6 @@ export class AuthService {
     }
 
     // Reject stale sign-in attempts - message must embed a recent timestamp
-    // (matches `Login to ZRP Messenger at ${Date.now()}` from the frontend)
     const match = message.match(/at (\d+)$/);
     const timestamp = match ? parseInt(match[1], 10) : null;
     if (!timestamp || Date.now() - timestamp > 5 * 60 * 1000) {
@@ -46,20 +53,31 @@ export class AuthService {
       throw new UnauthorizedException('Invalid signature');
     }
 
+    // Re-evaluate admin status from the allowlist every login, so adding or
+    // removing a wallet from ADMIN_WALLETS takes effect next time they sign in.
+    const admin = isAdminWallet(publicKey);
+
     const user = await this.prisma.user.upsert({
       where: { walletAddress: publicKey },
-      update: {},
-      create: { walletAddress: publicKey },
+      update: { isAdmin: admin },
+      create: { walletAddress: publicKey, isAdmin: admin },
     });
 
     const accessToken = this.jwtService.sign({
       sub: user.id,
       walletAddress: user.walletAddress,
+      isAdmin: user.isAdmin,
     });
 
     return {
       accessToken,
-      user: { id: user.id, walletAddress: user.walletAddress },
+      user: { id: user.id, walletAddress: user.walletAddress, isAdmin: user.isAdmin },
     };
+  }
+
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+    return { id: user.id, walletAddress: user.walletAddress, isAdmin: user.isAdmin };
   }
 }

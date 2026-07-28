@@ -4,6 +4,7 @@ import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 import { RoomsController } from './rooms.controller';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminGuard } from '../auth/admin.guard';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
     }),
   ],
   controllers: [RoomsController],
-  providers: [ChatGateway, ChatService, JwtAuthGuard],
+  providers: [ChatGateway, ChatService, JwtAuthGuard, AdminGuard],
 })
 export class ChatModule {}
